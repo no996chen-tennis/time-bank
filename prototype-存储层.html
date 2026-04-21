@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>时间银行 · 存储层草图</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg: #0A0A0F;
+    --card: #16161F;
+    --card-2: #1C1C26;
+    --border: #22222E;
+    --border-soft: #2A2A38;
+    --text: #F0EDE6;
+    --text-2: #8A8797;
+    --text-3: #605E6E;
+    --warm: #E8C47C;
+    --rose: #D4847C;
+    --sage: #7CB89E;
+    --sky: #7CACD4;
+    --lavender: #A088C4;
+  }
+
+  body {
+    font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+  }
+
+  .intro {
+    max-width: 1400px;
+    margin: 0 auto 40px;
+    text-align: center;
+  }
+  .intro h1 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+  .intro p {
+    color: var(--text-2);
+    font-size: 14px;
+    line-height: 1.7;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .intro .tag {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 4px 12px;
+    border: 1px solid var(--border-soft);
+    border-radius: 100px;
+    font-size: 12px;
+    color: var(--warm);
+    letter-spacing: 0.5px;
+  }
+
+  .gallery {
+    max-width: 1700px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+  @media (max-width: 1400px) {
+    .gallery { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 720px) {
+    .gallery { grid-template-columns: 1fr; }
+  }
+
+  .screen-label {
+    font-size: 12px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+  .screen-title {
+    font-size: 15px;
+    color: var(--text);
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 14px;
+  }
+
+  .phone {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 36px;
+    padding: 12px;
+    width: 100%;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
+  }
+  .phone-inner {
+    background: #0C0C13;
+    border-radius: 26px;
+    height: 720px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .status-bar {
+    height: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    font-size: 11px;
+    color: var(--text-2);
+    flex-shrink: 0;
+  }
+
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 18px 12px;
+    flex-shrink: 0;
+  }
+  .nav-title {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .nav-sub {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+  }
+  .nav-btn {
+    width: 32px; height: 32px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-2);
+    font-size: 16px;
+  }
+
+  .body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 18px 18px;
+  }
+  .body::-webkit-scrollbar { display: none; }
+
+  /* ======= 主页 - 双数字维度卡片 ======= */
+  .hero-balance {
+    background: linear-gradient(135deg, rgba(232,196,124,0.12) 0%, rgba(160,136,196,0.06) 100%);
+    border: 1px solid rgba(232,196,124,0.25);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .hero-label {
+    font-size: 10px;
+    color: var(--warm);
+    letter-spacing: 1.5px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .hero-num {
+    font-size: 34px;
+    font-weight: 300;
+    letter-spacing: -0.5px;
+  }
+  .hero-unit {
+    font-size: 14px;
+    color: var(--text-2);
+    margin-left: 4px;
+  }
+  .hero-sub {
+    font-size: 11px;
+    color: var(--text-2);
+    margin-top: 6px;
+  }
+
+  .dim-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .dim-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .dim-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .dim-icon.parents { background: rgba(212,132,124,0.18); color: var(--rose); }
+  .dim-icon.kids    { background: rgba(232,196,124,0.18); color: var(--warm); }
+  .dim-icon.partner { background: rgba(160,136,196,0.18); color: var(--lavender); }
+  .dim-icon.create  { background: rgba(124,172,212,0.18); color: var(--sky); }
+  .dim-icon.sport   { background: rgba(124,184,158,0.18); color: var(--sage); }
+
+  .dim-name { font-size: 14px; font-weight: 500; flex: 1; }
+  .dim-arrow { color: var(--text-3); font-size: 14px; }
+
+  .dim-duo {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap: 12px;
+    align-items: center;
+  }
+  .dim-cell-label {
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--text-3);
+    margin-bottom: 2px;
+    text-transform: uppercase;
+  }
+  .dim-cell-num {
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: -0.3px;
+  }
+  .dim-cell-num .u { font-size: 11px; color: var(--text-2); margin-left: 2px; font-weight: 400; }
+  .dim-cell-num.down { color: var(--text); opacity: 0.85; }
+  .dim-cell-num.up   { color: var(--warm); }
+  .dim-cell-sub {
+    font-size: 10px;
+    color: var(--text-3);
+    margin-top: 3px;
+    letter-spacing: 0.3px;
+  }
+  .dim-divider {
+    width: 1px;
+    height: 28px;
+    background: var(--border);
+    margin: 0 auto;
+  }
+
+  /* ======= 维度详情 - 时间线 ======= */
+  .dim-hero {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .dim-hero-num {
+    font-size: 44px;
+    font-weight: 200;
+    letter-spacing: -1px;
+    color: var(--rose);
+  }
+  .dim-hero-sub {
+    color: var(--text-2);
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .dim-split {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0 12px;
+  }
+  .dim-split-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-3);
+    text-transform: uppercase;
+  }
+  .dim-split-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .dim-split-count {
+    font-size: 11px;
+    color: var(--warm);
+  }
+
+  .timeline-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 8px;
+  }
+  .ti-thumb {
+    width: 64px; height: 64px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #3a2f45, #524158);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .ti-thumb.g1 { background: linear-gradient(135deg, #4a3540, #6b4b5a); }
+  .ti-thumb.g2 { background: linear-gradient(135deg, #3a4855, #556a7a); }
+  .ti-thumb.g3 { background: linear-gradient(135deg, #4e4230, #6b5a3f); }
+  .ti-thumb .multi-dot {
+    position: absolute;
+    top: 4px; right: 4px;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 6px;
+  }
+  .ti-content { flex: 1; min-width: 0; }
+  .ti-title {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 3px;
+  }
+  .ti-meta {
+    font-size: 11px;
+    color: var(--text-2);
+    margin-bottom: 4px;
+  }
+  .ti-note {
+    font-size: 11px;
+    color: var(--text-3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.5;
+  }
+
+  /* ======= 新增时刻 ======= */
+  .form-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .form-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+  }
+  .form-row + .form-row { border-top: 1px solid var(--border-soft); }
+  .form-label {
+    font-size: 12px;
+    color: var(--text-2);
+  }
+  .form-value {
+    font-size: 13px;
+    color: var(--text);
+  }
+  .form-value.placeholder { color: var(--text-3); }
+  .form-value.accent { color: var(--warm); }
+
+  .textarea-mock {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.7;
+    margin-bottom: 12px;
+    min-height: 84px;
+  }
+  .textarea-mock .placeholder-text {
+    color: var(--text-3);
+  }
+
+  .media-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .media-slot {
+    aspect-ratio: 1;
+    border-radius: 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .media-slot.filled {
+    background: linear-gradient(135deg, #3d2f38, #5a4352);
+    border: none;
+  }
+  .media-slot.filled.v2 { background: linear-gradient(135deg, #2e3f4d, #425c6e); }
+  .media-slot.filled.v3 { background: linear-gradient(135deg, #4e4230, #6b5a3f); }
+  .media-slot.filled.v4 { background: linear-gradient(135deg, #3a4226, #556b36); }
+  .media-slot.filled .video-tag {
+    position: absolute;
+    bottom: 4px; left: 4px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 4px;
+  }
+  .media-slot.filled .del {
+    position: absolute;
+    top: 4px; right: 4px;
+    width: 18px; height: 18px;
+    background: rgba(0,0,0,0.7);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 10px;
+  }
+  .media-slot.empty {
+    color: var(--text-3);
+    border: 1px dashed var(--border-soft);
+  }
+  .media-slot.add {
+    color: var(--warm);
+    font-size: 22px;
+    font-weight: 300;
+  }
+
+  .submit-btn {
+    background: linear-gradient(135deg, var(--warm) 0%, var(--rose) 100%);
+    color: #1a1a24;
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    margin-top: 20px;
+  }
+
+  /* ======= 时刻详情 ======= */
+  .detail-hero {
+    width: calc(100% + 36px);
+    margin-left: -18px;
+    aspect-ratio: 4/5;
+    background: linear-gradient(135deg, #4a3540 0%, #6b4b5a 50%, #2e3f4d 100%);
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    padding: 20px;
+  }
+  .detail-dots {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+  }
+  .detail-dots span {
+    width: 20px;
+    height: 3px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 2px;
+  }
+  .detail-dots span.active { background: rgba(255,255,255,0.9); }
+  .detail-badge {
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(10px);
+    padding: 6px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    color: #fff;
+  }
+  .detail-body {
+    padding: 20px 0 14px;
+  }
+  .detail-title {
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
+  .detail-meta {
+    color: var(--text-2);
+    font-size: 12px;
+    margin-bottom: 16px;
+  }
+  .detail-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .detail-chip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 5px 11px;
+    border-radius: 100px;
+    font-size: 11px;
+    color: var(--text-2);
+  }
+  .detail-chip.accent {
+    background: rgba(232,196,124,0.1);
+    color: var(--warm);
+    border-color: rgba(232,196,124,0.25);
+  }
+  .detail-note {
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--text);
+    padding: 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 14px;
+  }
+  .detail-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .detail-action {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 0;
+    text-align: center;
+    font-size: 10px;
+    color: var(--text-2);
+  }
+  .detail-action .ico {
+    font-size: 14px;
+    margin-bottom: 3px;
+    display: block;
+  }
+
+  /* ======= 注解 ======= */
+  .annotation {
+    max-width: 1700px;
+    margin: 30px auto 0;
+    padding: 20px 24px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+  .annotation h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--warm);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .annotation ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 1400px) {
+    .annotation ul { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 720px) {
+    .annotation ul { grid-template-columns: 1fr; }
+  }
+  .annotation li {
+    font-size: 12px;
+    color: var(--text-2);
+    line-height: 1.7;
+  }
+  .annotation li strong {
+    color: var(--text);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <h1>时间银行 · 存储层草图</h1>
+  <p>V1.1 新增的"存储层"核心交互流程线框。消耗层（还剩 N 次）不会扣存储层（已存入 N 次），两层同时在卡片底部呈现，形成对照。</p>
+  <span class="tag">V1.1 · 2026-04-19 · 非最终 UI</span>
+</div>
+
+<div class="gallery">
+
+  <!-- 屏 1：主页（双数字卡片） -->
+  <div>
+    <div class="screen-label">Screen 01</div>
+    <div class="screen-title">主页 · 双数字卡片</div>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="status-bar"><span>9:41</span><span>●●● ●●●</span></div>
+        <div class="nav">
+          <div>
+            <div class="nav-title">你好，Adam</div>
+            <div class="nav-sub">你已存入 128 小时 · 27 个瞬间</div>
+          </div>
+          <div class="nav-btn">⚙</div>
+        </div>
+        <div class="body">
+
+          <div class="hero-balance">
+            <div class="hero-label">时间银行 · 总账户</div>
+            <div>
+              <span class="hero-num">128</span>
+              <span class="hero-unit">小时</span>
+            </div>
+            <div class="hero-sub">跨 5 个维度 · 最近 1 次：3 天前</div>
+          </div>
+
+          <div class="dim-card">
+            <div class="dim-header">
+              <div class="dim-icon parents">♡</div>
+              <div class="dim-name">陪父母</div>
+              <div class="dim-arrow">›</div>
+            </div>
+            <div class="dim-duo">
+              <div>
+                <div class="dim-cell-label">还能存入</div>
+                <div class="dim-cell-num down">552<span class="u">h</span></div>
+                <div class="dim-cell-sub">约 92 次见面</div>
+              </div>
+              <div class="dim-divider"></div>
+              <div>
+                <div class="dim-cell-label">已存入</div>
+                <div class="dim-cell-num up">56<span class="u">h</span></div>
+                <div class="dim-cell-sub">12 个瞬间</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dim-card">
+            <div class="dim-header">
+              <div class="dim-icon kids">◐</div>
+              <div class="dim-name">陪孩子</div>
+              <div class="dim-arrow">›</div>
+            </div>
+            <div class="dim-duo">
+              <div>
+                <div class="dim-cell-label">还能存入</div>
+                <div class="dim-cell-num down">7,488<span class="u">h</span></div>
+                <div class="dim-cell-sub">黄金期剩 7.2 年</div>
+              </div>
+              <div class="dim-divider"></div>
+              <div>
+                <div class="dim-cell-label">已存入</div>
+                <div class="dim-cell-num up">34<span class="u">h</span></div>
+                <div class="dim-cell-sub">8 个瞬间</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dim-card">
+            <div class="dim-header">
+              <div class="dim-icon partner">◎</div>
+              <div class="dim-name">陪伴侣</div>
+              <div class="dim-arrow">›</div>
+            </div>
+            <div class="dim-duo">
+              <div>
+                <div class="dim-cell-label">还能存入</div>
+                <div class="dim-cell-num down">18.2K<span class="u">h</span></div>
+                <div class="dim-cell-sub">约共度 40 年</div>
+              </div>
+              <div class="dim-divider"></div>
+              <div>
+                <div class="dim-cell-label">已存入</div>
+                <div class="dim-cell-num up">22<span class="u">h</span></div>
+                <div class="dim-cell-sub">5 个瞬间</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dim-card">
+            <div class="dim-header">
+              <div class="dim-icon create">✦</div>
+              <div class="dim-name">创造</div>
+              <div class="dim-arrow">›</div>
+            </div>
+            <div class="dim-duo">
+              <div>
+                <div class="dim-cell-label">还能存入</div>
+                <div class="dim-cell-num down">45.8K<span class="u">h</span></div>
+                <div class="dim-cell-sub">黄金期剩 22 年</div>
+              </div>
+              <div class="dim-divider"></div>
+              <div>
+                <div class="dim-cell-label">已存入</div>
+                <div class="dim-cell-num up">12<span class="u">h</span></div>
+                <div class="dim-cell-sub">3 个瞬间</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 屏 2：维度详情 + 时间线 -->
+  <div>
+    <div class="screen-label">Screen 02</div>
+    <div class="screen-title">维度详情 · 时间线</div>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="status-bar"><span>9:41</span><span>●●● ●●●</span></div>
+        <div class="nav">
+          <div class="nav-btn">‹</div>
+          <div class="nav-title">陪父母</div>
+          <div class="nav-btn">+</div>
+        </div>
+        <div class="body">
+
+          <div class="dim-hero">
+            <div class="dim-hero-num">552<span style="font-size:22px;color:var(--text-2);font-weight:400;">h</span></div>
+            <div class="dim-hero-sub">约还能一起度过 · 合 92 次见面 · 每次 6h</div>
+          </div>
+
+          <div class="dim-split">
+            <span class="dim-split-label">已存入瞬间</span>
+            <span class="dim-split-line"></span>
+            <span class="dim-split-count">12 个 · 56h</span>
+          </div>
+
+          <div class="timeline-item">
+            <div class="ti-thumb g1">
+              <span class="multi-dot">9</span>
+              🏔
+            </div>
+            <div class="ti-content">
+              <div class="ti-title">杭州西湖 48 小时</div>
+              <div class="ti-meta">2026-03-22 · 48h · 3 天前</div>
+              <div class="ti-note">爸这辈子第一次坐游船，他说比他想的大多了。妈拍了好多照片…</div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="ti-thumb g2">
+              <span class="multi-dot">3</span>
+              🍲
+            </div>
+            <div class="ti-content">
+              <div class="ti-title">周末回家吃饭</div>
+              <div class="ti-meta">2026-03-08 · 6h · 上个月</div>
+              <div class="ti-note">妈做了糖醋排骨，爸切了西瓜。电视里放着新闻联播…</div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="ti-thumb g3">
+              🎂
+            </div>
+            <div class="ti-content">
+              <div class="ti-title">爸 63 岁生日</div>
+              <div class="ti-meta">2026-02-14 · 4h · 2 个月前</div>
+              <div class="ti-note">蛋糕是从老字号订的，爸吃了两块…</div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="ti-thumb g1">
+              <span class="multi-dot">5</span>
+              🌸
+            </div>
+            <div class="ti-content">
+              <div class="ti-title">陪妈去医院复查</div>
+              <div class="ti-meta">2026-01-30 · 5h</div>
+              <div class="ti-note">结果都正常。出来路过公园，梅花开了…</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 屏 3：新增时刻 -->
+  <div>
+    <div class="screen-label">Screen 03</div>
+    <div class="screen-title">新增时刻 · 存入表单</div>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="status-bar"><span>9:41</span><span>●●● ●●●</span></div>
+        <div class="nav">
+          <div class="nav-btn">×</div>
+          <div class="nav-title">存入一个时刻</div>
+          <div class="nav-btn" style="opacity:0">+</div>
+        </div>
+        <div class="body">
+
+          <div class="form-section">
+            <div class="form-row">
+              <span class="form-label">存入</span>
+              <span class="form-value accent">陪父母 ›</span>
+            </div>
+            <div class="form-row">
+              <span class="form-label">发生时间</span>
+              <span class="form-value">2026-03-22 ›</span>
+            </div>
+            <div class="form-row">
+              <span class="form-label">持续时长</span>
+              <span class="form-value">48 小时 ›</span>
+            </div>
+            <div class="form-row">
+              <span class="form-label">标题</span>
+              <span class="form-value">杭州西湖 48 小时</span>
+            </div>
+          </div>
+
+          <div class="textarea-mock">
+            爸这辈子第一次坐游船，他说比他想的大多了。妈在船上拍了好多照片发家族群。<br>
+            <span class="placeholder-text">（继续写下你的感受…）</span>
+          </div>
+
+          <div class="media-grid">
+            <div class="media-slot filled">
+              <span class="del">×</span>
+            </div>
+            <div class="media-slot filled v2">
+              <span class="del">×</span>
+            </div>
+            <div class="media-slot filled v3">
+              <span class="del">×</span>
+              <span class="video-tag">▸ 0:30</span>
+            </div>
+            <div class="media-slot filled v4">
+              <span class="del">×</span>
+            </div>
+            <div class="media-slot filled">
+              <span class="del">×</span>
+            </div>
+            <div class="media-slot add">+</div>
+            <div class="media-slot empty"></div>
+            <div class="media-slot empty"></div>
+            <div class="media-slot empty"></div>
+          </div>
+
+          <div style="font-size: 10px; color: var(--text-3); text-align: center; margin-top: -4px;">
+            5 / 9 · 图片/视频存在你的 iPhone 里，不上传任何服务器
+          </div>
+
+          <div class="submit-btn">存入时间银行</div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 屏 4：时刻详情 -->
+  <div>
+    <div class="screen-label">Screen 04</div>
+    <div class="screen-title">时刻详情 · 回看</div>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="status-bar"><span>9:41</span><span>●●● ●●●</span></div>
+        <div class="nav">
+          <div class="nav-btn">‹</div>
+          <div class="nav-title" style="font-size: 13px; color: var(--text-2);">陪父母 · 时刻</div>
+          <div class="nav-btn">⋯</div>
+        </div>
+        <div class="body" style="padding: 0 18px 18px;">
+
+          <div class="detail-hero">
+            <div class="detail-dots">
+              <span class="active"></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div class="detail-badge">1 / 5 · 视频 0:30</div>
+          </div>
+
+          <div class="detail-body">
+            <div class="detail-title">杭州西湖 48 小时</div>
+            <div class="detail-meta">2026-03-22 · 发生在 3 天前</div>
+
+            <div class="detail-chips">
+              <span class="detail-chip accent">♡ 陪父母</span>
+              <span class="detail-chip">48 小时</span>
+              <span class="detail-chip">5 个媒体</span>
+            </div>
+
+            <div class="detail-note">
+              爸这辈子第一次坐游船，他说比他想的大多了。妈在船上拍了好多照片发家族群，楼下的邻居都点赞了。<br><br>
+              晚上住的民宿离苏堤很近，早上推开窗听见湖水拍岸，爸站了很久没说话。
+            </div>
+
+            <div class="detail-actions">
+              <div class="detail-action">
+                <span class="ico">✎</span>
+                编辑
+              </div>
+              <div class="detail-action">
+                <span class="ico">⇆</span>
+                换维度
+              </div>
+              <div class="detail-action">
+                <span class="ico">↗</span>
+                分享卡
+              </div>
+              <div class="detail-action" style="color: var(--rose);">
+                <span class="ico">🗑</span>
+                删除
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="annotation">
+  <h3>⚡ 存储层 · 关键交互说明</h3>
+  <ul>
+    <li>
+      <strong>Screen 01 · 双数字卡片</strong>
+      每张维度卡片同时显示"还能见约 92 次 → 消耗层"和"已存入 56 小时 → 存储层"。消耗层数字会变小，存储层数字会变大，形成张力。主页顶部有总账户（128 小时）。
+    </li>
+    <li>
+      <strong>Screen 02 · 维度时间线</strong>
+      点卡片进入详情，上半是消耗层的核心数字（剩 92 次），下半是该维度所有存入的时刻，倒序排列。每条时刻展示缩略图 + 标题 + 时长 + 文字首句。右上角"+"直达新增。
+    </li>
+    <li>
+      <strong>Screen 03 · 新增时刻表单</strong>
+      字段：维度（可改）、发生时间（默认今天）、时长（滑块）、标题、长文本、媒体最多 9 条。媒体用系统 PhotosPicker 选，不要读相册权限。底部明确说明"不上传服务器"。
+    </li>
+    <li>
+      <strong>Screen 04 · 时刻详情回看</strong>
+      顶部媒体轮播（含视频）、中间标题+元信息、Chip 展示归属维度/时长/媒体数、全文笔记、底部 4 个动作：编辑 / 换维度 / 分享卡 / 删除。
+    </li>
+  </ul>
+</div>
+
+</body>
+</html>

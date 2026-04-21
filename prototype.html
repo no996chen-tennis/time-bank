@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>时间银行 - Prototype</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg: #0A0A0F;
+    --card: #16161F;
+    --card-border: #22222E;
+    --text: #F0EDE6;
+    --text-secondary: #8A8797;
+    --accent-warm: #E8C47C;
+    --accent-rose: #D4847C;
+    --accent-sage: #7CB89E;
+    --accent-sky: #7CACD4;
+    --accent-lavender: #A088C4;
+    --accent-peach: #D4A07C;
+  }
+
+  body {
+    font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Phone Frame */
+  .phone-frame {
+    width: 393px;
+    min-height: 100vh;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+  }
+
+  @media (max-width: 420px) {
+    .phone-frame { width: 100%; }
+  }
+
+  /* Screens */
+  .screen {
+    display: none;
+    min-height: 100vh;
+    animation: fadeIn 0.4s ease;
+  }
+  .screen.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============ ONBOARDING ============ */
+  .onboarding {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 28px;
+    text-align: center;
+  }
+
+  .onboarding-icon {
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, var(--accent-warm) 0%, var(--accent-rose) 100%);
+    border-radius: 22px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    margin-bottom: 32px;
+    box-shadow: 0 8px 32px rgba(232, 196, 124, 0.2);
+  }
+
+  .onboarding h1 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    margin-bottom: 12px;
+  }
+
+  .onboarding .subtitle {
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 48px;
+    max-width: 300px;
+  }
+
+  /* Form */
+  .form-group {
+    width: 100%;
+    margin-bottom: 20px;
+    text-align: left;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 12px;
+  }
+
+  .form-row .form-group { flex: 1; }
+
+  .form-input {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    color: var(--text);
+    font-size: 16px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-input:focus {
+    border-color: var(--accent-warm);
+  }
+
+  .form-input::placeholder {
+    color: #444;
+  }
+
+  select.form-input {
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='%238A8797'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--accent-warm) 0%, var(--accent-peach) 100%);
+    border: none;
+    border-radius: 14px;
+    color: #0A0A0F;
+    font-size: 17px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    margin-top: 24px;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .btn-primary:active { transform: scale(0.97); opacity: 0.9; }
+
+  .step-dots {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 36px;
+  }
+  .step-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--card-border);
+    transition: all 0.3s;
+  }
+  .step-dot.active {
+    background: var(--accent-warm);
+    width: 24px;
+    border-radius: 4px;
+  }
+
+  /* ============ HOME SCREEN ============ */
+  .home {
+    padding: 0 0 100px;
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 24px 8px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .status-bar .time { font-variant-numeric: tabular-nums; }
+  .status-bar .icons { display: flex; gap: 6px; font-size: 12px; }
+
+  /* Header */
+  .home-header {
+    padding: 12px 24px 20px;
+  }
+
+  .greeting {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+
+  .home-header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  /* Hero Card */
+  .hero-card {
+    margin: 0 20px 24px;
+    padding: 28px 24px;
+    background: linear-gradient(160deg, #1E1E2A 0%, #1A1A26 100%);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-card::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(232,196,124,0.08) 0%, transparent 70%);
+  }
+
+  .hero-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+  }
+
+  .hero-number {
+    font-size: 56px;
+    font-weight: 300;
+    letter-spacing: -2px;
+    color: var(--accent-warm);
+    line-height: 1.1;
+    margin-bottom: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hero-unit {
+    font-size: 16px;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+
+  .hero-sub {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--card-border);
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.5;
+    font-weight: 400;
+  }
+
+  .hero-sub em {
+    font-style: normal;
+    color: var(--accent-warm);
+    font-weight: 500;
+  }
+
+  /* Section */
+  .section-title {
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 0 24px;
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+
+  /* Time Cards */
+  .time-cards {
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .time-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 20px;
+    cursor: pointer;
+    transition: transform 0.15s, background 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .time-card:active { transform: scale(0.98); background: #1A1A24; }
+
+  .time-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+
+  .time-card-icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .time-card-value {
+    text-align: right;
+  }
+
+  .time-card-value .number {
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .time-card-value .unit {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  .time-card-label {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .time-card-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    margin-top: 16px;
+    overflow: hidden;
+  }
+  .progress-bar .fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1.5s ease;
+  }
+
+  /* Color themes for cards */
+  .theme-warm .time-card-icon { background: rgba(232,196,124,0.12); }
+  .theme-warm .number { color: var(--accent-warm); }
+  .theme-warm .fill { background: var(--accent-warm); }
+
+  .theme-rose .time-card-icon { background: rgba(212,132,124,0.12); }
+  .theme-rose .number { color: var(--accent-rose); }
+  .theme-rose .fill { background: var(--accent-rose); }
+
+  .theme-sage .time-card-icon { background: rgba(124,184,158,0.12); }
+  .theme-sage .number { color: var(--accent-sage); }
+  .theme-sage .fill { background: var(--accent-sage); }
+
+  .theme-sky .time-card-icon { background: rgba(124,172,212,0.12); }
+  .theme-sky .number { color: var(--accent-sky); }
+  .theme-sky .fill { background: var(--accent-sky); }
+
+  .theme-lavender .time-card-icon { background: rgba(160,136,196,0.12); }
+  .theme-lavender .number { color: var(--accent-lavender); }
+  .theme-lavender .fill { background: var(--accent-lavender); }
+
+  .theme-peach .time-card-icon { background: rgba(212,160,124,0.12); }
+  .theme-peach .number { color: var(--accent-peach); }
+  .theme-peach .fill { background: var(--accent-peach); }
+
+  /* Daily Moments */
+  .moments-scroll {
+    padding: 0 20px;
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin-bottom: 28px;
+    padding-bottom: 4px;
+  }
+  .moments-scroll::-webkit-scrollbar { display: none; }
+
+  .moment-card {
+    flex-shrink: 0;
+    width: 148px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 18px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .moment-card:active { transform: scale(0.96); }
+
+  .moment-emoji {
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+
+  .moment-nth {
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--accent-warm);
+    letter-spacing: -0.5px;
+    margin-bottom: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .moment-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  /* Widget Preview */
+  .widget-section {
+    padding: 0 20px;
+    margin-bottom: 28px;
+  }
+
+  .widget-preview {
+    background: linear-gradient(160deg, #1E1E2A 0%, #1A1A26 100%);
+    border: 1px solid var(--card-border);
+    border-radius: 22px;
+    padding: 24px;
+  }
+
+  .widget-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 16px;
+  }
+
+  .widget-lockscreen {
+    background: rgba(0,0,0,0.3);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .widget-lockscreen .w-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .widget-lockscreen .w-text {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+    font-weight: 400;
+  }
+
+  .widget-lockscreen .w-text em {
+    font-style: normal;
+    color: var(--accent-warm);
+    font-weight: 500;
+  }
+
+  .widget-tabs {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .widget-tab {
+    flex: 1;
+    padding: 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-align: center;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .widget-tab.active {
+    border-color: var(--accent-warm);
+    color: var(--accent-warm);
+    background: rgba(232,196,124,0.06);
+  }
+
+  /* Tab Bar */
+  .tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 393px;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--card-border);
+    display: flex;
+    padding: 8px 0 28px;
+    z-index: 100;
+  }
+
+  @media (max-width: 420px) {
+    .tab-bar { width: 100%; }
+  }
+
+  .tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 0;
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+    transition: opacity 0.2s;
+  }
+
+  .tab-item .tab-icon { font-size: 22px; opacity: 0.4; transition: opacity 0.2s; }
+  .tab-item .tab-label { font-size: 10px; color: var(--text-secondary); opacity: 0.4; transition: opacity 0.2s; }
+  .tab-item.active .tab-icon { opacity: 1; }
+  .tab-item.active .tab-label { color: var(--accent-warm); opacity: 1; }
+
+  /* ============ DETAIL SCREEN ============ */
+  .detail {
+    padding: 0 0 100px;
+  }
+
+  .detail-back {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 60px 20px 12px;
+    font-size: 16px;
+    color: var(--accent-warm);
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+  }
+
+  .detail-hero {
+    text-align: center;
+    padding: 20px 24px 32px;
+  }
+
+  .detail-emoji { font-size: 48px; margin-bottom: 16px; }
+
+  .detail-hero h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+
+  .detail-big-number {
+    font-size: 72px;
+    font-weight: 200;
+    letter-spacing: -3px;
+    line-height: 1;
+    margin-bottom: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .detail-big-unit {
+    font-size: 16px;
+    color: var(--text-secondary);
+  }
+
+  .detail-insight {
+    margin: 0 20px 24px;
+    padding: 20px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    text-align: center;
+  }
+
+  .detail-insight p {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .detail-insight em {
+    font-style: normal;
+    color: var(--accent-warm);
+    font-weight: 500;
+  }
+
+  .detail-stats {
+    margin: 0 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .detail-stat {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 18px;
+    text-align: center;
+  }
+
+  .detail-stat .ds-value {
+    font-size: 26px;
+    font-weight: 300;
+    margin-bottom: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .detail-stat .ds-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  /* ============ LOCK SCREEN PREVIEW ============ */
+  .lockscreen-preview {
+    padding: 0 0 100px;
+    min-height: 100vh;
+    background: linear-gradient(180deg, #0D1117 0%, #161B22 50%, #0D1117 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .ls-back {
+    align-self: flex-start;
+    padding: 60px 20px 12px;
+    font-size: 16px;
+    color: var(--accent-warm);
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+  }
+
+  .ls-time {
+    font-size: 72px;
+    font-weight: 700;
+    letter-spacing: -2px;
+    margin-top: 40px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ls-date {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    margin-bottom: 40px;
+  }
+
+  .ls-widgets {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: calc(100% - 80px);
+  }
+
+  .ls-widget {
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .ls-widget .lsw-icon { font-size: 20px; flex-shrink: 0; }
+  .ls-widget em { font-style: normal; color: var(--accent-warm); font-weight: 500; }
+
+  /* Subtle animation */
+  @keyframes breathe {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+  .breathe { animation: breathe 4s ease-in-out infinite; }
+
+  /* Scroll hint */
+  .scroll-hint {
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+
+  <!-- ====== SCREEN 1: ONBOARDING ====== -->
+  <div class="screen active" id="screen-onboard-1">
+    <div class="onboarding">
+      <div class="step-dots">
+        <div class="step-dot active"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+      </div>
+      <div class="onboarding-icon">⏳</div>
+      <h1>时间银行</h1>
+      <p class="subtitle">看见你的时间，感受每一刻。<br>只需要 30 秒，告诉我们一点关于你的事。</p>
+
+      <div class="form-group">
+        <label>你的出生日期</label>
+        <input type="date" class="form-input" id="input-birthday" value="1990-06-15">
+      </div>
+
+      <div class="form-group">
+        <label>性别</label>
+        <select class="form-input" id="input-gender">
+          <option value="male">男</option>
+          <option value="female">女</option>
+        </select>
+      </div>
+
+      <button class="btn-primary" onclick="goToStep2()">继续</button>
+    </div>
+  </div>
+
+  <!-- ====== SCREEN 2: FAMILY INFO ====== -->
+  <div class="screen" id="screen-onboard-2">
+    <div class="onboarding">
+      <div class="step-dots">
+        <div class="step-dot"></div>
+        <div class="step-dot active"></div>
+        <div class="step-dot"></div>
+      </div>
+      <div class="onboarding-icon">👨‍👩‍👧</div>
+      <h1>你的家人</h1>
+      <p class="subtitle">我们会计算你和家人的珍贵时间</p>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>父亲出生年份</label>
+          <input type="number" class="form-input" id="input-father" value="1962" placeholder="1962">
+        </div>
+        <div class="form-group">
+          <label>母亲出生年份</label>
+          <input type="number" class="form-input" id="input-mother" value="1965" placeholder="1965">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>每年见父母大约几次</label>
+        <select class="form-input" id="input-visit">
+          <option value="4">每季度一次（4次/年）</option>
+          <option value="6">差不多每两月一次（6次/年）</option>
+          <option value="12" selected>大约每月一次（12次/年）</option>
+          <option value="24">差不多每两周（24次/年）</option>
+          <option value="52">每周都见</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>最小的孩子年龄</label>
+          <input type="number" class="form-input" id="input-child" value="3" placeholder="没有填 0">
+        </div>
+        <div class="form-group">
+          <label>伴侣年龄</label>
+          <input type="number" class="form-input" id="input-partner" value="33" placeholder="没有填 0">
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="goToStep3()">继续</button>
+    </div>
+  </div>
+
+  <!-- ====== SCREEN 3: READY ====== -->
+  <div class="screen" id="screen-onboard-3">
+    <div class="onboarding">
+      <div class="step-dots">
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot active"></div>
+      </div>
+      <div class="onboarding-icon breathe">✨</div>
+      <h1>一切就绪</h1>
+      <p class="subtitle">我们已经为你算好了所有时间。<br>准备好看见你的人生了吗？</p>
+
+      <div style="width:100%; text-align:left; margin-bottom:24px;">
+        <div style="background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:20px;">
+          <div style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">为你计算了</div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <span style="background:rgba(232,196,124,0.1); color:var(--accent-warm); padding:6px 12px; border-radius:8px; font-size:13px;">可支配时间</span>
+            <span style="background:rgba(212,132,124,0.1); color:var(--accent-rose); padding:6px 12px; border-radius:8px; font-size:13px;">陪父母</span>
+            <span style="background:rgba(124,184,158,0.1); color:var(--accent-sage); padding:6px 12px; border-radius:8px; font-size:13px;">陪孩子</span>
+            <span style="background:rgba(124,172,212,0.1); color:var(--accent-sky); padding:6px 12px; border-radius:8px; font-size:13px;">运动</span>
+            <span style="background:rgba(160,136,196,0.1); color:var(--accent-lavender); padding:6px 12px; border-radius:8px; font-size:13px;">日常时刻</span>
+            <span style="background:rgba(212,160,124,0.1); color:var(--accent-peach); padding:6px 12px; border-radius:8px; font-size:13px;">陪伴侣</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="enterHome()">开始感受 →</button>
+    </div>
+  </div>
+
+  <!-- ====== HOME SCREEN ====== -->
+  <div class="screen" id="screen-home">
+    <div class="home">
+      <div class="status-bar">
+        <span class="time" id="status-time">9:41</span>
+        <span class="icons">●●●● 📶 🔋</span>
+      </div>
+
+      <div class="home-header">
+        <div class="greeting" id="greeting-text">早上好</div>
+        <h1>你的时间</h1>
+      </div>
+
+      <!-- Hero Card -->
+      <div class="hero-card">
+        <div class="hero-label">你的可支配时间</div>
+        <div class="hero-number" id="hero-hours">--</div>
+        <div class="hero-unit">小时</div>
+        <div class="hero-sub" id="hero-sub">扣除睡眠和基本生活后，<br>你大约还有 <em id="hero-years">--</em> 年的清醒时间</div>
+      </div>
+
+      <!-- Life Dimensions -->
+      <div class="section-title">人生维度</div>
+      <div class="time-cards" id="time-cards">
+        <!-- Filled by JS -->
+      </div>
+
+      <!-- Daily Moments -->
+      <div class="section-title">今日此刻</div>
+      <div class="moments-scroll" id="moments-scroll">
+        <!-- Filled by JS -->
+      </div>
+
+      <!-- Widget Preview -->
+      <div class="section-title">锁屏 Widget 预览</div>
+      <div class="widget-section">
+        <div class="widget-preview">
+          <div class="widget-label">你的锁屏看起来会像这样</div>
+          <div class="widget-lockscreen" id="widget-content">
+            <span class="w-icon">🌅</span>
+            <span class="w-text">这是你的第 <em id="w-sunrise">--</em> 个早晨<br>感受一下阳光</span>
+          </div>
+          <div class="widget-tabs">
+            <button class="widget-tab active" onclick="switchWidget(0, this)">早晨</button>
+            <button class="widget-tab" onclick="switchWidget(1, this)">家人</button>
+            <button class="widget-tab" onclick="switchWidget(2, this)">运动</button>
+            <button class="widget-tab" onclick="switchWidget(3, this)">日常</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="scroll-hint">
+        <span onclick="showLockscreen()" style="cursor:pointer; text-decoration:underline; color:var(--accent-warm);">预览完整锁屏效果 →</span>
+      </div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <button class="tab-item active">
+        <span class="tab-icon">⏳</span>
+        <span class="tab-label">时间</span>
+      </button>
+      <button class="tab-item" onclick="showLockscreen()">
+        <span class="tab-icon">📱</span>
+        <span class="tab-label">Widget</span>
+      </button>
+      <button class="tab-item">
+        <span class="tab-icon">⚙️</span>
+        <span class="tab-label">设置</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ====== DETAIL SCREEN ====== -->
+  <div class="screen" id="screen-detail">
+    <div class="detail">
+      <button class="detail-back" onclick="backToHome()">← 返回</button>
+      <div class="detail-hero">
+        <div class="detail-emoji" id="detail-emoji">👨‍👩‍👧</div>
+        <h2 id="detail-title">--</h2>
+        <div class="detail-big-number" id="detail-number" style="color: var(--accent-rose);">--</div>
+        <div class="detail-big-unit" id="detail-unit">--</div>
+      </div>
+      <div class="detail-insight" id="detail-insight">
+        <p>--</p>
+      </div>
+      <div class="detail-stats" id="detail-stats">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-item" onclick="backToHome()">
+        <span class="tab-icon">⏳</span>
+        <span class="tab-label">时间</span>
+      </button>
+      <button class="tab-item" onclick="showLockscreen()">
+        <span class="tab-icon">📱</span>
+        <span class="tab-label">Widget</span>
+      </button>
+      <button class="tab-item">
+        <span class="tab-icon">⚙️</span>
+        <span class="tab-label">设置</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ====== LOCKSCREEN PREVIEW ====== -->
+  <div class="screen" id="screen-lockscreen">
+    <div class="lockscreen-preview">
+      <button class="ls-back" onclick="backToHome()">← 返回</button>
+      <div class="ls-time" id="ls-clock">9:41</div>
+      <div class="ls-date" id="ls-date">4月1日 星期二</div>
+      <div class="ls-widgets" id="ls-widgets">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-item" onclick="backToHome()">
+        <span class="tab-icon">⏳</span>
+        <span class="tab-label">时间</span>
+      </button>
+      <button class="tab-item active">
+        <span class="tab-icon">📱</span>
+        <span class="tab-label">Widget</span>
+      </button>
+      <button class="tab-item">
+        <span class="tab-icon">⚙️</span>
+        <span class="tab-label">设置</span>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============ DATA & CALCULATIONS ============
+
+let userData = {};
+
+function calcAge(birthday) {
+  const today = new Date();
+  const birth = new Date(birthday);
+  return (today - birth) / (365.25 * 24 * 3600 * 1000);
+}
+
+function calcDaysSinceBirth(birthday) {
+  const today = new Date();
+  const birth = new Date(birthday);
+  return Math.floor((today - birth) / (24 * 3600 * 1000));
+}
+
+function lifeExpectancy(gender) {
+  return gender === 'female' ? 84 : 78;
+}
+
+function calculate() {
+  const bday = document.getElementById('input-birthday').value;
+  const gender = document.getElementById('input-gender').value;
+  const fatherYear = parseInt(document.getElementById('input-father').value) || 0;
+  const motherYear = parseInt(document.getElementById('input-mother').value) || 0;
+  const visitPerYear = parseInt(document.getElementById('input-visit').value) || 12;
+  const childAge = parseInt(document.getElementById('input-child').value) || 0;
+  const partnerAge = parseInt(document.getElementById('input-partner').value) || 0;
+
+  const age = calcAge(bday);
+  const days = calcDaysSinceBirth(bday);
+  const expectancy = lifeExpectancy(gender);
+  const remainYears = Math.max(0, expectancy - age);
+
+  // Waking hours: ~16h/day, minus 2h daily essentials
+  const freeHoursPerDay = 14;
+  const totalFreeHours = Math.round(remainYears * 365.25 * freeHoursPerDay);
+
+  // Parent time
+  const fatherAge = fatherYear ? (new Date().getFullYear() - fatherYear) : 0;
+  const motherAge = motherYear ? (new Date().getFullYear() - motherYear) : 0;
+  const parentExpectancy = 82;
+  const fatherRemainYears = Math.max(0, parentExpectancy - fatherAge);
+  const motherRemainYears = Math.max(0, parentExpectancy - motherAge);
+  const parentRemainYears = Math.max(fatherRemainYears, motherRemainYears);
+  const parentVisitsRemain = Math.round(parentRemainYears * visitPerYear);
+  const hoursPerVisit = 6;
+  const parentHoursRemain = parentVisitsRemain * hoursPerVisit;
+
+  // Child time (quality time decreases after 18)
+  const childRemainYears = childAge > 0 ? Math.max(0, 18 - childAge) : 0;
+  const childHoursPerWeek = childAge <= 5 ? 30 : childAge <= 12 ? 20 : 10;
+  const childTotalHours = childAge > 0 ? Math.round(childRemainYears * 52 * childHoursPerWeek) : 0;
+
+  // Exercise
+  let exerciseHoursPerWeek;
+  if (age < 50) exerciseHoursPerWeek = 5;
+  else if (age < 80) exerciseHoursPerWeek = 3;
+  else exerciseHoursPerWeek = 1;
+  const exerciseTotalHours = Math.round(remainYears * 52 * exerciseHoursPerWeek);
+
+  // Partner
+  const partnerHoursPerDay = partnerAge > 0 ? 4 : 0;
+  const partnerTotalHours = partnerAge > 0 ? Math.round(remainYears * 365.25 * partnerHoursPerDay) : 0;
+
+  // Daily moments
+  const showersRemain = Math.round(remainYears * 365.25);
+  const mealsRemain = Math.round(remainYears * 365.25 * 3);
+  const sunsetsRemain = Math.round(remainYears * 365.25);
+  const morningsLived = days;
+
+  // "Nth time" counts
+  const showersDone = days;
+  const mealsDone = days * 3;
+
+  userData = {
+    age: Math.floor(age), days, expectancy, remainYears,
+    totalFreeHours,
+    parentVisitsRemain, parentHoursRemain, parentRemainYears: Math.round(parentRemainYears),
+    fatherAge, motherAge,
+    childAge, childRemainYears: Math.round(childRemainYears), childTotalHours, childHoursPerWeek,
+    exerciseTotalHours, exerciseHoursPerWeek,
+    partnerAge, partnerTotalHours,
+    showersRemain, showersDone,
+    mealsRemain, mealsDone,
+    sunsetsRemain, morningsLived,
+    visitPerYear
+  };
+}
+
+// ============ NAVIGATION ============
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function goToStep2() { showScreen('screen-onboard-2'); }
+function goToStep3() {
+  calculate();
+  showScreen('screen-onboard-3');
+}
+function backToHome() { showScreen('screen-home'); }
+
+function enterHome() {
+  renderHome();
+  showScreen('screen-home');
+}
+
+function showLockscreen() {
+  renderLockscreen();
+  showScreen('screen-lockscreen');
+}
+
+// ============ RENDER HOME ============
+
+function renderHome() {
+  const d = userData;
+
+  // Update time
+  const now = new Date();
+  document.getElementById('status-time').textContent =
+    now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+
+  // Greeting
+  const hour = now.getHours();
+  const g = hour < 12 ? '早上好' : hour < 18 ? '下午好' : '晚上好';
+  document.getElementById('greeting-text').textContent = g;
+
+  // Hero
+  document.getElementById('hero-hours').textContent = d.totalFreeHours.toLocaleString();
+  document.getElementById('hero-years').textContent = Math.round(d.remainYears);
+
+  // Sunrise
+  document.getElementById('w-sunrise').textContent = d.morningsLived.toLocaleString();
+
+  // Time cards
+  const cards = [
+    {
+      id: 'parent', theme: 'rose', icon: '👨‍👩‍👧', label: '陪父母',
+      desc: `每年见 ${d.visitPerYear} 次 · 每次约 6 小时`,
+      number: d.parentVisitsRemain.toLocaleString(), unit: '次见面',
+      pct: Math.min(100, ((82 - Math.max(d.fatherAge, d.motherAge)) / 82) * 100)
+    },
+    {
+      id: 'child', theme: 'sage', icon: '👶', label: '陪孩子成长',
+      desc: d.childAge > 0 ? `孩子 ${d.childAge} 岁 · TA 18 岁前还有 ${d.childRemainYears} 年` : '未设置',
+      number: d.childTotalHours > 0 ? d.childTotalHours.toLocaleString() : '--', unit: '小时',
+      pct: d.childAge > 0 ? ((18 - d.childAge) / 18) * 100 : 0
+    },
+    {
+      id: 'exercise', theme: 'sky', icon: '🏃', label: '运动',
+      desc: `当前建议每周 ${d.exerciseHoursPerWeek} 小时`,
+      number: d.exerciseTotalHours.toLocaleString(), unit: '小时',
+      pct: (d.remainYears / d.expectancy) * 100
+    },
+    {
+      id: 'partner', theme: 'peach', icon: '💑', label: '和伴侣共处',
+      desc: d.partnerAge > 0 ? '每天约 4 小时的共处时光' : '未设置',
+      number: d.partnerTotalHours > 0 ? d.partnerTotalHours.toLocaleString() : '--', unit: '小时',
+      pct: d.partnerAge > 0 ? (d.remainYears / d.expectancy) * 100 : 0
+    }
+  ];
+
+  const cardsHTML = cards.map(c => `
+    <div class="time-card theme-${c.theme}" onclick="showDetail('${c.id}')">
+      <div class="time-card-top">
+        <div>
+          <div class="time-card-icon">${c.icon}</div>
+        </div>
+        <div class="time-card-value">
+          <div class="number">${c.number}</div>
+          <div class="unit">${c.unit}</div>
+        </div>
+      </div>
+      <div class="time-card-label">${c.label}</div>
+      <div class="time-card-desc">${c.desc}</div>
+      <div class="progress-bar"><div class="fill" style="width:${c.pct}%"></div></div>
+    </div>
+  `).join('');
+  document.getElementById('time-cards').innerHTML = cardsHTML;
+
+  // Moments
+  const moments = [
+    { emoji: '🚿', nth: d.showersDone.toLocaleString(), label: '第 N 次洗澡\n享受热水的温度' },
+    { emoji: '🍜', nth: d.mealsDone.toLocaleString(), label: '第 N 顿饭\n好好尝尝味道' },
+    { emoji: '🌅', nth: d.morningsLived.toLocaleString(), label: '第 N 个早晨\n感受一下阳光' },
+    { emoji: '🌙', nth: d.sunsetsRemain.toLocaleString(), label: '还能看到的日落\n上次认真看是何时' },
+    { emoji: '🚶', nth: Math.round(d.remainYears * 365.25).toLocaleString(), label: '还能散的步\n走慢一点也好' },
+  ];
+
+  document.getElementById('moments-scroll').innerHTML = moments.map(m => `
+    <div class="moment-card">
+      <div class="moment-emoji">${m.emoji}</div>
+      <div class="moment-nth">${m.nth}</div>
+      <div class="moment-label">${m.label.replace('\n', '<br>')}</div>
+    </div>
+  `).join('');
+}
+
+// ============ WIDGET SWITCHER ============
+
+const widgetContents = [
+  { icon: '🌅', text: () => `这是你的第 <em>${userData.morningsLived.toLocaleString()}</em> 个早晨<br>感受一下阳光` },
+  { icon: '👨‍👩‍👧', text: () => `和爸妈大约还有 <em>${userData.parentVisitsRemain.toLocaleString()}</em> 次见面<br>这周末要不要回去看看` },
+  { icon: '🏃', text: () => `你一生还能运动约 <em>${userData.exerciseTotalHours.toLocaleString()}</em> 小时<br>今天动一动吧` },
+  { icon: '🚿', text: () => `这是你的第 <em>${userData.showersDone.toLocaleString()}</em> 次洗澡<br>放下手机，感受热水` },
+];
+
+function switchWidget(idx, btn) {
+  document.querySelectorAll('.widget-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const w = widgetContents[idx];
+  document.querySelector('#widget-content .w-icon').textContent = w.icon;
+  document.querySelector('#widget-content .w-text').innerHTML = w.text();
+}
+
+// ============ DETAIL SCREEN ============
+
+const detailData = {
+  parent: () => ({
+    emoji: '👨‍👩‍👧', title: '陪父母的时间', color: 'var(--accent-rose)',
+    number: userData.parentVisitsRemain, unit: '次见面',
+    insight: `按每年见 <em>${userData.visitPerYear}</em> 次算，和爸妈大约还有 <em>${userData.parentVisitsRemain}</em> 次见面。每次见面大约 6 小时，总共约 <em>${userData.parentHoursRemain.toLocaleString()}</em> 小时。`,
+    stats: [
+      { value: userData.fatherAge, label: '父亲现在年龄' },
+      { value: userData.motherAge, label: '母亲现在年龄' },
+      { value: userData.parentHoursRemain.toLocaleString(), label: '剩余小时数' },
+      { value: userData.visitPerYear, label: '每年见面次数' },
+    ]
+  }),
+  child: () => ({
+    emoji: '👶', title: '陪孩子成长', color: 'var(--accent-sage)',
+    number: userData.childTotalHours, unit: '小时',
+    insight: `孩子现在 <em>${userData.childAge}</em> 岁，到 18 岁还有 <em>${userData.childRemainYears}</em> 年。现阶段每周约 <em>${userData.childHoursPerWeek}</em> 小时的陪伴时间。这些时间过去了就不会回来。`,
+    stats: [
+      { value: userData.childAge, label: '孩子现在年龄' },
+      { value: userData.childRemainYears, label: '成年前还有几年' },
+      { value: userData.childHoursPerWeek + 'h', label: '每周陪伴时间' },
+      { value: Math.round(userData.childTotalHours / 52) + 'h', label: '平均每周（均摊）' },
+    ]
+  }),
+  exercise: () => ({
+    emoji: '🏃', title: '运动时间', color: 'var(--accent-sky)',
+    number: userData.exerciseTotalHours, unit: '小时',
+    insight: `你现在 <em>${userData.age}</em> 岁，建议每周运动 <em>${userData.exerciseHoursPerWeek}</em> 小时。随着年龄增长，适合的运动强度会逐渐降低——现在的每一次运动都格外珍贵。`,
+    stats: [
+      { value: userData.exerciseHoursPerWeek + 'h', label: '每周建议' },
+      { value: Math.round(userData.exerciseTotalHours / 52) + 'h', label: '平均每周（余生）' },
+      { value: Math.round(userData.remainYears), label: '可运动的年数' },
+      { value: userData.age, label: '当前年龄' },
+    ]
+  }),
+  partner: () => ({
+    emoji: '💑', title: '和伴侣共处', color: 'var(--accent-peach)',
+    number: userData.partnerTotalHours, unit: '小时',
+    insight: `假设每天有 <em>4</em> 小时真正在一起的时间（不是各自看手机），你们大约还有 <em>${userData.partnerTotalHours.toLocaleString()}</em> 小时的共处时光。`,
+    stats: [
+      { value: userData.partnerAge, label: '伴侣年龄' },
+      { value: '4h', label: '每日共处时间' },
+      { value: Math.round(userData.partnerTotalHours / 365), label: '天数' },
+      { value: Math.round(userData.remainYears), label: '预计年数' },
+    ]
+  })
+};
+
+function showDetail(key) {
+  const d = detailData[key]();
+  document.getElementById('detail-emoji').textContent = d.emoji;
+  document.getElementById('detail-title').textContent = d.title;
+  document.getElementById('detail-number').textContent = d.number.toLocaleString();
+  document.getElementById('detail-number').style.color = d.color;
+  document.getElementById('detail-unit').textContent = d.unit;
+  document.getElementById('detail-insight').innerHTML = `<p>${d.insight}</p>`;
+  document.getElementById('detail-stats').innerHTML = d.stats.map(s => `
+    <div class="detail-stat">
+      <div class="ds-value" style="color:${d.color}">${s.value}</div>
+      <div class="ds-label">${s.label}</div>
+    </div>
+  `).join('');
+  showScreen('screen-detail');
+}
+
+// ============ LOCKSCREEN ============
+
+function renderLockscreen() {
+  const now = new Date();
+  document.getElementById('ls-clock').textContent =
+    now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+
+  const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const weekdays = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+  document.getElementById('ls-date').textContent =
+    `${months[now.getMonth()]}${now.getDate()}日 ${weekdays[now.getDay()]}`;
+
+  const widgets = [
+    { icon: '🌅', text: `这是你的第 <em>${userData.morningsLived.toLocaleString()}</em> 个早晨` },
+    { icon: '👨‍👩‍👧', text: `和爸妈还有约 <em>${userData.parentVisitsRemain}</em> 次见面` },
+    { icon: '🚿', text: `第 <em>${userData.showersDone.toLocaleString()}</em> 次洗澡，享受热水` },
+  ];
+
+  document.getElementById('ls-widgets').innerHTML = widgets.map(w => `
+    <div class="ls-widget">
+      <span class="lsw-icon">${w.icon}</span>
+      <span>${w.text}</span>
+    </div>
+  `).join('');
+}
+
+// Update clock every minute
+setInterval(() => {
+  const now = new Date();
+  const t = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  const el = document.getElementById('status-time');
+  if (el) el.textContent = t;
+  const lc = document.getElementById('ls-clock');
+  if (lc) lc.textContent = t;
+}, 30000);
+</script>
+
+</body>
+</html>
