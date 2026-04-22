@@ -2,12 +2,13 @@
 
 > Version: 1.3 | Date: 2026-04-22 | Author: Adamchen
 >
-> **V1.3 主要变更（依据 ChatGPT 2026-04-22 review 定稿）：**
+> **V1.3 主要变更（依据 ChatGPT 2026-04-22 review 定稿 + Adam 2026-04-22 设计方向决策）：**
 > - **V1 scope 明确收窄**（配合 12 周 timeline + 初学者工程可行性）
+> - **V1 改为 Light Mode Only**（Dark Mode 推迟到 V1.1）
 > - 新增 §7.6 Authoritative Schema Appendix（工程唯一 schema 源）
 > - 新增 §21 Formatter Matrix（单位显示规则）
 > - Memorial mode 从"父母特判"升级为"任何关系维度通用能力"，升 P0
-> - 账户 Tab 升 P0；"今日此刻"、自定义维度 CRUD、分享卡、视频拍摄、保存到相册、桌面 Widget、StandBy、Light Mode、多格式导出、从 ZIP 恢复——全部推迟到 V1.1+
+> - 账户 Tab 升 P0；"今日此刻"、自定义维度 CRUD、分享卡、视频拍摄、保存到相册、桌面 Widget、StandBy、**Dark Mode**、多格式导出、从 ZIP 恢复——全部推迟到 V1.1+
 > - CloudKit 同步拆两阶段（metadata → media）
 > - 通知默认文案改为中性，关系型提醒改为 opt-in
 >
@@ -61,7 +62,7 @@ Memorial mode       · 任何关系维度可进入（纪念模式，只保留存
 Widget              · 1 个锁屏 Widget family（小号）+ 基础维度偏好
 通知                 · 每天最多 1 次（默认中性文案，关系型提醒为 opt-in）
 导出                 · Raw ZIP（原媒体 + JSON + README，一种格式）
-外观                 · Dark Mode Only
+外观                 · Light Mode Only（设计方向见 `设计提示词-浅色5风格.md`）
 本地存储             · SwiftData + FileManager 沙盒
 ```
 
@@ -72,7 +73,7 @@ V1.1（上线后第 1 迭代）
   · 今日此刻模块（第 N 次洗澡等）
   · 桌面 Widget（中 / 大号）
   · 自定义维度 CRUD
-  · Light Mode
+  · Dark Mode（跟随系统 + 独立切换）
   · 分享卡生成
   · 从 ZIP 恢复数据
 
@@ -96,7 +97,7 @@ V2+
 1. **拍视频 / 保存到相册**：砍掉能保住"不碰系统相册、不加麦克风权限"的硬承诺。这是 V1 隐私营销主张的核心。
 2. **今日此刻 / 自定义维度 CRUD**：V1 先验证"关系维度 + 双数字"主命题是否成立；这两个是独立小产品，可以后补。
 3. **分享卡**：冷启动传播可以靠用户截图"双数字卡片"本身完成，不必在产品里专门做"分享卡生成"。增长文档相应调整（见 `增长与上线.md`）。
-4. **桌面 Widget / StandBy / Light Mode**：每一个都是工程坑。Swift 初学者 12 周只能保 1 个锁屏 Widget + Dark 做好。
+4. **桌面 Widget / StandBy / Dark Mode**：每一个都是工程坑。Swift 初学者 12 周只能保 1 个锁屏 Widget + Light Mode 做好。Dark Mode V1.1 补时可以用同一套 design token 的深色变体快速出。
 5. **多格式导出 / 从 ZIP 恢复**：V1 导出只保证"用户数据可带走"（信任锚），V1 明说"导出是归档，不是可直接重建的库"。
 
 ---
@@ -367,7 +368,7 @@ As a 用户, I want to 导出我所有存入的时刻, so that 我不会担心 A
 | P0-14 | 每日温暖通知（opt-in） | 默认中性文案；**关系型提醒（"你上次见爸妈是 X 天前"）默认关闭**，用户主动在设置里 opt-in 并可随时关闭 |
 | P0-15 | 本地数据存储 | SwiftData + FileManager 沙盒；无联网、无账号 |
 | P0-16 | 数据导出 | 单一格式：Raw ZIP（原图/原视频 + JSON 索引 + 人类可读 README）。**V1 不做 Markdown 导出、转码导出、从 ZIP 恢复**|
-| P0-17 | Dark Mode 完整适配 | Release Criteria 只验收 Dark，不含 Light |
+| P0-17 | Light Mode 完整适配 | Release Criteria 只验收 Light，不含 Dark；设计方向见 `设计提示词-浅色5风格.md` |
 | P0-18 | 孤儿文件清理 | App 启动时自动扫描并清理沙盒中"无 SwiftData 记录"的媒体文件夹 |
 | P0-19 | 无障碍基线 | VoiceOver 标签齐全；44pt 触控；Dynamic Type 到 `.accessibility1` |
 | P0-20 | Privacy Manifest + 最小权限 | 仅需 PhotosPicker（免权限）；不索相册写入权限、不索麦克风权限、不索相机权限（V1） |
@@ -380,7 +381,7 @@ As a 用户, I want to 导出我所有存入的时刻, so that 我不会担心 A
 | P1-2 | 自定义维度 CRUD | 用户新增/编辑/排序/删除自定义维度，最多 10 个 |
 | P1-3 | 桌面 Widget（中号 + 大号） | Home Screen Widget 多维度 grid |
 | P1-4 | 分享卡生成 | 1080×1920 图片，**仅走系统分享表**，V1.1 不加相册写入权限 |
-| P1-5 | Light Mode | 全应用 Light 适配 + 设计 token |
+| P1-5 | Dark Mode | 全应用 Dark 适配 + 设计 token 的深色变体 |
 | P1-6 | 从 ZIP 恢复数据 | 设置页导入 ZIP 重建时间银行 |
 | P1-7 | 叙事模式切换 | "第 N 次" ↔ "剩余 N 次"全局切换 |
 | P1-8 | 创造维度子分类 | 编程 / 写作 / 创业等子项 |
@@ -688,8 +689,8 @@ enum MomentStatus: String, Codable {
     var widgetPreferredDimensions: [String]       // Dimension.id 列表
     var widgetTone: WidgetTone                    // warm / minimal / poetic
 
-    // Appearance (V1 只深色，字段预留)
-    var appearance: Appearance                    // systemDark（V1 强制）
+    // Appearance (V1 只浅色，字段预留)
+    var appearance: Appearance                    // systemLight（V1 强制；V1.1 加 systemDark 和 system）
 
     // Privacy
     var hasSeenPrivacyIntro: Bool
@@ -890,7 +891,7 @@ App Sandbox / Documents / TimeBank /
 ### 质量
 - [ ] 连续使用 30 天 + 100+ 时刻 + 500+ 媒体不崩溃（自己日用验证）
 - [ ] 从 iPhone SE（最小屏）到 iPhone 16 Pro Max 布局都不溢出
-- [ ] **Dark Mode 全场景走查**（Light Mode V1 不验收，V1.1 独立发布）
+- [ ] **Light Mode 全场景走查**（Dark Mode V1 不验收，V1.1 独立发布）
 - [ ] Dynamic Type 到 `.accessibility1` 不截断关键内容（≥ accessibility2 允许截断但不崩）
 
 ### 合规

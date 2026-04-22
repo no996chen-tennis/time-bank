@@ -3,7 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>时间银行 · 存储层草图</title>
+<title>【交互草图·深色示意】时间银行 · 存储层</title>
+<!--
+  ⚠️ 重要说明（2026-04-22）
+  本原型是【交互逻辑草图】，使用深色配色**仅为方便快速验证流程**。
+  V1 最终设计方向已锁定为 Light Mode Only（见 PRD V1.3 + 设计提示词-浅色5风格.md）。
+  最终 UI 视觉将由 Claude Design 根据浅色 5 风格提示词生成。
+  本文件的意义是：
+    1. 向 ChatGPT / 工程师展示每屏的信息架构、交互触发点
+    2. 展示"双数字卡片"这一核心视觉符号
+    3. 不代表最终配色、字体、视觉样式
+-->
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
 
@@ -595,9 +605,13 @@
 <body>
 
 <div class="intro">
+  <div style="max-width:720px;margin:0 auto 24px;padding:14px 18px;border:1px solid rgba(232,196,124,0.4);border-radius:12px;background:rgba(232,196,124,0.08);color:#E8C47C;font-size:13px;line-height:1.7;text-align:left;">
+    ⚠️ <strong>本原型仅为交互逻辑草图，配色非最终 UI</strong><br>
+    V1 最终设计方向已锁定为 <strong>Light Mode Only</strong>（2026-04-22 Adam 决策）。此处深色仅为快速验证信息架构与交互流。最终视觉由 Claude Design 按 <code style="background:rgba(255,255,255,0.1);padding:1px 6px;border-radius:4px;">设计提示词-浅色5风格.md</code> 生成。
+  </div>
   <h1>时间银行 · 存储层草图</h1>
   <p>V1.1 新增的"存储层"核心交互流程线框。消耗层（还剩 N 次）不会扣存储层（已存入 N 次），两层同时在卡片底部呈现，形成对照。</p>
-  <span class="tag">V1.1 · 2026-04-19 · 非最终 UI</span>
+  <span class="tag">V1.1 · 2026-04-19 · 交互草图（非最终 UI 视觉）</span>
 </div>
 
 <div class="gallery">
