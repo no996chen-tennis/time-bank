@@ -12,6 +12,13 @@
 > - CloudKit 同步拆两阶段（metadata → media）
 > - 通知默认文案改为中性，关系型提醒改为 opt-in
 >
+> **V1.3.1 补丁（2026-04-22 晚 · Claude Design 首版 review 后）：**
+> - **新增「时间余额」内置顶部维度**（`Dimension.id = "lifespan"`）：主单位用**周**（呼应《四千周》），副文案 "N 年 · N Kh"
+> - 主页顶部卡从"单层已存入"升级为**双层账户卡**：上半「时间余额」+ 下半「已存入」
+> - Tab Bar 从 2 Tab 改为 **3 Tab**（主页 / 账户 / 我），浮动 + 按钮保留在中间
+> - 主页 "管理" 入口删除（V1 不做自定义维度）
+> - 主页内容高度硬约束 ≤ 一屏 852px（见 §22 Homepage Layout Constraint）
+>
 > **V1.2 主要变更：** 单位统一到小时（h）为主、"次/年/瞬间"为副；补充信息架构、Release Criteria、风险登记、空态清单、无障碍、i18n、Push/通知策略、Changelog。
 >
 > **V1.1 主要变更：** 引入"时间存储层"作为产品第二大核心机制。
@@ -372,6 +379,10 @@ As a 用户, I want to 导出我所有存入的时刻, so that 我不会担心 A
 | P0-18 | 孤儿文件清理 | App 启动时自动扫描并清理沙盒中"无 SwiftData 记录"的媒体文件夹 |
 | P0-19 | 无障碍基线 | VoiceOver 标签齐全；44pt 触控；Dynamic Type 到 `.accessibility1` |
 | P0-20 | Privacy Manifest + 最小权限 | 仅需 PhotosPicker（免权限）；不索相册写入权限、不索麦克风权限、不索相机权限（V1） |
+| **P0-21** | **时间余额（lifespan）顶部维度** | **内置 `Dimension.id = "lifespan"` (`kind = systemTop`)；主页顶部双层卡上半展示 `约 N 周` + 副 `N 年 · N Kh`；预期寿命默认 85 可在设置调** |
+| **P0-22** | **主页顶部双层账户卡** | **上半 lifespan「时间余额」+ 下半「已存入」共用一个珊瑚橘渐变卡；中间柔和分隔线；高度 ≤ 240pt** |
+| **P0-23** | **3 Tab 底部导航** | **主页 / 账户 / 我**；中央浮动 + 按钮（新增瞬间）保留；Account Tab 独立而非"我"的子页 |
+| **P0-24** | **主页一屏容纳** | **全部关键内容（双层卡 + 至少 4 张维度卡片完整双数字区）必须在 iPhone 16 Pro 852pt 屏高内第一屏可见，不依赖滚动；详见 §22** |
 
 ### P1 — V1.1（首次迭代，上线 1-2 月内）
 
@@ -411,9 +422,16 @@ As a 用户, I want to 导出我所有存入的时刻, so that 我不会担心 A
 
 ## 7. 时间维度计算逻辑
 
-### 单位统一规则（V1.1 全局约定）
+### 单位统一规则（V1.3.1 全局约定）
 
-**主数字全部用「小时（h）」**——这是时间银行账户的唯一硬通货，消耗层和存储层的对照才能成立。
+**两种时间的区分（2026-04-22 补充）：**
+
+| 类型 | 特点 | 主单位 | 适用维度 | 哲学依据 |
+|------|------|-------|---------|---------|
+| **连续流逝型** | 时间不管你做什么都在流 | **周** | `lifespan` 时间余额 | 《四千周》Oliver Burkeman |
+| **分散累加型** | 具体场景中累积出来的 | **小时 (h)** | 陪父母 / 陪孩子 / 陪伴侣 / 运动 / 创造 / 自由 | 实际体验累加 |
+
+为什么不全改周：陪父母 "3.3 周"（552h ÷ 168h）数学对但直觉怪——用户实际每年见 4 次 × 6h，这不是"3 周"能描述的感受。**顶部时间余额走周（作为哲学 anchor），其他维度走小时（作为具体场景 anchor）**，这种"刻意不一致"是设计选择不是 bug。
 
 **副文案用「次」「年」作人类尺度翻译**——"552 小时"对普通人抽象，"约 92 次见面"立刻可想象。
 
@@ -430,6 +448,14 @@ As a 用户, I want to 导出我所有存入的时刻, so that 我不会担心 A
 ```
 
 ### 内置维度默认值
+
+**时间余额（lifespan · 顶部系统维度 · V1.3.1 新增）：**
+- 输入：用户的生日（已有）、预期寿命（默认 85，可在设置调）
+- 计算：`剩余周数 = (预期寿命 - 当前年龄) × 52.1429`（一年约 52.1429 周）
+- **主显示**：`约 2,704 周` · **副文案**：`45 年 · 473 Kh`
+- **不参与其他维度聚合**（它是总体人生倒计时，不和"陪父母"等分散累加型维度相加）
+- 展示位置：主页顶部双层卡的上半部分（见 §22）
+- 存储层：**没有**（Memorial mode 对 lifespan 无意义，人生整体不标记已故）
 
 **陪父母：**
 - 输入：父母出生年份、每年见面次数
@@ -544,10 +570,11 @@ User (1) ──── (N) Dimension ──── (N) Moment ──── (N) Med
 
 ```
 Dimension.id 保留值：
-  "parents" / "kids" / "partner" / "sport" / "create" / "free"   ← 内置可见维度
-  "daily"            ← 系统隐藏维度（V1.1"今日此刻"使用，V1 预留但不启用）
-  "other"            ← 孤儿瞬间承接维度（当 Moment 归属维度被删时迁入）
-  其余 UUID          ← 用户自定义维度（V1.1+ 启用）
+  "lifespan"                                                      ← 【V1.3.1 新增】顶部系统维度 · 时间余额 · 主页顶部专属
+  "parents" / "kids" / "partner" / "sport" / "create" / "free"    ← 内置可见关系/通用维度
+  "daily"                                                         ← 系统隐藏维度（V1.1"今日此刻"使用，V1 预留但不启用）
+  "other"                                                         ← 孤儿瞬间承接维度（当 Moment 归属维度被删时迁入）
+  其余 UUID                                                       ← 用户自定义维度（V1.1+ 启用）
 ```
 
 ### UserProfile
@@ -557,6 +584,7 @@ Dimension.id 保留值：
     @Attribute(.unique) var id: UUID           // 恒为单例 ID
     var birthday: Date                          // 必填
     var gender: Gender                          // male / female / other / undisclosed
+    var expectedLifespanYears: Int              // V1.3.1 新增 · 默认 85 · 用于 lifespan 维度计算
     var parents: ParentsInfo?                   // null = onboarding 未勾选
     var children: [ChildInfo]                   // [] = 未勾选或没有
     var partner: PartnerInfo?                   // null = 未勾选或单身
@@ -626,7 +654,8 @@ enum Gender: String, Codable {
 }
 
 enum DimensionKind: String, Codable {
-    case builtin           // 6 内置
+    case builtin           // 6 内置关系/通用维度
+    case systemTop         // V1.3.1 · 仅 lifespan 一个 · 顶部专属 · 不进入维度列表/聚合
     case custom            // V1.1+ 用户自建
     case systemHidden      // 系统内部，不展示给用户（如 daily、other）
     case systemVirtual     // 聚合用，无实际持久化（V2+ 预留）
@@ -710,14 +739,20 @@ Dimension.storedMomentCount(d) = COUNT(m for m in Moments where
     m.dimensionId == d.id AND m.status == .normal)
 
 TotalAccount.hours = SUM(d.storedHours for d in Dimensions where
-    d.status != .deleted AND d.kind != .systemHidden)
-TotalAccount.moments = SUM(d.storedMomentCount ...)
+    d.status != .deleted AND d.kind IN (.builtin, .custom))   // ← 只聚合 builtin + custom
+TotalAccount.moments = SUM(d.storedMomentCount ...同条件...)
+
+// lifespan 独立计算（不参与聚合）
+Lifespan.remainingWeeks   = (profile.expectedLifespanYears - age) * 52.1429
+Lifespan.remainingYears   = profile.expectedLifespanYears - age
+Lifespan.remainingHoursK  = Lifespan.remainingYears * 365.25 * 24 / 1000   // "Kh" 单位
 ```
 
 **关键规则：**
 - **`pendingDelete` 状态的 Moment 不参与聚合**（UI 上已删除的立刻消失，不等 5s commit）
 - **`durationSeconds == nil` 的 Moment 对"小时"贡献为 0，但"瞬间数"计 1**
 - `systemHidden` 维度（如 daily）**不计入总账户**，但其内部瞬间可在 V1.1 账户页单独展示
+- **`systemTop` 维度（lifespan）**：**独立展示在主页顶部**，不进入维度列表、不进入 TotalAccount 聚合、无存储层
 
 ### 持久化位置
 
@@ -819,9 +854,12 @@ App Sandbox / Documents / TimeBank /
 │   ├── Step 3 — 完成（教用户"你也可以手动存入有意义的时刻"）
 │   └── 请求通知权限（可跳过）
 │
-├── [主页 Tab]
-│   ├── 顶部：总账户卡片（已存入 X 小时）
-│   ├── 时间维度卡片列表（6 内置，仅展示 visible 的）
+├── [主页 Tab]  · 底部 Tab 左一
+│   ├── 顶部：「你好 Adam」问候 + 右上齿轮→[设置]
+│   ├── 顶部：双层账户卡（V1.3.1 新增，见 §22）
+│   │   ├── 上半：时间余额（lifespan）· 约 N 周 · N 年/N Kh
+│   │   └── 下半：已存入 · N 小时 · N 个瞬间 · 跨 M 个维度
+│   ├── 时间维度卡片列表（6 内置，仅展示 visible 的，禁"管理"入口）
 │   │   └── 点卡片 → [维度详情]
 │   ├── [V1 无"今日此刻"模块，V1.1 补]
 │   └── 浮动按钮「+」→ [新增时刻表单]
@@ -861,7 +899,16 @@ App Sandbox / Documents / TimeBank /
     └── 高级 — 清除缩略图缓存、重置
 ```
 
-**导航模式**：主页 / 账户 / 设置 三个 Tab（简化，避免再多一个），引导完成后默认进入主页。
+**导航模式（V1.3.1 锁定）**：底部 3 Tab + 中央浮动按钮：
+
+```
+  [🏠 主页]    [📊 账户]    [＋]    [👤 我]
+```
+
+- **主页 / 账户 / 我** 三个 Tab（Tab Bar 上的真 Tab 是这 3 个）
+- **中央浮动 +** 是全局"新增瞬间"快捷入口（不是 Tab，是 FAB），位置在两个 Tab 之间偏上
+- **不再有"设置"Tab**——设置入口走「我」Tab 下面
+- 引导完成后默认进入主页
 
 ## 12. Release Criteria（V1 上线门槛）
 
@@ -1024,6 +1071,7 @@ App Sandbox / Documents / TimeBank /
 
 | 版本 | 日期 | 主要变更 |
 |------|------|---------|
+| V1.3.1 | 2026-04-22 晚 | Claude Design 首版 review 后：新增 `lifespan` 顶部维度（周为单位）+ 双层账户卡 + 3 Tab 导航；删除"管理"入口；补 §22 主页 layout 硬约束 |
 | V1.3 | 2026-04-22 | ChatGPT review 定稿：V1 scope 明确收窄（砍今日此刻/自定义维度/分享卡/视频拍摄/保存相册/桌面 Widget/StandBy/Light/多格式导出/恢复），Memorial mode 抽象化升 P0，账户 Tab 升 P0，补 §7.6 Authoritative Schema、§21 Formatter Matrix，CloudKit 拆两阶段 |
 | V1.2 | 2026-04-19 | 单位统一到小时；补充 §0 文档使用说明、§11 IA、§12 Release Criteria、§13 风险登记、§14 空态、§15 通知、§16 隐私、§17 a11y、§18 i18n、§19 商业化 |
 | V1.1 | 2026-04-19 | 引入存储层（图文视频沉淀）、双层模型、数据模型 |
@@ -1080,6 +1128,82 @@ enum Formatter {
 ```
 
 所有 SwiftUI View 必须调用这些方法，不得自己拼 `"\(hours)h"`。
+
+## 22. Homepage Layout Constraint（主页一屏约束）· V1.3.1 新增
+
+### 22.1 视野预算
+
+iPhone 16 Pro 可视区（含 Dynamic Island + Home Indicator 安全区外）**≈ 789pt 可用高度**（852pt 屏高 − 54pt status bar − 9pt home indicator）。
+
+主页必须把"用户第一眼能看到的关键内容"压进这 789pt。允许滚动，但**滚动前用户必须能看见**：
+
+- [x] 顶部 greeting（你好 Adam + 设置图标）
+- [x] 双层账户卡完整（时间余额 + 已存入）
+- [x] 至少 4 张维度卡片的**完整双数字区**（不能只露出色块被截断）
+- [x] 底部 Tab Bar 完整可见
+
+### 22.2 垂直高度预算（参考）
+
+| 区域 | 高度预算 | 说明 |
+|------|---------|------|
+| Status bar | 54pt | 系统 |
+| Greeting 区 | 48-56pt | 下午好 + Adam + ⚙ |
+| 双层账户卡 | **≤ 240pt** | 上半 lifespan 120pt + 分隔线 8pt + 下半 deposited 112pt |
+| "维度 · N 个" 小标题 | 28pt | 不含"管理"字样 |
+| 维度卡片 × 4 | **每张 ≤ 140pt**, gap 12 | 4 张共 596pt；压缩比 V1.3 版低 24pt |
+| Tab Bar | 84pt | 系统 |
+| **合计** | **≤ 1106pt** | 仍超 789pt |
+| 允许滚动显示 | 317pt | 底部 1-2 张维度卡可滚到 |
+
+总和 ≈ 1106pt，超出 317pt——意味着可滚显示底部 2 张维度卡。**这是允许的**，只要滚动前第一屏能看到 **双层卡 + 前 4 张维度卡双数字区完整**。
+
+### 22.3 DimensionCard 的紧凑规格
+
+```
+┌──────────────────────────────────────── 140pt ↑
+│ [插画 40×40]  陪父母                 ›   │ 48pt  · header
+│  (余 76pt)                              │
+│ ┌─────── 还能存入 ┐ ┌─────── 已存入 ───┐ │
+│ │ 552h           │ │ 56h            │ │  · 72pt · dual
+│ │ 约 92 次见面    │ │ 12 个瞬间       │ │
+│ └────────────────┘ └────────────────┘ │
+│ padding 14 + 14 + header + dual + padding │
+└──────────────────────────────────────── ↓
+```
+
+硬约束：
+- 卡片总高 ≤ 140pt
+- header 区 ≤ 48pt（插画 40 + margin 4 上下）
+- dual-numbers 区 ≤ 72pt（标签 14 + 主数字 28 + 副文案 14 + padding 16 内边距）
+- 卡片外 padding 14（左右），内部两小块 gap 10
+
+### 22.4 双层账户卡规格
+
+```
+╭──────────────────────── 240pt ↑
+│ ◌  时间余额                     │
+│                                │ 上半 120pt
+│      约 2,704 周                │
+│     45 年 · 473 Kh              │
+│ ────── opacity 0.25 分隔线 ─── │ 8pt
+│ ♡  已存入            128 小时     │
+│                      27 个瞬间    │ 下半 112pt
+│                      跨 5 个维度   │
+╰──────────────────────── ↓
+```
+
+- 卡片整体珊瑚橘渐变底 `linear-gradient(135deg, #F5C79E 0%, #E89A7C 50%, #D4A07C 100%)`
+- 上半 + 分隔线 + 下半 **是一个卡**，不是两个
+- 分隔线用 `rgba(255, 255, 255, 0.25)` 或 `rgba(45, 37, 32, 0.1)` 柔和
+- 上半 lifespan icon 建议用 ⧗ 或自绘沙漏
+- 下半 deposited icon 建议用 ♡ 或自绘"存入"符号
+
+### 22.5 禁止项
+
+- ❌ 不允许因为容纳不下而省略 dual-numbers 的副文案（"约 92 次见面"、"12 个瞬间"必须完整）
+- ❌ 不允许把 lifespan 放进"维度列表"（它必须是顶部卡，不是第 7 张卡片）
+- ❌ 不允许 "维度 · N 个" 标题右侧有"管理"入口（V1 无自定义维度）
+- ❌ 不允许 Tab Bar 只有 2 Tab（必须是 3 Tab + 中央 FAB）
 
 ---
 
