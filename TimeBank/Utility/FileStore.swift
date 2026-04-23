@@ -2,6 +2,7 @@
 
 import AVFoundation
 import CoreGraphics
+import Dispatch
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
@@ -14,6 +15,7 @@ final class FileStore {
         case cannotPersistThumbnail
         case invalidRelativePath(String)
         case injectedFailure(String)
+        case blockingLoadFailed
 
         var errorDescription: String? {
             switch self {
@@ -29,6 +31,8 @@ final class FileStore {
                 return "非法相对路径：\(path)"
             case .injectedFailure(let message):
                 return message
+            case .blockingLoadFailed:
+                return "异步媒体属性加载失败。"
             }
         }
     }
@@ -226,15 +230,15 @@ final class FileStore {
             try generateThumbnail(from: fileURL, type: item.type, output: thumbURL, maxPixelSize: 200)
             try failureInjector?(item, index, .afterGenerateThumbnail)
 
-            let relativePath = try relativePath(forAbsoluteURL: fileURL)
-            let thumbnailPath = try relativePath(forAbsoluteURL: thumbURL)
+            let savedOriginalPath = try relativePath(forAbsoluteURL: fileURL)
+            let savedThumbnailPath = try relativePath(forAbsoluteURL: thumbURL)
             let durationSeconds = try resolvedDurationSeconds(for: item, fileURL: fileURL)
 
             written.append(
                 WrittenMedia(
                     kind: item.type,
-                    relativePath: relativePath,
-                    thumbnailPath: thumbnailPath,
+                    relativePath: savedOriginalPath,
+                    thumbnailPath: savedThumbnailPath,
                     fileSize: fileSize,
                     durationSeconds: durationSeconds,
                     sortIndex: index
@@ -279,9 +283,9 @@ final class FileStore {
             generator.appliesPreferredTrackTransform = true
             generator.maximumSize = CGSize(width: maxPixelSize, height: maxPixelSize)
 
-            let thumbnail = try generator.copyCGImage(
-                at: CMTime(seconds: 0.1, preferredTimescale: 600),
-                actualTime: nil
+            let thumbnail = try generateVideoThumbnail(
+                generator: generator,
+                requestedTime: CMTime(seconds: 0.1, preferredTimescale: 600)
             )
 
             try persistJPEG(cgImage: thumbnail, to: output)
@@ -376,14 +380,87 @@ final class FileStore {
         if let durationSeconds = media.durationSeconds {
             return durationSeconds
         }
-        return videoDurationSeconds(at: fileURL)
+        return try videoDurationSeconds(at: fileURL)
     }
 
-    private func videoDurationSeconds(at fileURL: URL) -> Int? {
-        let asset = AVURLAsset(url: fileURL)
-        let seconds = CMTimeGetSeconds(asset.duration)
+    private func generateVideoThumbnail(
+        generator: AVAssetImageGenerator,
+        requestedTime: CMTime
+    ) throws -> CGImage {
+        let semaphore = DispatchSemaphore(value: 0)
+        let box = BlockingResultBox<CGImage>()
 
+        generator.generateCGImageAsynchronously(for: requestedTime) { image, _, error in
+            if let error {
+                box.set(.failure(error))
+            } else if let image {
+                box.set(.success(image))
+            } else {
+                box.set(.failure(FileStoreError.thumbnailGenerationFailed))
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+
+        guard let result = box.get() else {
+            throw FileStoreError.blockingLoadFailed
+        }
+
+        return try result.get()
+    }
+
+    private func videoDurationSeconds(at fileURL: URL) throws -> Int? {
+        let duration: CMTime = try blockingLoad { [fileURL] in
+            let options: [String: Any] = [AVURLAssetPreferPreciseDurationAndTimingKey: true]
+            let asset = AVURLAsset(url: fileURL, options: options)
+            return try await asset.load(.duration)
+        }
+
+        let seconds = CMTimeGetSeconds(duration)
         guard seconds.isFinite, seconds > 0 else { return nil }
         return Int(seconds.rounded())
+    }
+
+    private func blockingLoad<Value>(
+        priority: TaskPriority = .userInitiated,
+        _ operation: @escaping @Sendable () async throws -> Value
+    ) throws -> Value {
+        let semaphore = DispatchSemaphore(value: 0)
+        let box = BlockingResultBox<Value>()
+
+        Task.detached(priority: priority) {
+            do {
+                box.set(.success(try await operation()))
+            } catch {
+                box.set(.failure(error))
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+
+        guard let result = box.get() else {
+            throw FileStoreError.blockingLoadFailed
+        }
+
+        return try result.get()
+    }
+}
+
+private final class BlockingResultBox<Value>: @unchecked Sendable {
+    private let lock = NSLock()
+    private var result: Result<Value, Error>?
+
+    func set(_ result: Result<Value, Error>) {
+        lock.lock()
+        self.result = result
+        lock.unlock()
+    }
+
+    func get() -> Result<Value, Error>? {
+        lock.lock()
+        defer { lock.unlock() }
+        return result
     }
 }
