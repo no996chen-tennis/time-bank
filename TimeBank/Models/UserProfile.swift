@@ -151,7 +151,9 @@ final class UserProfile {
     }
 
     static func fetchSingleton(in modelContext: ModelContext) throws -> UserProfile? {
-        try modelContext.fetch(FetchDescriptor<UserProfile>()).first
+        let id = UserProfile.singletonID
+        let descriptor = FetchDescriptor<UserProfile>(predicate: #Predicate { $0.id == id })
+        return try modelContext.fetch(descriptor).first
     }
 
     @discardableResult

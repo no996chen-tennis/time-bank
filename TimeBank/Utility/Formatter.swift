@@ -75,6 +75,43 @@ enum Formatter {
         "\(max(0, n)) 个瞬间"
     }
 
+    // MARK: - 副文案接口（V1.3.2 新增 · 时间账户卡片消耗层副文案）
+
+    /// 每周约 N 小时（kids / sport / create 卡副文案）
+    /// 例：weeklyHours(30) → "每周约 30 小时"
+    static func weeklyHours(_ h: Double) -> String {
+        let rounded = max(0, Int(h.rounded()))
+        return "每周约 \(rounded) 小时"
+    }
+
+    /// 每天约 N 小时<action>（partner 卡副文案）
+    /// 例：dailyHoursWith(4, action: "共处") → "每天约 4 小时共处"
+    /// 例：dailyHoursWith(3.5, action: "共处") → "每天约 3.5 小时共处"
+    static func dailyHoursWith(_ h: Double, action: String) -> String {
+        let value = max(0, h)
+        let rounded = (value * 10).rounded() / 10
+        if rounded == rounded.rounded() {
+            return "每天约 \(Int(rounded)) 小时\(action)"
+        }
+        let formatted = String(format: "%.1f", rounded)
+        return "每天约 \(formatted) 小时\(action)"
+    }
+
+    /// 占清醒时间约 N%（free 卡副文案）
+    /// 例：percentOfAwake(56) → "占清醒时间约 56%"
+    static func percentOfAwake(_ pct: Double) -> String {
+        let clamped = max(0, min(100, Int(pct.rounded())))
+        return "占清醒时间约 \(clamped)%"
+    }
+
+    /// lifespan 顶部卡副文案：N 年 · N Kh
+    /// 例：lifespanSubtitle(years: 45, hoursK: 473) → "45 年 · 473 Kh"
+    static func lifespanSubtitle(years: Double, hoursK: Double) -> String {
+        let y = max(0, Int(years.rounded()))
+        let k = max(0, Int(hoursK.rounded()))
+        return "\(y) 年 · \(k) Kh"
+    }
+
     static func relativeTime(_ date: Date, relativeTo now: Date = .now) -> String {
         let referenceNow = max(now, date)
         let calendar = Calendar(identifier: .gregorian)

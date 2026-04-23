@@ -1305,19 +1305,11 @@ TimeBank-Export-2026-04-19/
 
 **数据变更：** `Settings.notification.*`
 
-## UC-8.3【U】切换主题 `[V1.1+]`
+## UC-8.3【已下线】切换主题
 
-**V1 只有浅色（Light Mode Only）**，设置里无主题切换入口。V1.1 加入 Dark Mode 后才有：
+**产品仅 Light Mode，无 Dark Mode 规划**。设置里无主题切换入口。
 
-```
- 主题
-
- ○ 跟随系统
- ◉ 浅色
- ○ 深色
-```
-
-V1.1 加 Dark Mode 时，Settings.appearance 字段扩展：`systemLight | systemDark | system`。
+奶咖暖色 Light 是产品核心调性的载体，不提供深色版本。`Settings.appearance` 字段固定为 `systemLight`，枚举不提供其他值。
 
 ## UC-8.4【U】开启 iCloud 同步（V1.5）
 

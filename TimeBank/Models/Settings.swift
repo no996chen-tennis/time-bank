@@ -20,10 +20,10 @@ enum WidgetTone: String, Codable, CaseIterable, Sendable {
     case poetic
 }
 
+/// 仅 Light Mode（无 Dark Mode 规划，参考 PRD §0.6 + §7.6）。
+/// 字段保留是为了让 SwiftData schema 稳定，方便未来若产品方向变化能加 case 兼容旧数据。
 enum Appearance: String, Codable, CaseIterable, Sendable {
     case systemLight
-    case systemDark
-    case system
 }
 
 @Model
@@ -70,7 +70,9 @@ final class Settings {
     }
 
     static func fetch(in modelContext: ModelContext) throws -> Settings? {
-        try modelContext.fetch(FetchDescriptor<Settings>()).first
+        let id = Settings.singletonID
+        let descriptor = FetchDescriptor<Settings>(predicate: #Predicate { $0.id == id })
+        return try modelContext.fetch(descriptor).first
     }
 
     @discardableResult

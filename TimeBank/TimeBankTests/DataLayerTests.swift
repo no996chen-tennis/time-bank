@@ -305,7 +305,8 @@ final class DataLayerTests: XCTestCase {
         XCTAssertEqual(totalAccount.dimensionCount, 2)
     }
 
-    func testFormatterMatrixCoversAllSevenInterfaces() {
+    func testFormatterMatrixCoversAllInterfaces() {
+        // 既有 7 接口
         XCTAssertEqual(TimeBank.Formatter.hoursCompact(552), "552h")
         XCTAssertEqual(TimeBank.Formatter.hoursCompact(1_240), "1,240h")
         XCTAssertEqual(TimeBank.Formatter.hoursCompact(18_240), "18.2Kh")
@@ -338,6 +339,28 @@ final class DataLayerTests: XCTestCase {
         XCTAssertEqual(TimeBank.Formatter.absoluteDate(localKnownDate), "2026-03-22")
         XCTAssertEqual(TimeBank.Formatter.absoluteDate(Date(timeIntervalSince1970: 1_700_000_000)).count, 10)
         XCTAssertTrue(TimeBank.Formatter.absoluteDate(now).contains("-"))
+
+        // V1.3.2 新增 4 接口（PRD §21 + §22.3.1）
+        XCTAssertEqual(TimeBank.Formatter.weeklyHours(30), "每周约 30 小时")
+        XCTAssertEqual(TimeBank.Formatter.weeklyHours(5), "每周约 5 小时")
+        XCTAssertEqual(TimeBank.Formatter.weeklyHours(40), "每周约 40 小时")
+        XCTAssertEqual(TimeBank.Formatter.weeklyHours(0), "每周约 0 小时")
+        XCTAssertEqual(TimeBank.Formatter.weeklyHours(29.6), "每周约 30 小时") // round to int
+
+        XCTAssertEqual(TimeBank.Formatter.dailyHoursWith(4, action: "共处"), "每天约 4 小时共处")
+        XCTAssertEqual(TimeBank.Formatter.dailyHoursWith(3.5, action: "共处"), "每天约 3.5 小时共处")
+        XCTAssertEqual(TimeBank.Formatter.dailyHoursWith(2, action: "陪伴"), "每天约 2 小时陪伴")
+        XCTAssertEqual(TimeBank.Formatter.dailyHoursWith(0, action: "共处"), "每天约 0 小时共处")
+
+        XCTAssertEqual(TimeBank.Formatter.percentOfAwake(56), "占清醒时间约 56%")
+        XCTAssertEqual(TimeBank.Formatter.percentOfAwake(0), "占清醒时间约 0%")
+        XCTAssertEqual(TimeBank.Formatter.percentOfAwake(100), "占清醒时间约 100%")
+        XCTAssertEqual(TimeBank.Formatter.percentOfAwake(150), "占清醒时间约 100%") // clamped
+        XCTAssertEqual(TimeBank.Formatter.percentOfAwake(-10), "占清醒时间约 0%") // clamped
+
+        XCTAssertEqual(TimeBank.Formatter.lifespanSubtitle(years: 45, hoursK: 473), "45 年 · 473 Kh")
+        XCTAssertEqual(TimeBank.Formatter.lifespanSubtitle(years: 0, hoursK: 0), "0 年 · 0 Kh")
+        XCTAssertEqual(TimeBank.Formatter.lifespanSubtitle(years: 44.6, hoursK: 472.7), "45 年 · 473 Kh") // round
     }
 
     func testBuiltinComputeFunctionsProduceStableNonNegativeValues() throws {
@@ -447,6 +470,243 @@ final class DataLayerTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(DimensionCompute.consumeHours(for: sport, profile: profile, dimensionsByID: lookup), 0)
         XCTAssertGreaterThanOrEqual(DimensionCompute.consumeHours(for: create, profile: profile, dimensionsByID: lookup), 0)
         XCTAssertGreaterThanOrEqual(DimensionCompute.consumeHours(for: free, profile: profile, dimensionsByID: lookup), 0)
+    }
+
+    // MARK: - V1.3.2 新增测试（Codex review 后补充）
+
+    /// PRD §7.6 保留 ID seed 默认值 invariant：
+    /// - daily.name 必须是 "__daily" 占位（V1 不暴露 V1.1+ 功能名）
+    /// - 关系型（parents/kids/partner）seed 默认 .hidden（等 Onboarding 勾选后转 visible）
+    /// - 通用型（sport/create/free）seed 默认 .visible（人人都适用）
+    /// - lifespan 默认 .visible 且 kind = .systemTop
+    func testReservedDimensionSeedInvariants() throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        try TimeBank.Dimension.seedReservedDimensionsIfNeeded(in: env.context)
+
+        let daily = try XCTUnwrap(TimeBank.Dimension.fetch(by: DimensionReservedID.daily.rawValue, in: env.context))
+        XCTAssertEqual(daily.name, "__daily", "daily 占位名必须是 __daily（V1 不能暴露 V1.1 功能名 '今日此刻'）")
+        XCTAssertEqual(daily.kind, .systemHidden)
+        XCTAssertEqual(daily.status, .hidden)
+
+        for relationalId in [DimensionReservedID.parents, .kids, .partner] {
+            let dim = try XCTUnwrap(TimeBank.Dimension.fetch(by: relationalId.rawValue, in: env.context))
+            XCTAssertEqual(dim.kind, .builtin)
+            XCTAssertEqual(dim.status, .hidden, "关系型 \(relationalId.rawValue) seed 默认必须 .hidden")
+        }
+
+        for genericId in [DimensionReservedID.sport, .create, .free] {
+            let dim = try XCTUnwrap(TimeBank.Dimension.fetch(by: genericId.rawValue, in: env.context))
+            XCTAssertEqual(dim.kind, .builtin)
+            XCTAssertEqual(dim.status, .visible, "通用型 \(genericId.rawValue) seed 默认必须 .visible")
+        }
+
+        let lifespan = try XCTUnwrap(TimeBank.Dimension.fetch(by: DimensionReservedID.lifespan.rawValue, in: env.context))
+        XCTAssertEqual(lifespan.kind, .systemTop)
+        XCTAssertEqual(lifespan.status, .visible)
+        XCTAssertEqual(lifespan.name, "时间余额")
+
+        let other = try XCTUnwrap(TimeBank.Dimension.fetch(by: DimensionReservedID.other.rawValue, in: env.context))
+        XCTAssertEqual(other.kind, .systemHidden)
+        XCTAssertEqual(other.status, .hidden)
+    }
+
+    /// MomentStore.save 必须拒绝绑到无存储层的系统账户（lifespan / daily / other）。
+    /// 依据：PRD §7.6 "systemTop / systemHidden 无存储层" + V1.3.2 Codex review 加固。
+    func testSaveRejectsSystemDimensionIds() async throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        let store = env.makeMomentStore()
+        _ = try store.bootstrapReservedData()
+
+        for forbiddenId in [DimensionReservedID.lifespan, .daily, .other] {
+            let request = MomentStore.SaveRequest(
+                dimensionId: forbiddenId.rawValue,
+                durationSeconds: 3600,
+                media: []
+            )
+
+            do {
+                _ = try await store.save(moment: request)
+                XCTFail("save 应该拒绝 dimensionId = \(forbiddenId.rawValue)，但没抛错")
+            } catch let error as MomentStore.MomentStoreError {
+                guard case .invalidDimensionForMoment(let id) = error else {
+                    XCTFail("期望 .invalidDimensionForMoment，实际 \(error)")
+                    return
+                }
+                XCTAssertEqual(id, forbiddenId.rawValue)
+            } catch {
+                XCTFail("期望 MomentStoreError.invalidDimensionForMoment，实际 \(error)")
+            }
+        }
+
+        XCTAssertEqual(try store.fetchAllMoments().count, 0, "拒绝的 save 不应留下 DB 记录")
+    }
+
+    /// PRD §22.3.1 6 内置时间账户的副文案数据契约。
+    func testDimensionSubtitleDataForBuiltins() throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        try TimeBank.Dimension.seedReservedDimensionsIfNeeded(in: env.context)
+
+        let calendar = Calendar(identifier: .gregorian)
+        let birthday = calendar.date(from: DateComponents(year: 1990, month: 4, day: 1)) ?? .now
+        let now = calendar.date(from: DateComponents(year: 2026, month: 4, day: 1)) ?? .now
+
+        let profile = UserProfile(
+            birthday: birthday,
+            gender: .undisclosed,
+            expectedLifespanYears: 85,
+            parents: ParentsInfo(
+                father: FamilyMember(birthYear: 1958, deceased: false, deceasedAt: nil),
+                mother: FamilyMember(birthYear: 1960, deceased: false, deceasedAt: nil),
+                visitsPerYear: 4,
+                hoursPerVisit: 6,
+                expectedLifespan: 82
+            ),
+            children: [ChildInfo(birthYear: 2018, gender: .undisclosed, deceased: false, deceasedAt: nil)],
+            partner: PartnerInfo(birthYear: 1991, hoursPerDay: 4, deceased: false, deceasedAt: nil),
+            soloEmphasis: false,
+            extras: []
+        )
+
+        let allDims = try env.context.fetch(FetchDescriptor<TimeBank.Dimension>())
+        let dimsByID = Dictionary(uniqueKeysWithValues: allDims.map { ($0.id, $0) })
+
+        // lifespan
+        let lifespanDim = try XCTUnwrap(dimsByID[DimensionReservedID.lifespan.rawValue])
+        let lifespanSubtitle = DimensionCompute.subtitleData(for: lifespanDim, profile: profile, dimensionsByID: dimsByID, now: now)
+        guard case .lifespan(let years, let hoursK) = lifespanSubtitle else {
+            XCTFail("lifespan 应返回 .lifespan case，实际 \(lifespanSubtitle)")
+            return
+        }
+        XCTAssertGreaterThan(years, 0)
+        XCTAssertGreaterThan(hoursK, 0)
+
+        // parents → .occurrence
+        let parentsDim = try XCTUnwrap(dimsByID[DimensionReservedID.parents.rawValue])
+        let parentsSubtitle = DimensionCompute.subtitleData(for: parentsDim, profile: profile, dimensionsByID: dimsByID, now: now)
+        guard case .occurrence(let count, let noun) = parentsSubtitle else {
+            XCTFail("parents 应返回 .occurrence case，实际 \(parentsSubtitle)")
+            return
+        }
+        XCTAssertGreaterThan(count, 0)
+        XCTAssertEqual(noun, "见面")
+
+        // kids → .weeklyHours，孩子 2018 年生 → 2026 = 8 岁，落 6-13 段 = 20 小时/周
+        let kidsDim = try XCTUnwrap(dimsByID[DimensionReservedID.kids.rawValue])
+        let kidsSubtitle = DimensionCompute.subtitleData(for: kidsDim, profile: profile, dimensionsByID: dimsByID, now: now)
+        guard case .weeklyHours(let kidsHpw) = kidsSubtitle else {
+            XCTFail("kids 应返回 .weeklyHours case，实际 \(kidsSubtitle)")
+            return
+        }
+        XCTAssertEqual(kidsHpw, 20, accuracy: 0.001, "8 岁孩子应落 6-13 段 = 20h/周")
+
+        // partner → .dailyHoursWith
+        let partnerDim = try XCTUnwrap(dimsByID[DimensionReservedID.partner.rawValue])
+        let partnerSubtitle = DimensionCompute.subtitleData(for: partnerDim, profile: profile, dimensionsByID: dimsByID, now: now)
+        guard case .dailyHoursWith(let pHours, let action) = partnerSubtitle else {
+            XCTFail("partner 应返回 .dailyHoursWith case，实际 \(partnerSubtitle)")
+            return
+        }
+        XCTAssertEqual(pHours, 4, accuracy: 0.001)
+        XCTAssertEqual(action, "共处")
+
+        // sport → .weeklyHours，36 岁落 < 50 段 = 5h/周
+        let sportDim = try XCTUnwrap(dimsByID[DimensionReservedID.sport.rawValue])
+        let sportSubtitle = DimensionCompute.subtitleData(for: sportDim, profile: profile, dimensionsByID: dimsByID, now: now)
+        guard case .weeklyHours(let sportHpw) = sportSubtitle else {
+            XCTFail("sport 应返回 .weeklyHours case")
+            return
+        }
+        XCTAssertEqual(sportHpw, 5, accuracy: 0.001, "36 岁应落 < 50 段 = 5h/周")
+
+        // create → .weeklyHours，36 岁 < 65（focusedPhaseEndAge 默认）= 40h/周
+        let createDim = try XCTUnwrap(dimsByID[DimensionReservedID.create.rawValue])
+        let createSubtitle = DimensionCompute.subtitleData(for: createDim, profile: profile, dimensionsByID: dimsByID, now: now)
+        guard case .weeklyHours(let createHpw) = createSubtitle else {
+            XCTFail("create 应返回 .weeklyHours case")
+            return
+        }
+        XCTAssertEqual(createHpw, 40, accuracy: 0.001, "36 岁 < 65 应取 focused 段 = 40h/周")
+
+        // free → .percentOfAwake，应在 0~100 之间
+        let freeDim = try XCTUnwrap(dimsByID[DimensionReservedID.free.rawValue])
+        let freeSubtitle = DimensionCompute.subtitleData(for: freeDim, profile: profile, dimensionsByID: dimsByID, now: now)
+        guard case .percentOfAwake(let pct) = freeSubtitle else {
+            XCTFail("free 应返回 .percentOfAwake case")
+            return
+        }
+        XCTAssertGreaterThanOrEqual(pct, 0)
+        XCTAssertLessThanOrEqual(pct, 100)
+
+        // memorial mode 应返回 .none
+        let memorialDim = try XCTUnwrap(dimsByID[DimensionReservedID.parents.rawValue])
+        memorialDim.mode = .memorial
+        let memorialSubtitle = DimensionCompute.subtitleData(for: memorialDim, profile: profile, dimensionsByID: dimsByID, now: now)
+        XCTAssertEqual(memorialSubtitle, .none, "memorial mode 应返回 .none")
+    }
+
+    /// childQualityHours 必须包含 18+ 尾段（V1.3.2 Codex review 发现的对称性 bug）。
+    /// 公式：0-6 岁 30h/周、6-13 岁 20h/周、13-18 岁 10h/周、18+ 2h/周。
+    func testKidsHoursIncludesAdultBand() throws {
+        let calendar = Calendar(identifier: .gregorian)
+        let birthday = calendar.date(from: DateComponents(year: 1990, month: 4, day: 1)) ?? .now
+        let now = calendar.date(from: DateComponents(year: 2026, month: 4, day: 1)) ?? .now // self 36 岁
+
+        // 用单个 5 岁孩子构造 profile，self 寿命 85 → 还有 49 年
+        let profile = UserProfile(
+            birthday: birthday,
+            gender: .undisclosed,
+            expectedLifespanYears: 85,
+            parents: nil,
+            children: [ChildInfo(birthYear: 2021, gender: nil, deceased: false, deceasedAt: nil)],
+            partner: nil,
+            soloEmphasis: false,
+            extras: []
+        )
+
+        let kidsDim = TimeBank.Dimension(
+            id: DimensionReservedID.kids.rawValue,
+            name: "陪孩子",
+            kind: .builtin,
+            status: .visible,
+            mode: .normal,
+            iconKey: "figure.2.and.child.holdinghands",
+            colorKey: "warm",
+            sortIndex: 2,
+            params: TimeBank.Dimension.encodedParams(EmptyDimensionParams())
+        )
+
+        let kidsHours = DimensionCompute.consumeHours(for: kidsDim, profile: profile, dimensionsByID: [:], now: now)
+
+        // 5 岁孩子，剩余 49 年（self 寿命 85 - age 36）
+        // 0-6 段：1 年 × 52.1429 × 30 ≈ 1564.29
+        // 6-13 段：7 年 × 52.1429 × 20 ≈ 7300.01
+        // 13-18 段：5 年 × 52.1429 × 10 ≈ 2607.15
+        // 18+ 段：49 - 13 = 36 年 × 52.1429 × 2 ≈ 3754.29
+        // 总：约 15225.74
+        XCTAssertGreaterThan(kidsHours, 15000, "kidsHours 必须包含 18+ 尾段，应 > 15000h（旧实现漏算约 3754h）")
+        XCTAssertLessThan(kidsHours, 16000)
+
+        // 孩子已成年（25 岁）case
+        let adultProfile = UserProfile(
+            birthday: birthday,
+            gender: .undisclosed,
+            expectedLifespanYears: 85,
+            parents: nil,
+            children: [ChildInfo(birthYear: 2001, gender: nil, deceased: false, deceasedAt: nil)],
+            partner: nil,
+            soloEmphasis: false,
+            extras: []
+        )
+        let adultKidsHours = DimensionCompute.consumeHours(for: kidsDim, profile: adultProfile, dimensionsByID: [:], now: now)
+        // 25 岁 ≥ 18，全程 49 年 × 52.1429 × 2 ≈ 5110.0
+        XCTAssertGreaterThan(adultKidsHours, 5000)
+        XCTAssertLessThan(adultKidsHours, 5200)
     }
 
     private func makeJPEGData(size: CGSize = CGSize(width: 40, height: 40), color: UIColor = .systemOrange) -> Data {

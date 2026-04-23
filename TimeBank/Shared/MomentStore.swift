@@ -5,6 +5,29 @@ import SwiftData
 
 @MainActor
 final class MomentStore {
+    enum MomentStoreError: Error, LocalizedError {
+        /// 用户主动新建的 Moment 不允许绑到无存储层的系统账户（lifespan / daily / other）。
+        /// 详见 PRD §7.6 「systemTop / systemHidden 无存储层」。
+        case invalidDimensionForMoment(String)
+
+        var errorDescription: String? {
+            switch self {
+            case .invalidDimensionForMoment(let id):
+                return "不能把瞬间存入系统账户「\(id)」（无存储层）。"
+            }
+        }
+    }
+
+    /// 系统账户的保留 ID，禁止用户主动 save Moment 到这些账户。
+    /// `lifespan`：顶部时间余额卡，无存储层。
+    /// `daily`：V1.1 今日此刻系统隐藏账户。
+    /// `other`：孤儿 Moment 承接账户，仅供内部迁移使用，不允许用户直接选。
+    private static let reservedSystemDimensionIds: Set<String> = [
+        DimensionReservedID.lifespan.rawValue,
+        DimensionReservedID.daily.rawValue,
+        DimensionReservedID.other.rawValue
+    ]
+
     struct SaveRequest: Sendable {
         var id: UUID
         var dimensionId: String
@@ -66,6 +89,10 @@ final class MomentStore {
 
     @discardableResult
     func save(moment request: SaveRequest) async throws -> Moment {
+        if MomentStore.reservedSystemDimensionIds.contains(request.dimensionId) {
+            throw MomentStoreError.invalidDimensionForMoment(request.dimensionId)
+        }
+
         let moment = Moment(
             id: request.id,
             dimensionId: request.dimensionId,
