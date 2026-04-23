@@ -1309,7 +1309,7 @@ TimeBank-Export-2026-04-19/
 
 **产品仅 Light Mode，无 Dark Mode 规划**。设置里无主题切换入口。
 
-奶咖暖色 Light 是产品核心调性的载体，不提供深色版本。`Settings.appearance` 字段固定为 `systemLight`，枚举不提供其他值。
+奶咖暖色 Light 是产品核心调性的载体，不提供深色版本。`Settings` 模型不再保留 `appearance` 字段（V1.3.2 已彻底移除），如未来需要恢复 Dark Mode，加字段是 SwiftData 兼容操作。
 
 ## UC-8.4【U】开启 iCloud 同步（V1.5）
 
