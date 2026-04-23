@@ -9,6 +9,7 @@ import XCTest
 
 @MainActor
 final class DataLayerTests: XCTestCase {
+    @MainActor
     private final class TestEnvironment {
         let rootURL: URL
         let storeURL: URL
@@ -38,7 +39,7 @@ final class DataLayerTests: XCTestCase {
 
             self.container = try ModelContainer(
                 for: UserProfile.self,
-                Dimension.self,
+                TimeBank.Dimension.self,
                 Moment.self,
                 MediaItem.self,
                 Settings.self,
@@ -229,12 +230,12 @@ final class DataLayerTests: XCTestCase {
         let env = try TestEnvironment()
         defer { env.cleanup() }
 
-        try Dimension.seedReservedDimensionsIfNeeded(in: env.context)
+        try TimeBank.Dimension.seedReservedDimensionsIfNeeded(in: env.context)
 
-        let sportDimension = try XCTUnwrap(Dimension.fetch(by: DimensionReservedID.sport.rawValue, in: env.context))
-        let lifespanDimension = try XCTUnwrap(Dimension.fetch(by: DimensionReservedID.lifespan.rawValue, in: env.context))
+        let sportDimension = try XCTUnwrap(TimeBank.Dimension.fetch(by: DimensionReservedID.sport.rawValue, in: env.context))
+        let lifespanDimension = try XCTUnwrap(TimeBank.Dimension.fetch(by: DimensionReservedID.lifespan.rawValue, in: env.context))
 
-        let customDimension = Dimension(
+        let customDimension = TimeBank.Dimension(
             id: UUID().uuidString,
             name: "阅读",
             kind: .custom,
@@ -243,7 +244,7 @@ final class DataLayerTests: XCTestCase {
             iconKey: "book",
             colorKey: "sky",
             sortIndex: 100,
-            params: Dimension.encodedParams(EmptyDimensionParams())
+            params: TimeBank.Dimension.encodedParams(EmptyDimensionParams())
         )
         env.context.insert(customDimension)
 
@@ -286,7 +287,7 @@ final class DataLayerTests: XCTestCase {
         try env.context.save()
 
         let allMoments = try env.context.fetch(FetchDescriptor<Moment>())
-        let allDimensions = try env.context.fetch(FetchDescriptor<Dimension>())
+        let allDimensions = try env.context.fetch(FetchDescriptor<TimeBank.Dimension>())
 
         XCTAssertEqual(
             DimensionCompute.storedHours(for: sportDimension.id, moments: allMoments),
@@ -367,7 +368,7 @@ final class DataLayerTests: XCTestCase {
             extras: []
         )
 
-        let parents = Dimension(
+        let parents = TimeBank.Dimension(
             id: DimensionReservedID.parents.rawValue,
             name: "陪父母",
             kind: .builtin,
@@ -376,9 +377,9 @@ final class DataLayerTests: XCTestCase {
             iconKey: "heart",
             colorKey: "rose",
             sortIndex: 1,
-            params: Dimension.encodedParams(EmptyDimensionParams())
+            params: TimeBank.Dimension.encodedParams(EmptyDimensionParams())
         )
-        let kids = Dimension(
+        let kids = TimeBank.Dimension(
             id: DimensionReservedID.kids.rawValue,
             name: "陪孩子",
             kind: .builtin,
@@ -387,9 +388,9 @@ final class DataLayerTests: XCTestCase {
             iconKey: "figure.2.and.child.holdinghands",
             colorKey: "warm",
             sortIndex: 2,
-            params: Dimension.encodedParams(EmptyDimensionParams())
+            params: TimeBank.Dimension.encodedParams(EmptyDimensionParams())
         )
-        let partner = Dimension(
+        let partner = TimeBank.Dimension(
             id: DimensionReservedID.partner.rawValue,
             name: "陪伴侣",
             kind: .builtin,
@@ -398,9 +399,9 @@ final class DataLayerTests: XCTestCase {
             iconKey: "sparkles.heart",
             colorKey: "lavender",
             sortIndex: 3,
-            params: Dimension.encodedParams(EmptyDimensionParams())
+            params: TimeBank.Dimension.encodedParams(EmptyDimensionParams())
         )
-        let sport = Dimension(
+        let sport = TimeBank.Dimension(
             id: DimensionReservedID.sport.rawValue,
             name: "运动",
             kind: .builtin,
@@ -409,9 +410,9 @@ final class DataLayerTests: XCTestCase {
             iconKey: "figure.run",
             colorKey: "sage",
             sortIndex: 4,
-            params: Dimension.encodedParams(SportDimensionParams())
+            params: TimeBank.Dimension.encodedParams(SportDimensionParams())
         )
-        let create = Dimension(
+        let create = TimeBank.Dimension(
             id: DimensionReservedID.create.rawValue,
             name: "创造",
             kind: .builtin,
@@ -420,9 +421,9 @@ final class DataLayerTests: XCTestCase {
             iconKey: "paintbrush",
             colorKey: "sky",
             sortIndex: 5,
-            params: Dimension.encodedParams(CreateDimensionParams())
+            params: TimeBank.Dimension.encodedParams(CreateDimensionParams())
         )
-        let free = Dimension(
+        let free = TimeBank.Dimension(
             id: DimensionReservedID.free.rawValue,
             name: "自由",
             kind: .builtin,
@@ -431,7 +432,7 @@ final class DataLayerTests: XCTestCase {
             iconKey: "sun.max",
             colorKey: "peach",
             sortIndex: 6,
-            params: Dimension.encodedParams(FreeDimensionParams())
+            params: TimeBank.Dimension.encodedParams(FreeDimensionParams())
         )
 
         let lookup = Dictionary(uniqueKeysWithValues: [parents, kids, partner, sport, create, free].map { ($0.id, $0) })
