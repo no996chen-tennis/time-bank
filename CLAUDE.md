@@ -32,9 +32,9 @@
 
 ## V1 Scope（12 周 timeline · 2026-04-22 定稿）
 
-**做：** Onboarding（4 步 + chip 多选，支持单身/无父母/丁克） · 6 内置时间账户双数字卡片 · 时刻 CRUD（图文，只从相册选）· Memorial Mode（任何关系时间账户）· 账户 Tab · 1 个锁屏 Widget · Raw ZIP 导出 · **Light Mode Only**
+**做：** Onboarding（4 步 + chip 多选，支持单身/无父母/丁克） · 6 内置时间账户双数字卡片 · 时刻 CRUD（图文，只从相册选）· Memorial Mode（任何关系时间账户）· 账户 Tab · 1 个锁屏 Widget · Raw ZIP 导出 · **仅 Light Mode**（无 Dark Mode 规划）
 
-**推迟到 V1.1+：** 今日此刻 · 自定义时间账户 CRUD · 分享卡 · 视频拍摄 · 保存到相册 · 桌面 Widget · StandBy · **Dark Mode** · 多格式导出 · 从 ZIP 恢复 · CloudKit 同步（V1.5 两阶段做）
+**推迟到 V1.1+：** 今日此刻 · 自定义时间账户 CRUD · 分享卡 · 视频拍摄 · 保存到相册 · 桌面 Widget · StandBy · 多格式导出 · 从 ZIP 恢复 · CloudKit 同步（V1.5 两阶段做）
 
 ## 目标平台
 Apple 生态优先：iOS Widget（锁屏 + 桌面 + StandBy）→ Apple Watch → Android
