@@ -721,8 +721,8 @@ enum MomentStatus: String, Codable {
     var widgetPreferredDimensions: [String]       // Dimension.id 列表
     var widgetTone: WidgetTone                    // warm / minimal / poetic
 
-    // Appearance (V1 只浅色，字段预留)
-    var appearance: Appearance                    // 仅 systemLight（无 Dark Mode 规划）
+    // Appearance：字段已彻底移除（V1.3.2 + Codex review 二轮后定稿）
+    // 产品仅 Light Mode，无 Dark Mode 规划。如未来需要恢复，加字段是 SwiftData 兼容操作。
 
     // Privacy
     var hasSeenPrivacyIntro: Bool

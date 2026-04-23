@@ -20,12 +20,6 @@ enum WidgetTone: String, Codable, CaseIterable, Sendable {
     case poetic
 }
 
-/// 仅 Light Mode（无 Dark Mode 规划，参考 PRD §0.6 + §7.6）。
-/// 字段保留是为了让 SwiftData schema 稳定，方便未来若产品方向变化能加 case 兼容旧数据。
-enum Appearance: String, Codable, CaseIterable, Sendable {
-    case systemLight
-}
-
 @Model
 final class Settings {
     static let singletonID = UUID(uuidString: "0F5D71FB-C180-4CB6-9A42-B4263C3F0202")!
@@ -39,9 +33,12 @@ final class Settings {
     var relationshipNoteOptIn: Bool
     var widgetPreferredDimensions: [String]
     var widgetTone: WidgetTone
-    var appearance: Appearance
     var hasSeenPrivacyIntro: Bool
     var momentCountForReviewTrigger: Int
+
+    // 注：appearance 字段已移除（V1.3.2 + Codex review 二轮后定稿）。
+    // 产品仅 Light Mode，无 Dark Mode 规划。如未来需要恢复，加字段是 SwiftData 兼容操作。
+    // 详见 PRD §0.6 + §7.6 + Use-Cases UC-8.3。
 
     init(
         id: UUID = Settings.singletonID,
@@ -52,7 +49,6 @@ final class Settings {
         relationshipNoteOptIn: Bool = false,
         widgetPreferredDimensions: [String] = [],
         widgetTone: WidgetTone = .warm,
-        appearance: Appearance = .systemLight,
         hasSeenPrivacyIntro: Bool = false,
         momentCountForReviewTrigger: Int = 0
     ) {
@@ -64,7 +60,6 @@ final class Settings {
         self.relationshipNoteOptIn = relationshipNoteOptIn
         self.widgetPreferredDimensions = widgetPreferredDimensions
         self.widgetTone = widgetTone
-        self.appearance = appearance
         self.hasSeenPrivacyIntro = hasSeenPrivacyIntro
         self.momentCountForReviewTrigger = momentCountForReviewTrigger
     }

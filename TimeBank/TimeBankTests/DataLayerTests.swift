@@ -361,6 +361,11 @@ final class DataLayerTests: XCTestCase {
         XCTAssertEqual(TimeBank.Formatter.lifespanSubtitle(years: 45, hoursK: 473), "45 年 · 473 Kh")
         XCTAssertEqual(TimeBank.Formatter.lifespanSubtitle(years: 0, hoursK: 0), "0 年 · 0 Kh")
         XCTAssertEqual(TimeBank.Formatter.lifespanSubtitle(years: 44.6, hoursK: 472.7), "45 年 · 473 Kh") // round
+
+        // 负数 input clamp（Codex review 二轮加固，PRD §21 4 个新接口的边界契约）
+        XCTAssertEqual(TimeBank.Formatter.weeklyHours(-5), "每周约 0 小时")
+        XCTAssertEqual(TimeBank.Formatter.dailyHoursWith(-3, action: "共处"), "每天约 0 小时共处")
+        XCTAssertEqual(TimeBank.Formatter.lifespanSubtitle(years: -10, hoursK: -100), "0 年 · 0 Kh")
     }
 
     func testBuiltinComputeFunctionsProduceStableNonNegativeValues() throws {
@@ -512,25 +517,27 @@ final class DataLayerTests: XCTestCase {
         XCTAssertEqual(other.status, .hidden)
     }
 
-    /// MomentStore.save 必须拒绝绑到无存储层的系统账户（lifespan / daily / other）。
-    /// 依据：PRD §7.6 "systemTop / systemHidden 无存储层" + V1.3.2 Codex review 加固。
-    func testSaveRejectsSystemDimensionIds() async throws {
+    /// MomentStore.save 必须按 Dimension.kind 白名单校验：
+    /// 只允许 .builtin / .custom；拒绝 .systemTop / .systemHidden / .systemVirtual；
+    /// dimensionId 不存在时抛 .dimensionNotFound。
+    /// 依据：PRD §7.6「systemTop / systemHidden 无存储层」+ V1.3.2 Codex review 二轮加固。
+    func testSaveRejectsSystemDimensionsAndAcceptsValidKinds() async throws {
         let env = try TestEnvironment()
         defer { env.cleanup() }
 
         let store = env.makeMomentStore()
         _ = try store.bootstrapReservedData()
 
+        // (1) 系统账户（lifespan = systemTop；daily / other = systemHidden）→ invalidDimensionForMoment
         for forbiddenId in [DimensionReservedID.lifespan, .daily, .other] {
             let request = MomentStore.SaveRequest(
                 dimensionId: forbiddenId.rawValue,
                 durationSeconds: 3600,
                 media: []
             )
-
             do {
                 _ = try await store.save(moment: request)
-                XCTFail("save 应该拒绝 dimensionId = \(forbiddenId.rawValue)，但没抛错")
+                XCTFail("save 应该拒绝 \(forbiddenId.rawValue)，但没抛错")
             } catch let error as MomentStore.MomentStoreError {
                 guard case .invalidDimensionForMoment(let id) = error else {
                     XCTFail("期望 .invalidDimensionForMoment，实际 \(error)")
@@ -542,7 +549,83 @@ final class DataLayerTests: XCTestCase {
             }
         }
 
-        XCTAssertEqual(try store.fetchAllMoments().count, 0, "拒绝的 save 不应留下 DB 记录")
+        // (2) systemVirtual 也应被拒（虚构一个保存到 DB 的 systemVirtual dimension）
+        let virtualId = "test-virtual-dim"
+        let virtualDim = TimeBank.Dimension(
+            id: virtualId,
+            name: "test virtual",
+            kind: .systemVirtual,
+            status: .hidden,
+            mode: .normal,
+            iconKey: "circle",
+            colorKey: "rose",
+            sortIndex: 999,
+            params: TimeBank.Dimension.encodedParams(EmptyDimensionParams())
+        )
+        env.context.insert(virtualDim)
+        try env.context.save()
+
+        do {
+            _ = try await store.save(moment: MomentStore.SaveRequest(
+                dimensionId: virtualId,
+                durationSeconds: 3600,
+                media: []
+            ))
+            XCTFail("save 应该拒绝 systemVirtual dimension")
+        } catch MomentStore.MomentStoreError.invalidDimensionForMoment(let id) {
+            XCTAssertEqual(id, virtualId)
+        } catch {
+            XCTFail("期望 .invalidDimensionForMoment，实际 \(error)")
+        }
+
+        // (3) dimensionId 不存在 → dimensionNotFound
+        let unknownId = "non-existent-\(UUID().uuidString)"
+        do {
+            _ = try await store.save(moment: MomentStore.SaveRequest(
+                dimensionId: unknownId,
+                durationSeconds: 3600,
+                media: []
+            ))
+            XCTFail("save 应该拒绝不存在的 dimensionId")
+        } catch MomentStore.MomentStoreError.dimensionNotFound(let id) {
+            XCTAssertEqual(id, unknownId)
+        } catch {
+            XCTFail("期望 .dimensionNotFound，实际 \(error)")
+        }
+
+        // (4) builtin (parents) 应该接受 — 即使 status 是 .hidden
+        let parentsId = DimensionReservedID.parents.rawValue
+        let savedFromBuiltin = try await store.save(moment: MomentStore.SaveRequest(
+            dimensionId: parentsId,
+            durationSeconds: 3600,
+            media: []
+        ))
+        XCTAssertEqual(savedFromBuiltin.dimensionId, parentsId)
+
+        // (5) custom 应该接受
+        let customId = UUID().uuidString
+        let customDim = TimeBank.Dimension(
+            id: customId,
+            name: "阅读",
+            kind: .custom,
+            status: .visible,
+            mode: .normal,
+            iconKey: "book",
+            colorKey: "sky",
+            sortIndex: 100,
+            params: TimeBank.Dimension.encodedParams(EmptyDimensionParams())
+        )
+        env.context.insert(customDim)
+        try env.context.save()
+
+        let savedFromCustom = try await store.save(moment: MomentStore.SaveRequest(
+            dimensionId: customId,
+            durationSeconds: 1800,
+            media: []
+        ))
+        XCTAssertEqual(savedFromCustom.dimensionId, customId)
+
+        XCTAssertEqual(try store.fetchAllMoments().count, 2, "2 个有效 save 应该都留下了 DB 记录")
     }
 
     /// PRD §22.3.1 6 内置时间账户的副文案数据契约。
@@ -707,6 +790,52 @@ final class DataLayerTests: XCTestCase {
         // 25 岁 ≥ 18，全程 49 年 × 52.1429 × 2 ≈ 5110.0
         XCTAssertGreaterThan(adultKidsHours, 5000)
         XCTAssertLessThan(adultKidsHours, 5200)
+
+        // 边界 1：0 岁孩子（今年生），完整覆盖 0-6 / 6-13 / 13-18 / 18+ 四段
+        let infantProfile = UserProfile(
+            birthday: birthday,
+            gender: .undisclosed,
+            expectedLifespanYears: 85,
+            parents: nil,
+            children: [ChildInfo(birthYear: 2026, gender: nil, deceased: false, deceasedAt: nil)],
+            partner: nil,
+            soloEmphasis: false,
+            extras: []
+        )
+        let infantKidsHours = DimensionCompute.consumeHours(for: kidsDim, profile: infantProfile, dimensionsByID: [:], now: now)
+        // 0-6: 6×52.1429×30 ≈ 9385.72; 6-13: 7×52.1429×20 ≈ 7300.01;
+        // 13-18: 5×52.1429×10 ≈ 2607.15; 18+: 31×52.1429×2 ≈ 3232.86
+        // 总：约 22525.74
+        XCTAssertGreaterThan(infantKidsHours, 22000, "0 岁孩子应覆盖全 4 段")
+        XCTAssertLessThan(infantKidsHours, 23000)
+
+        // 边界 2：self 剩余 0 年（expectedLifespan = 当前 age）
+        let dyingProfile = UserProfile(
+            birthday: birthday,
+            gender: .undisclosed,
+            expectedLifespanYears: 36, // self 当前 36 岁，剩余 0
+            parents: nil,
+            children: [ChildInfo(birthYear: 2021, gender: nil, deceased: false, deceasedAt: nil)],
+            partner: nil,
+            soloEmphasis: false,
+            extras: []
+        )
+        let dyingKidsHours = DimensionCompute.consumeHours(for: kidsDim, profile: dyingProfile, dimensionsByID: [:], now: now)
+        XCTAssertEqual(dyingKidsHours, 0, accuracy: 0.001, "self 剩余 0 年时应返回 0（cap 生效）")
+
+        // 边界 3：所有孩子已故
+        let bereavedProfile = UserProfile(
+            birthday: birthday,
+            gender: .undisclosed,
+            expectedLifespanYears: 85,
+            parents: nil,
+            children: [ChildInfo(birthYear: 2018, gender: nil, deceased: true, deceasedAt: now)],
+            partner: nil,
+            soloEmphasis: false,
+            extras: []
+        )
+        let bereavedKidsHours = DimensionCompute.consumeHours(for: kidsDim, profile: bereavedProfile, dimensionsByID: [:], now: now)
+        XCTAssertEqual(bereavedKidsHours, 0, accuracy: 0.001, "所有孩子已故应返回 0")
     }
 
     private func makeJPEGData(size: CGSize = CGSize(width: 40, height: 40), color: UIColor = .systemOrange) -> Data {
