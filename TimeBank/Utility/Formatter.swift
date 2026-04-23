@@ -8,6 +8,8 @@ enum Formatter {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.numberStyle = .decimal
         formatter.groupingSeparator = ","
+        formatter.usesGroupingSeparator = true // POSIX locale 默认 false，需显式开启
+        formatter.groupingSize = 3
         formatter.maximumFractionDigits = 0
         formatter.minimumFractionDigits = 0
         return formatter

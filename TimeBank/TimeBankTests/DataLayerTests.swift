@@ -209,6 +209,7 @@ final class DataLayerTests: XCTestCase {
             XCTAssertEqual(moment.status, .pendingDelete)
         }
 
+        _ = firstStore // 让 compiler 知道这个变量不是 dead store，其生命周期是刻意延长到这一行
         firstStore = nil
 
         do {
