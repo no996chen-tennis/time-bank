@@ -15,6 +15,7 @@
 		F2B000072FAB010100000001 /* Step2RelationshipsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000062FAB010100000001 /* Step2RelationshipsView.swift */; };
 		F2B000092FAB010100000001 /* Step3DetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000082FAB010100000001 /* Step3DetailsView.swift */; };
 		F2B0000B2FAB010100000001 /* Step4DoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B0000A2FAB010100000001 /* Step4DoneView.swift */; };
+		F2B000102FAC010100000001 /* SelectableChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B0000F2FAC010100000001 /* SelectableChip.swift */; };
 		F135277C2F99D3E500847E51 /* DimensionCompute.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527752F99D3E400847E51 /* DimensionCompute.swift */; };
 		F135277D2F99D3E500847E51 /* MediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527702F99D3E400847E51 /* MediaItem.swift */; };
 		F135277E2F99D3E500847E51 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527782F99D3E400847E51 /* DesignTokens.swift */; };
@@ -54,6 +55,7 @@
 		F2B000062FAB010100000001 /* Step2RelationshipsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step2RelationshipsView.swift; sourceTree = "<group>"; };
 		F2B000082FAB010100000001 /* Step3DetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step3DetailsView.swift; sourceTree = "<group>"; };
 		F2B0000A2FAB010100000001 /* Step4DoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step4DoneView.swift; sourceTree = "<group>"; };
+		F2B0000F2FAC010100000001 /* SelectableChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectableChip.swift; sourceTree = "<group>"; };
 		F135276F2F99D3E400847E51 /* Dimension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dimension.swift; sourceTree = "<group>"; };
 		F2A000002FAA000100000001 /* DimensionParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionParams.swift; sourceTree = "<group>"; };
 		F13527702F99D3E400847E51 /* MediaItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaItem.swift; sourceTree = "<group>"; };
@@ -133,6 +135,7 @@
 		F2B0000D2FAB010100000001 /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
+				F2B0000E2FAC010100000001 /* Components */,
 				F2B000002FAB010100000001 /* OnboardingDraft.swift */,
 				F2B000022FAB010100000001 /* OnboardingFlowView.swift */,
 				F2B000042FAB010100000001 /* Step1BirthdayView.swift */,
@@ -141,6 +144,14 @@
 				F2B0000A2FAB010100000001 /* Step4DoneView.swift */,
 			);
 			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		F2B0000E2FAC010100000001 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				F2B0000F2FAC010100000001 /* SelectableChip.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 		F13527742F99D3E400847E51 /* Models */ = {
@@ -352,6 +363,7 @@
 				F2B000072FAB010100000001 /* Step2RelationshipsView.swift in Sources */,
 				F2B000092FAB010100000001 /* Step3DetailsView.swift in Sources */,
 				F2B0000B2FAB010100000001 /* Step4DoneView.swift in Sources */,
+				F2B000102FAC010100000001 /* SelectableChip.swift in Sources */,
 				F135277C2F99D3E500847E51 /* DimensionCompute.swift in Sources */,
 				F135277D2F99D3E500847E51 /* MediaItem.swift in Sources */,
 				F135277E2F99D3E500847E51 /* DesignTokens.swift in Sources */,
