@@ -17,6 +17,7 @@
 		F13527832F99D3E500847E51 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527732F99D3E400847E51 /* UserProfile.swift */; };
 		F13527842F99D3E500847E51 /* FileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527792F99D3E400847E51 /* FileStore.swift */; };
 		F13527852F99D3E500847E51 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527722F99D3E400847E51 /* Settings.swift */; };
+		F2A000012FAA000100000001 /* DimensionParams.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A000002FAA000100000001 /* DimensionParams.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,6 +39,7 @@
 
 /* Begin PBXFileReference section */
 		F135276F2F99D3E400847E51 /* Dimension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dimension.swift; sourceTree = "<group>"; };
+		F2A000002FAA000100000001 /* DimensionParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionParams.swift; sourceTree = "<group>"; };
 		F13527702F99D3E400847E51 /* MediaItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaItem.swift; sourceTree = "<group>"; };
 		F13527712F99D3E400847E51 /* Moment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moment.swift; sourceTree = "<group>"; };
 		F13527722F99D3E400847E51 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
@@ -99,6 +101,7 @@
 			isa = PBXGroup;
 			children = (
 				F135276F2F99D3E400847E51 /* Dimension.swift */,
+				F2A000002FAA000100000001 /* DimensionParams.swift */,
 				F13527702F99D3E400847E51 /* MediaItem.swift */,
 				F13527712F99D3E400847E51 /* Moment.swift */,
 				F13527722F99D3E400847E51 /* Settings.swift */,
@@ -300,6 +303,7 @@
 				F13527802F99D3E500847E51 /* MomentStore.swift in Sources */,
 				F13527812F99D3E500847E51 /* Moment.swift in Sources */,
 				F13527822F99D3E500847E51 /* Dimension.swift in Sources */,
+				F2A000012FAA000100000001 /* DimensionParams.swift in Sources */,
 				F13527832F99D3E500847E51 /* UserProfile.swift in Sources */,
 				F13527842F99D3E500847E51 /* FileStore.swift in Sources */,
 				F13527852F99D3E500847E51 /* Settings.swift in Sources */,
