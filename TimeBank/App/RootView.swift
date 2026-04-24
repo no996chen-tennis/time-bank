@@ -26,8 +26,7 @@ struct RootView: View {
                 .tint(Color.tbPrimary)
 
         case .needsOnboarding:
-            Text("TODO §3.2B")
-                .foregroundStyle(Color.tbInk)
+            OnboardingFlowView(onFinish: {})
 
         case .readyForHome:
             Text("TODO §3.2D")
