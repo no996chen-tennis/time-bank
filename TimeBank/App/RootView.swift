@@ -34,8 +34,7 @@ struct RootView: View {
             })
 
         case .readyForHome:
-            Text("TODO §3.2D")
-                .foregroundStyle(Color.tbInk)
+            HomeView()
 
         case .failed(let message):
             Text(message)

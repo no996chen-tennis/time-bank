@@ -16,6 +16,11 @@
 		F2B000092FAB010100000001 /* Step3DetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000082FAB010100000001 /* Step3DetailsView.swift */; };
 		F2B0000B2FAB010100000001 /* Step4DoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B0000A2FAB010100000001 /* Step4DoneView.swift */; };
 		F2B000102FAC010100000001 /* SelectableChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B0000F2FAC010100000001 /* SelectableChip.swift */; };
+		F2D000012FB0010100000001 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D000002FB0010100000001 /* HomeView.swift */; };
+		F2D000032FB0010100000001 /* GreetingHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D000022FB0010100000001 /* GreetingHeaderView.swift */; };
+		F2D000052FB0010100000001 /* DoubleLayerAccountCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D000042FB0010100000001 /* DoubleLayerAccountCardView.swift */; };
+		F2D000072FB0010100000001 /* DimensionCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D000062FB0010100000001 /* DimensionCardView.swift */; };
+		F2D000092FB0010100000001 /* BottomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D000082FB0010100000001 /* BottomTabBar.swift */; };
 		F135277C2F99D3E500847E51 /* DimensionCompute.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527752F99D3E400847E51 /* DimensionCompute.swift */; };
 		F135277D2F99D3E500847E51 /* MediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527702F99D3E400847E51 /* MediaItem.swift */; };
 		F135277E2F99D3E500847E51 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527782F99D3E400847E51 /* DesignTokens.swift */; };
@@ -56,6 +61,11 @@
 		F2B000082FAB010100000001 /* Step3DetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step3DetailsView.swift; sourceTree = "<group>"; };
 		F2B0000A2FAB010100000001 /* Step4DoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step4DoneView.swift; sourceTree = "<group>"; };
 		F2B0000F2FAC010100000001 /* SelectableChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectableChip.swift; sourceTree = "<group>"; };
+		F2D000002FB0010100000001 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		F2D000022FB0010100000001 /* GreetingHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GreetingHeaderView.swift; sourceTree = "<group>"; };
+		F2D000042FB0010100000001 /* DoubleLayerAccountCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubleLayerAccountCardView.swift; sourceTree = "<group>"; };
+		F2D000062FB0010100000001 /* DimensionCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionCardView.swift; sourceTree = "<group>"; };
+		F2D000082FB0010100000001 /* BottomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomTabBar.swift; sourceTree = "<group>"; };
 		F135276F2F99D3E400847E51 /* Dimension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dimension.swift; sourceTree = "<group>"; };
 		F2A000002FAA000100000001 /* DimensionParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionParams.swift; sourceTree = "<group>"; };
 		F13527702F99D3E400847E51 /* MediaItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaItem.swift; sourceTree = "<group>"; };
@@ -128,8 +138,21 @@
 			isa = PBXGroup;
 			children = (
 				F2B0000D2FAB010100000001 /* Onboarding */,
+				F2D0000A2FB0010100000001 /* Home */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		F2D0000A2FB0010100000001 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				F2D000002FB0010100000001 /* HomeView.swift */,
+				F2D000022FB0010100000001 /* GreetingHeaderView.swift */,
+				F2D000042FB0010100000001 /* DoubleLayerAccountCardView.swift */,
+				F2D000062FB0010100000001 /* DimensionCardView.swift */,
+				F2D000082FB0010100000001 /* BottomTabBar.swift */,
+			);
+			path = Home;
 			sourceTree = "<group>";
 		};
 		F2B0000D2FAB010100000001 /* Onboarding */ = {
@@ -364,6 +387,11 @@
 				F2B000092FAB010100000001 /* Step3DetailsView.swift in Sources */,
 				F2B0000B2FAB010100000001 /* Step4DoneView.swift in Sources */,
 				F2B000102FAC010100000001 /* SelectableChip.swift in Sources */,
+				F2D000012FB0010100000001 /* HomeView.swift in Sources */,
+				F2D000032FB0010100000001 /* GreetingHeaderView.swift in Sources */,
+				F2D000052FB0010100000001 /* DoubleLayerAccountCardView.swift in Sources */,
+				F2D000072FB0010100000001 /* DimensionCardView.swift in Sources */,
+				F2D000092FB0010100000001 /* BottomTabBar.swift in Sources */,
 				F135277C2F99D3E500847E51 /* DimensionCompute.swift in Sources */,
 				F135277D2F99D3E500847E51 /* MediaItem.swift in Sources */,
 				F135277E2F99D3E500847E51 /* DesignTokens.swift in Sources */,
