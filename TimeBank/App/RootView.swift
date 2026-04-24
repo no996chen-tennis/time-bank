@@ -26,7 +26,12 @@ struct RootView: View {
                 .tint(Color.tbPrimary)
 
         case .needsOnboarding:
-            OnboardingFlowView(onFinish: {})
+            OnboardingFlowView(onFinish: {
+                Task { @MainActor in
+                    launchState = .bootstrapping
+                    await bootstrapIfNeeded()
+                }
+            })
 
         case .readyForHome:
             Text("TODO §3.2D")
