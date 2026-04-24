@@ -1,18 +1,17 @@
-//
-//  TimeBankApp.swift
-//  TimeBank
-//
-//  Created by 陈志达 on 2026/4/22.
-//
+// TimeBank/App/TimeBankApp.swift
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 @main
 struct TimeBankApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            UserProfile.self,
+            Dimension.self,
+            Moment.self,
+            MediaItem.self,
+            Settings.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -25,7 +24,7 @@ struct TimeBankApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
         }
         .modelContainer(sharedModelContainer)
     }

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F2A000032FAA010100000001 /* TimeBankApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A000022FAA010100000001 /* TimeBankApp.swift */; };
+		F2A000052FAA010100000001 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A000042FAA010100000001 /* RootView.swift */; };
 		F135277C2F99D3E500847E51 /* DimensionCompute.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527752F99D3E400847E51 /* DimensionCompute.swift */; };
 		F135277D2F99D3E500847E51 /* MediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527702F99D3E400847E51 /* MediaItem.swift */; };
 		F135277E2F99D3E500847E51 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527782F99D3E400847E51 /* DesignTokens.swift */; };
@@ -38,6 +40,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		F2A000022FAA010100000001 /* TimeBankApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeBankApp.swift; sourceTree = "<group>"; };
+		F2A000042FAA010100000001 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		F135276F2F99D3E400847E51 /* Dimension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dimension.swift; sourceTree = "<group>"; };
 		F2A000002FAA000100000001 /* DimensionParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionParams.swift; sourceTree = "<group>"; };
 		F13527702F99D3E400847E51 /* MediaItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaItem.swift; sourceTree = "<group>"; };
@@ -97,6 +101,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		F2A000062FAA010100000001 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				F2A000022FAA010100000001 /* TimeBankApp.swift */,
+				F2A000042FAA010100000001 /* RootView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
 		F13527742F99D3E400847E51 /* Models */ = {
 			isa = PBXGroup;
 			children = (
@@ -132,6 +145,7 @@
 		F13D3F692F989EE4007D270B = {
 			isa = PBXGroup;
 			children = (
+				F2A000062FAA010100000001 /* App */,
 				F13527742F99D3E400847E51 /* Models */,
 				F13527772F99D3E400847E51 /* Shared */,
 				F135277B2F99D3E400847E51 /* Utility */,
@@ -296,6 +310,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F2A000032FAA010100000001 /* TimeBankApp.swift in Sources */,
+				F2A000052FAA010100000001 /* RootView.swift in Sources */,
 				F135277C2F99D3E500847E51 /* DimensionCompute.swift in Sources */,
 				F135277D2F99D3E500847E51 /* MediaItem.swift in Sources */,
 				F135277E2F99D3E500847E51 /* DesignTokens.swift in Sources */,
