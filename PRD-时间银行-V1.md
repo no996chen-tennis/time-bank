@@ -1092,6 +1092,7 @@ App Sandbox / Documents / TimeBank /
 | `hoursCompact(h)` | 小时简写 | `552h`、`1,240h`、`18.2Kh` | 卡片主数字、Widget |
 | `hoursReadable(h)` | 小时完整 | `128 小时`、`48 小时` | 主页顶部总账户、时刻详情 chip |
 | `hoursWithMinutes(s)` | 带分钟 | `2h 30m`、`30m` | 新增时刻表单时长滑块预览、参数编辑 |
+| `hoursInDays(h)` | 小时 → 天数辅助显示 | `≈ 23 天`、`≈ 414 天`、`≈ 2,967 天` | **V1.3.2 新增**· 时间账户卡 Kh 主数字下方辅助显示，帮用户心算"多少天"（较大数字用千分位） |
 | `occurrenceCount(n, noun)` | 次数（消耗层用）| `约 92 次见面` | parents 卡副文案 |
 | `weeklyHours(h)` | 每周小时数 | `每周约 30 小时`、`每周约 5 小时`、`每周约 40 小时` | kids / sport / create 卡副文案 |
 | `dailyHoursWith(h, action)` | 每天小时 + 动作 | `每天约 4 小时共处` | partner 卡副文案 |
@@ -1128,6 +1129,7 @@ enum Formatter {
     static func hoursCompact(_ h: Double) -> String
     static func hoursReadable(_ h: Double) -> String
     static func hoursWithMinutes(_ seconds: Int) -> String
+    static func hoursInDays(_ h: Double) -> String                       // ≈ N 天（辅助显示）
     static func occurrenceCount(_ n: Int, noun: String) -> String       // 约 N 次 <noun>
     static func weeklyHours(_ h: Double) -> String                       // 每周约 N 小时
     static func dailyHoursWith(_ h: Double, action: String) -> String    // 每天约 N 小时<action>
