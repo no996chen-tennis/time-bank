@@ -51,6 +51,12 @@ enum Formatter {
         return "\(rendered) 小时"
     }
 
+    static func hoursInDays(_ h: Double) -> String {
+        let days = Int(max(0, h) / 24.0)
+        let formatted = decimalGroupingFormatter.string(from: NSNumber(value: days)) ?? "\(days)"
+        return "≈ \(formatted) 天"
+    }
+
     static func hoursWithMinutes(_ seconds: Int) -> String {
         let clampedSeconds = max(0, seconds)
         let roundedMinutes = Int((Double(clampedSeconds) / 60.0).rounded())

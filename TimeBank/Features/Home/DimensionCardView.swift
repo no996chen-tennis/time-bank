@@ -16,6 +16,7 @@ struct DimensionCardView: View {
             HStack(spacing: TBSpace.s4) {
                 metricColumn(
                     label: consumeLabel,
+                    rawHours: consumeHours,
                     primary: Formatter.hoursCompact(consumeHours),
                     secondary: subtitleText
                 )
@@ -26,16 +27,17 @@ struct DimensionCardView: View {
 
                 metricColumn(
                     label: "已存入",
+                    rawHours: storedHours,
                     primary: Formatter.hoursCompact(storedHours),
                     secondary: Formatter.momentsCount(storedMomentCount)
                 )
             }
-            .frame(height: 72)
+            .frame(height: 88)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, TBSpace.s2)
         .frame(maxWidth: .infinity)
-        .frame(height: 140)
+        .frame(height: 156)
         .background(Color.tbSurface)
         .clipShape(RoundedRectangle(cornerRadius: TBRadius.lg))
         .modifier(TBSoftShadowModifier())
@@ -74,6 +76,7 @@ struct DimensionCardView: View {
 
     private func metricColumn(
         label: String,
+        rawHours: Double,
         primary: String,
         secondary: String
     ) -> some View {
@@ -87,6 +90,14 @@ struct DimensionCardView: View {
                 .foregroundStyle(Color.tbInk)
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
+
+            if rawHours >= 1 {
+                Text(Formatter.hoursInDays(rawHours))
+                    .font(.tbLabel)
+                    .foregroundStyle(Color.tbInk3)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.82)
+            }
 
             Text(secondary)
                 .font(.tbBodySm)

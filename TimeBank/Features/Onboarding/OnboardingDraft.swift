@@ -15,10 +15,10 @@ struct OnboardingDraft: Equatable, Sendable {
     var extras: [ExtraRelation]
 
     init(
-        birthday: Date = .now,
+        birthday: Date = Calendar.current.date(from: DateComponents(year: 2000, month: 7, day: 1)) ?? .now,
         gender: Gender = .undisclosed,
         expectedLifespanYears: Int = 85,
-        selectedRelationships: Set<OnboardingRelationship> = [],
+        selectedRelationships: Set<OnboardingRelationship> = [.solo],
         parents: ParentsInfo? = nil,
         children: [ChildInfo] = [],
         partner: PartnerInfo? = nil,

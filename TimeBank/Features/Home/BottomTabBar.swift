@@ -11,7 +11,7 @@ struct BottomTabBar: View {
                 tabItem(icon: "chart.pie", title: "账户", isSelected: false)
 
                 Spacer()
-                    .frame(width: 76)
+                    .frame(width: 104)
 
                 tabItem(icon: "person.circle", title: "我", isSelected: false)
             }
@@ -29,13 +29,13 @@ struct BottomTabBar: View {
                 Image(systemName: "plus")
                     .font(.tbHeadM)
                     .foregroundStyle(Color.white)
-                    .frame(width: 60, height: 60)
+                    .frame(width: 52, height: 52)
                     .background(Color.tbPrimary)
                     .clipShape(Circle())
                     .contentShape(Circle())
             }
             .buttonStyle(.plain)
-            .offset(y: -16)
+            .offset(y: -22)
             .accessibilityLabel("存入时刻")
         }
         .frame(height: 84)

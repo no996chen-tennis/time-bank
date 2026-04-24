@@ -53,7 +53,7 @@ struct Step4DoneView: View {
                 .font(.tbHeadM)
                 .foregroundStyle(Color.tbInk)
 
-            Text("你将看到你和重要的人还能共度多少时间。遇到值得记住的瞬间，也可以存进来 —— 它们不会被时间带走。")
+            Text("一切就绪。开始吧。")
                 .font(.tbBody)
                 .foregroundStyle(Color.tbInk2)
                 .fixedSize(horizontal: false, vertical: true)

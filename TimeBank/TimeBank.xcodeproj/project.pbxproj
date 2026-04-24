@@ -11,11 +11,13 @@
 		F2A000052FAA010100000001 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A000042FAA010100000001 /* RootView.swift */; };
 		F2B000012FAB010100000001 /* OnboardingDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000002FAB010100000001 /* OnboardingDraft.swift */; };
 		F2B000032FAB010100000001 /* OnboardingFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000022FAB010100000001 /* OnboardingFlowView.swift */; };
+		F2B000122FAE010100000001 /* Step0WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000112FAE010100000001 /* Step0WelcomeView.swift */; };
 		F2B000052FAB010100000001 /* Step1BirthdayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000042FAB010100000001 /* Step1BirthdayView.swift */; };
 		F2B000072FAB010100000001 /* Step2RelationshipsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000062FAB010100000001 /* Step2RelationshipsView.swift */; };
 		F2B000092FAB010100000001 /* Step3DetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000082FAB010100000001 /* Step3DetailsView.swift */; };
 		F2B0000B2FAB010100000001 /* Step4DoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B0000A2FAB010100000001 /* Step4DoneView.swift */; };
 		F2B000102FAC010100000001 /* SelectableChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B0000F2FAC010100000001 /* SelectableChip.swift */; };
+		F2B000142FAE010100000001 /* YearInputField.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000132FAE010100000001 /* YearInputField.swift */; };
 		F2D000012FB0010100000001 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D000002FB0010100000001 /* HomeView.swift */; };
 		F2D000032FB0010100000001 /* GreetingHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D000022FB0010100000001 /* GreetingHeaderView.swift */; };
 		F2D000052FB0010100000001 /* DoubleLayerAccountCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D000042FB0010100000001 /* DoubleLayerAccountCardView.swift */; };
@@ -56,11 +58,13 @@
 		F2A000042FAA010100000001 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		F2B000002FAB010100000001 /* OnboardingDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingDraft.swift; sourceTree = "<group>"; };
 		F2B000022FAB010100000001 /* OnboardingFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlowView.swift; sourceTree = "<group>"; };
+		F2B000112FAE010100000001 /* Step0WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step0WelcomeView.swift; sourceTree = "<group>"; };
 		F2B000042FAB010100000001 /* Step1BirthdayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step1BirthdayView.swift; sourceTree = "<group>"; };
 		F2B000062FAB010100000001 /* Step2RelationshipsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step2RelationshipsView.swift; sourceTree = "<group>"; };
 		F2B000082FAB010100000001 /* Step3DetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step3DetailsView.swift; sourceTree = "<group>"; };
 		F2B0000A2FAB010100000001 /* Step4DoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step4DoneView.swift; sourceTree = "<group>"; };
 		F2B0000F2FAC010100000001 /* SelectableChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectableChip.swift; sourceTree = "<group>"; };
+		F2B000132FAE010100000001 /* YearInputField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YearInputField.swift; sourceTree = "<group>"; };
 		F2D000002FB0010100000001 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		F2D000022FB0010100000001 /* GreetingHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GreetingHeaderView.swift; sourceTree = "<group>"; };
 		F2D000042FB0010100000001 /* DoubleLayerAccountCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubleLayerAccountCardView.swift; sourceTree = "<group>"; };
@@ -161,6 +165,7 @@
 				F2B0000E2FAC010100000001 /* Components */,
 				F2B000002FAB010100000001 /* OnboardingDraft.swift */,
 				F2B000022FAB010100000001 /* OnboardingFlowView.swift */,
+				F2B000112FAE010100000001 /* Step0WelcomeView.swift */,
 				F2B000042FAB010100000001 /* Step1BirthdayView.swift */,
 				F2B000062FAB010100000001 /* Step2RelationshipsView.swift */,
 				F2B000082FAB010100000001 /* Step3DetailsView.swift */,
@@ -173,6 +178,7 @@
 			isa = PBXGroup;
 			children = (
 				F2B0000F2FAC010100000001 /* SelectableChip.swift */,
+				F2B000132FAE010100000001 /* YearInputField.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -382,11 +388,13 @@
 				F2A000052FAA010100000001 /* RootView.swift in Sources */,
 				F2B000012FAB010100000001 /* OnboardingDraft.swift in Sources */,
 				F2B000032FAB010100000001 /* OnboardingFlowView.swift in Sources */,
+				F2B000122FAE010100000001 /* Step0WelcomeView.swift in Sources */,
 				F2B000052FAB010100000001 /* Step1BirthdayView.swift in Sources */,
 				F2B000072FAB010100000001 /* Step2RelationshipsView.swift in Sources */,
 				F2B000092FAB010100000001 /* Step3DetailsView.swift in Sources */,
 				F2B0000B2FAB010100000001 /* Step4DoneView.swift in Sources */,
 				F2B000102FAC010100000001 /* SelectableChip.swift in Sources */,
+				F2B000142FAE010100000001 /* YearInputField.swift in Sources */,
 				F2D000012FB0010100000001 /* HomeView.swift in Sources */,
 				F2D000032FB0010100000001 /* GreetingHeaderView.swift in Sources */,
 				F2D000052FB0010100000001 /* DoubleLayerAccountCardView.swift in Sources */,

@@ -3,6 +3,7 @@
 import SwiftUI
 
 enum OnboardingStep {
+    case welcome
     case birthday
     case relationships
     case details
@@ -11,7 +12,7 @@ enum OnboardingStep {
 
 struct OnboardingFlowView: View {
     @State private var draft = OnboardingDraft()
-    @State private var currentStep: OnboardingStep = .birthday
+    @State private var currentStep: OnboardingStep = .welcome
 
     let onFinish: () -> Void
 
@@ -22,13 +23,16 @@ struct OnboardingFlowView: View {
         .font(.tbBody)
         .foregroundStyle(Color.tbInk)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(TBSpace.s6)
+        .padding(currentStep == .welcome ? 0 : TBSpace.s6)
         .background(Color.tbBg)
     }
 
     @ViewBuilder
     private var stepContent: some View {
         switch currentStep {
+        case .welcome:
+            Step0WelcomeView(onNext: goNext)
+
         case .birthday:
             Step1BirthdayView(
                 draft: $draft,
@@ -61,6 +65,8 @@ struct OnboardingFlowView: View {
 
     private func goNext() {
         switch currentStep {
+        case .welcome:
+            currentStep = .birthday
         case .birthday:
             currentStep = .relationships
         case .relationships:
@@ -74,8 +80,10 @@ struct OnboardingFlowView: View {
 
     private func goBack() {
         switch currentStep {
-        case .birthday:
+        case .welcome:
             break
+        case .birthday:
+            currentStep = .welcome
         case .relationships:
             currentStep = .birthday
         case .details:

@@ -4,9 +4,27 @@ import SwiftUI
 
 struct Step3DetailsView: View {
     @Binding var draft: OnboardingDraft
+    @State private var frequencyUnit: FrequencyUnit
+    @State private var frequencyValue: Int
+    @State private var frequencyText: String
 
     let onNext: () -> Void
     let onBack: () -> Void
+
+    init(
+        draft: Binding<OnboardingDraft>,
+        onNext: @escaping () -> Void,
+        onBack: @escaping () -> Void
+    ) {
+        let visitsPerYear = max(1, draft.wrappedValue.parents?.visitsPerYear ?? 4)
+
+        self._draft = draft
+        self._frequencyUnit = State(initialValue: .perYear)
+        self._frequencyValue = State(initialValue: visitsPerYear)
+        self._frequencyText = State(initialValue: "\(visitsPerYear)")
+        self.onNext = onNext
+        self.onBack = onBack
+    }
 
     private var currentYear: Int {
         Calendar.current.component(.year, from: .now)
@@ -35,9 +53,19 @@ struct Step3DetailsView: View {
             navigationButtons
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear(perform: ensureSelectedDefaults)
+        .onAppear {
+            ensureSelectedDefaults()
+            syncParentsVisitsPerYear()
+        }
         .onChange(of: draft.selectedRelationships) { _, _ in
             ensureSelectedDefaults()
+            syncParentsVisitsPerYear()
+        }
+        .onChange(of: frequencyUnit) { oldUnit, newUnit in
+            convertFrequencyValue(from: oldUnit, to: newUnit)
+        }
+        .onChange(of: frequencyText) { _, newValue in
+            updateFrequencyValue(from: newValue)
         }
     }
 
@@ -88,11 +116,7 @@ struct Step3DetailsView: View {
                 birthYear: parentBirthYearBinding(\.mother, defaultOffset: 58)
             )
 
-            Stepper(
-                "每年见 \(parentsBinding.visitsPerYear.wrappedValue) 次",
-                value: parentsBinding.visitsPerYear,
-                in: 1...52
-            )
+            parentFrequencyRow
 
             sliderRow(
                 title: "每次见面大约",
@@ -140,10 +164,10 @@ struct Step3DetailsView: View {
 
     private var partnerForm: some View {
         DetailCard(title: "伴侣") {
-            Stepper(
-                "伴侣出生于 \(partnerBirthYear.wrappedValue) 年",
-                value: partnerBirthYear,
-                in: 1920...(currentYear - 18)
+            YearInputField(
+                title: "伴侣出生于",
+                year: partnerBirthYear,
+                range: 1920...(currentYear - 18)
             )
 
             sliderRow(
@@ -186,10 +210,10 @@ struct Step3DetailsView: View {
 
     private func childRow(index: Int) -> some View {
         HStack(spacing: TBSpace.s3) {
-            Stepper(
-                "孩子 \(index + 1) 生于 \(draft.children[index].birthYear) 年",
-                value: childBirthYearBinding(index: index),
-                in: 1920...currentYear
+            YearInputField(
+                title: "孩子 \(index + 1) 生于",
+                year: childBirthYearBinding(index: index),
+                range: 1920...currentYear
             )
 
             Button {
@@ -228,12 +252,54 @@ struct Step3DetailsView: View {
             }
 
             if member != nil {
-                Stepper(
-                    "生于 \(birthYear.wrappedValue) 年",
-                    value: birthYear,
-                    in: 1920...(currentYear - 18)
+                YearInputField(
+                    title: "生于",
+                    year: birthYear,
+                    range: 1920...(currentYear - 18)
                 )
             }
+        }
+    }
+
+    private var parentFrequencyRow: some View {
+        VStack(alignment: .leading, spacing: TBSpace.s2) {
+            HStack(spacing: TBSpace.s3) {
+                Text("见面频率")
+                    .font(.tbBody)
+                    .foregroundStyle(Color.tbInk)
+
+                Spacer()
+
+                Picker("见面频率单位", selection: $frequencyUnit) {
+                    ForEach(FrequencyUnit.allCases, id: \.self) { unit in
+                        Text(unit.title)
+                            .tag(unit)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 176)
+            }
+
+            HStack(spacing: TBSpace.s2) {
+                TextField("次数", text: $frequencyText)
+                    .font(.tbBody)
+                    .foregroundStyle(Color.tbInk)
+                    .multilineTextAlignment(.trailing)
+                    .keyboardType(.numberPad)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, TBSpace.s3)
+                    .padding(.vertical, TBSpace.s2)
+                    .background(Color.tbSurface)
+                    .clipShape(RoundedRectangle(cornerRadius: TBRadius.sm))
+
+                Text("次")
+                    .font(.tbBody)
+                    .foregroundStyle(Color.tbInk2)
+            }
+
+            Text("大约\(frequencyUnit.title)见 \(frequencyValue) 次")
+                .font(.tbBodySm)
+                .foregroundStyle(Color.tbInk3)
         }
     }
 
@@ -336,10 +402,89 @@ struct Step3DetailsView: View {
         )
     }
 
+    private func convertFrequencyValue(
+        from oldUnit: FrequencyUnit,
+        to newUnit: FrequencyUnit
+    ) {
+        let visitsPerYear = oldUnit.visitsPerYear(from: frequencyValue)
+        setFrequencyValue(newUnit.value(fromVisitsPerYear: visitsPerYear))
+    }
+
+    private func updateFrequencyValue(from value: String) {
+        let digits = value.filter { $0.isNumber }
+
+        if digits != value {
+            frequencyText = digits
+            return
+        }
+
+        guard let parsed = Int(digits) else {
+            setFrequencyValue(10_000)
+            return
+        }
+
+        setFrequencyValue(parsed)
+    }
+
+    private func setFrequencyValue(_ value: Int) {
+        let clampedValue = min(max(1, value), 10_000)
+        frequencyValue = clampedValue
+
+        if frequencyText != "\(clampedValue)" {
+            frequencyText = "\(clampedValue)"
+        }
+
+        syncParentsVisitsPerYear()
+    }
+
+    private func syncParentsVisitsPerYear() {
+        guard isSelected(.parents) else { return }
+
+        var parents = draft.parents ?? ParentsInfo()
+        parents.visitsPerYear = frequencyUnit.visitsPerYear(from: frequencyValue)
+        draft.parents = parents
+    }
+
     private func formatHalfHour(_ value: Double) -> String {
         value.truncatingRemainder(dividingBy: 1) == 0
             ? String(Int(value))
             : String(format: "%.1f", value)
+    }
+}
+
+fileprivate enum FrequencyUnit: CaseIterable, Hashable {
+    case perWeek
+    case perMonth
+    case perYear
+
+    var title: String {
+        switch self {
+        case .perWeek:
+            return "每周"
+        case .perMonth:
+            return "每月"
+        case .perYear:
+            return "每年"
+        }
+    }
+
+    private var annualMultiplier: Int {
+        switch self {
+        case .perWeek:
+            return 52
+        case .perMonth:
+            return 12
+        case .perYear:
+            return 1
+        }
+    }
+
+    func visitsPerYear(from value: Int) -> Int {
+        max(1, value) * annualMultiplier
+    }
+
+    func value(fromVisitsPerYear visitsPerYear: Int) -> Int {
+        max(1, Int((Double(max(1, visitsPerYear)) / Double(annualMultiplier)).rounded()))
     }
 }
 
