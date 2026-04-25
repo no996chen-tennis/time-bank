@@ -676,6 +676,44 @@ enum DimensionMode: String, Codable {
 }
 ```
 
+### Dimension.params · 各 kind 的 JSON 结构
+
+`Dimension.params: Data` 字段是 JSON-encoded 的、按 dimension kind 不同的参数 struct。下列是 V1 内置 6 账户的 params struct 形态（authoritative · 与 `Models/DimensionParams.swift` 同源 · 调整 schema 时同步两边）：
+
+```swift
+// parents 不存 Dimension.params，所有参数存 UserProfile.parents（与"人物"耦合）
+// partner 不存 Dimension.params，所有参数存 UserProfile.partner
+
+struct KidsDimensionParams: Codable {
+    var weeklyHoursOverride: Double?      // V1.3.2 新增 · A2 编辑器写入 · nil = 用 DimensionCompute 默认年龄段映射
+}
+
+struct SportDimensionParams: Codable {
+    var hoursPerWeekBefore50: Double      // 默认 5 · DimensionCompute 当前年龄 < 50 时读
+    var hoursPerWeek50To80: Double        // 默认 3 · 50-80 读
+    var hoursPerWeekAfter80: Double       // 默认 1 · > 80 读
+    var sessionsPerWeek: Int              // V1.3.2 新增 · 默认 5 · A2 编辑器 derived UI state（不参与 compute）
+    var hoursPerSession: Double           // V1.3.2 新增 · 默认 1 · 同上
+    // 编辑器保存时 sessionsPerWeek × hoursPerSession 反向同步**当前年龄段对应**的 hoursPerWeekXxx，
+    // 其他年龄段字段保留原值（A2 契约）。
+    // 旧 JSON 缺新字段时 decode 自动补默认 5/1（custom decoder 兜底，避免覆盖已调参数）。
+}
+
+struct CreateDimensionParams: Codable {
+    var focusedPhaseEndAge: Int           // 默认 65 · 黄金创造期截止
+    var focusedPhaseHoursPerWeek: Double  // 默认 40 · 黄金期每周
+    var freePhaseHoursPerWeek: Double     // 默认 20 · 自由期每周
+}
+
+struct FreeDimensionParams: Codable {
+    var awakeHoursPerDay: Double          // 默认 14 · 每天清醒小时
+}
+
+struct EmptyDimensionParams: Codable {}   // lifespan / other 等无参数 dimension 占位
+```
+
+> **A2 关系参数存储约定**：父母 / 伴侣 / 孩子的关系参数（出生年、见面频率、共处时长等）**不存 `Dimension.params`**，存 `UserProfile.parents / partner / children[]`。这是 V1 实施现状，与早期 §7.6 草稿（"`Dimension[id=parents].params.visitsPerYear`"）的差异 — 实际真相源以本节为准。
+
 ### Moment
 
 ```swift
