@@ -34,6 +34,8 @@
 		F2F000082FD0010100000001 /* ProfileEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2F000072FD0010100000001 /* ProfileEditorView.swift */; };
 		F2F0000A2FD0010100000001 /* RelationshipEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2F000092FD0010100000001 /* RelationshipEditorSheet.swift */; };
 		F2F0000C2FD0010100000001 /* DimensionDemotionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2F0000B2FD0010100000001 /* DimensionDemotionStore.swift */; };
+		F30000012FE1010100000001 /* MomentEditorDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30000002FE1010100000001 /* MomentEditorDraft.swift */; };
+		F30000032FE1010100000001 /* MomentEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30000022FE1010100000001 /* MomentEditorView.swift */; };
 		F135277C2F99D3E500847E51 /* DimensionCompute.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527752F99D3E400847E51 /* DimensionCompute.swift */; };
 		F135277D2F99D3E500847E51 /* MediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527702F99D3E400847E51 /* MediaItem.swift */; };
 		F135277E2F99D3E500847E51 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527782F99D3E400847E51 /* DesignTokens.swift */; };
@@ -92,6 +94,8 @@
 		F2F000072FD0010100000001 /* ProfileEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileEditorView.swift; sourceTree = "<group>"; };
 		F2F000092FD0010100000001 /* RelationshipEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelationshipEditorSheet.swift; sourceTree = "<group>"; };
 		F2F0000B2FD0010100000001 /* DimensionDemotionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionDemotionStore.swift; sourceTree = "<group>"; };
+		F30000002FE1010100000001 /* MomentEditorDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentEditorDraft.swift; sourceTree = "<group>"; };
+		F30000022FE1010100000001 /* MomentEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentEditorView.swift; sourceTree = "<group>"; };
 		F135276F2F99D3E400847E51 /* Dimension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dimension.swift; sourceTree = "<group>"; };
 		F2A000002FAA000100000001 /* DimensionParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionParams.swift; sourceTree = "<group>"; };
 		F13527702F99D3E400847E51 /* MediaItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaItem.swift; sourceTree = "<group>"; };
@@ -166,9 +170,27 @@
 				F2B0000D2FAB010100000001 /* Onboarding */,
 				F2D0000A2FB0010100000001 /* Home */,
 				F2E0000A2FC1010100000001 /* DimensionDetail */,
+				F30000062FE1010100000001 /* Moment */,
 				F2F0000D2FD0010100000001 /* SettingsUI */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		F30000062FE1010100000001 /* Moment */ = {
+			isa = PBXGroup;
+			children = (
+				F30000072FE1010100000001 /* MomentEditor */,
+			);
+			path = Moment;
+			sourceTree = "<group>";
+		};
+		F30000072FE1010100000001 /* MomentEditor */ = {
+			isa = PBXGroup;
+			children = (
+				F30000002FE1010100000001 /* MomentEditorDraft.swift */,
+				F30000022FE1010100000001 /* MomentEditorView.swift */,
+			);
+			path = MomentEditor;
 			sourceTree = "<group>";
 		};
 		F2E0000A2FC1010100000001 /* DimensionDetail */ = {
@@ -464,6 +486,8 @@
 				F2E000072FC1010100000001 /* MomentTimelineView.swift in Sources */,
 				F2E000092FC1010100000001 /* DimensionDetailCopy.swift in Sources */,
 				F2F000042FD0010100000001 /* DimensionParameterEditorView.swift in Sources */,
+				F30000012FE1010100000001 /* MomentEditorDraft.swift in Sources */,
+				F30000032FE1010100000001 /* MomentEditorView.swift in Sources */,
 				F2F000062FD0010100000001 /* SettingsHomeView.swift in Sources */,
 				F2F000082FD0010100000001 /* ProfileEditorView.swift in Sources */,
 				F2F0000A2FD0010100000001 /* RelationshipEditorSheet.swift in Sources */,

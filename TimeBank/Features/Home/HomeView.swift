@@ -10,6 +10,7 @@ struct HomeView: View {
 
     @State private var selectedTab: HomeTab = .home
     @State private var toastMessage: String?
+    @State private var momentEditorRoute: MomentEditorRoute?
 
     var body: some View {
         NavigationStack {
@@ -41,6 +42,9 @@ struct HomeView: View {
                         .padding(.bottom, 96)
                         .transition(.opacity.combined(with: .move(edge: .bottom)))
                 }
+            }
+            .sheet(item: $momentEditorRoute) { route in
+                MomentEditorView(route: route)
             }
         }
     }
@@ -116,7 +120,7 @@ struct HomeView: View {
                 }
             },
             onCreateMoment: {
-                showToast("存入功能马上就来")
+                momentEditorRoute = .newMoment
             }
         )
     }

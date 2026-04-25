@@ -12,6 +12,8 @@ struct DimensionDetailView: View {
 
     private let fileStore = FileStore()
 
+    @State private var momentEditorRoute: MomentEditorRoute?
+
     var body: some View {
         Group {
             if let profile = profiles.first,
@@ -29,6 +31,22 @@ struct DimensionDetailView: View {
         .background(Color.tbBg)
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if let dimension = dimensions.first(where: { $0.id == dimensionID }),
+               dimension.kind == .builtin || dimension.kind == .custom {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        momentEditorRoute = .dimension(dimension)
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .accessibilityLabel(DimensionDetailCopy.depositAccessibilityLabel)
+                }
+            }
+        }
+        .sheet(item: $momentEditorRoute) { route in
+            MomentEditorView(route: route)
+        }
     }
 
     private func detailContent(

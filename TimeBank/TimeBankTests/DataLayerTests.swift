@@ -135,6 +135,94 @@ final class DataLayerTests: XCTestCase {
         XCTAssertTrue(orphans.isEmpty)
     }
 
+    func testMomentEditorDraftRequiresMediaTitleOrNoteForSave() {
+        var draft = MomentEditorDraft(selectedDimensionID: DimensionReservedID.parents.rawValue)
+
+        XCTAssertFalse(draft.canSave)
+        XCTAssertEqual(draft.disabledSaveAccessibilityLabel, "请先添加照片、标题或笔记")
+
+        draft.title = "   "
+        draft.note = "   "
+        XCTAssertFalse(draft.canSave)
+
+        draft.title = "一次散步"
+        XCTAssertTrue(draft.canSave)
+
+        draft.title = ""
+        draft.note = "一些想留下的话"
+        XCTAssertTrue(draft.canSave)
+
+        draft.note = ""
+        draft.mediaItems = [.failed()]
+        XCTAssertFalse(draft.canSave)
+
+        draft.mediaItems = [.image(data: makeJPEGData())]
+        XCTAssertTrue(draft.canSave)
+    }
+
+    func testMomentEditorDraftHappyPathSavesMomentThroughMomentStore() async throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        let store = env.makeMomentStore()
+        _ = try store.bootstrapReservedData()
+
+        var draft = MomentEditorDraft(
+            selectedDimensionID: DimensionReservedID.sport.rawValue,
+            title: "晨跑",
+            note: "天气很好",
+            happenedAt: Date(timeIntervalSince1970: 1_713_000_000),
+            durationMinutesText: "45",
+            mediaItems: [.image(data: makeJPEGData())]
+        )
+        draft.durationMinutesText = "45分钟"
+
+        let request = try XCTUnwrap(draft.makeSaveRequest(id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!))
+        XCTAssertEqual(request.durationSeconds, 45 * 60)
+
+        let savedMoment = try await store.save(moment: request)
+        let fetched = try XCTUnwrap(try store.fetchAllMoments().first)
+
+        XCTAssertEqual(savedMoment.id, request.id)
+        XCTAssertEqual(fetched.dimensionId, DimensionReservedID.sport.rawValue)
+        XCTAssertEqual(fetched.title, "晨跑")
+        XCTAssertEqual(fetched.note, "天气很好")
+        XCTAssertEqual(fetched.durationSeconds, 45 * 60)
+        XCTAssertEqual(fetched.mediaItems.count, 1)
+    }
+
+    func testMomentEditorDraftSaveFailureRollsBackDatabaseAndFiles() async throws {
+        let env = try TestEnvironment { _, index, stage in
+            if index == 1 && stage == .beforeWriteOriginal {
+                throw FileStore.FileStoreError.injectedFailure("Simulated editor save failure.")
+            }
+        }
+        defer { env.cleanup() }
+
+        let store = env.makeMomentStore()
+        _ = try store.bootstrapReservedData()
+
+        let draft = MomentEditorDraft(
+            selectedDimensionID: DimensionReservedID.create.rawValue,
+            title: "写完一段",
+            mediaItems: [
+                .image(data: makeJPEGData()),
+                .image(data: makeJPEGData())
+            ]
+        )
+        let request = try XCTUnwrap(draft.makeSaveRequest(id: UUID(uuidString: "22222222-2222-2222-2222-222222222222")!))
+
+        await XCTAssertThrowsErrorAsync {
+            _ = try await store.save(moment: request)
+        }
+
+        XCTAssertEqual(try store.fetchAllMoments().count, 0)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: env.fileStore.momentDirectory(for: request.id).path))
+
+        let orphans = try env.fileStore.orphanMomentDirectories(referencedMomentIDs: [])
+        XCTAssertTrue(orphans.isEmpty)
+    }
+
     func testDeleteThenUndoWithinWindowRestoresMoment() async throws {
         let env = try TestEnvironment()
         defer { env.cleanup() }
