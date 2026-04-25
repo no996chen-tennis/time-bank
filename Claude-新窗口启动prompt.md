@@ -163,16 +163,15 @@ feature branch `m{n}-{模块}` 已推送到 origin，等 Adam 验证。
 
 # 七、Milestone 路线图（长期上下文）
 
-- ✅ **V1.3.2 文档定稿** + **Xcode 骨架就位** + **UI 定稿**（已完成）
-- 🔄 **M1 · 数据层**（进行中）· 11 个 Swift 文件 + 单测
-- ⏭ M2 · Onboarding + 主页
-- ⏭ M3 · 时间账户详情 + 参数编辑
-- ⏭ M4 · 存储层核心（时刻 CRUD · 最大模块）
-- ⏭ M5 · 账户 Tab + Memorial Mode
-- ⏭ M6 · Widget（App Group · 第二大风险点）
-- ⏭ M7 · 导出 + 设置
-- ⏭ M8 · 打磨 + TestFlight
-- ⏭ M9 · App Store 提交
+- ✅ **V1.3.2 文档定稿** + **Xcode 骨架就位** + **UI 定稿**
+- ✅ **M1 · 数据层**（2026-04-22）· 11 个 Swift 文件 + 单测
+- ✅ **M2 · Onboarding + 主页**（2026-04-25）
+- 🔄 **M3 · App 内闭环**（最大 milestone）· 时间账户详情 + 参数编辑 + 存时刻 CRUD + 账户 Tab + Memorial
+- ⏭ M4 · 跨进程 + 导出 · Widget + ZIP 导出 + 通知偏好
+- ⏭ M5 · 打磨 + TestFlight
+- ⏭ M6 · App Store 提交
+
+> **2026-04-25 路线图重排**：原 M3-M7 五个细粒度 milestone 合并为新 M3 + M4 两个大里程碑（详见 `ChatGPT-协作协议.md` §3）。原 M8/M9 重编号为 M5/M6。
 
 # 八、最后一句
 
