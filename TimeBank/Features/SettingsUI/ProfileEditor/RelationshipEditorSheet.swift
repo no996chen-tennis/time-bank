@@ -138,7 +138,7 @@ struct RelationshipEditorSheet: View {
 
                     Spacer()
 
-                    Text("\(formatHalfHour(partner.hoursPerDay)) 小时")
+                    Text(Formatter.hoursReadable(partner.hoursPerDay))
                         .font(.tbBodySm)
                         .foregroundStyle(Color.tbPrimary)
                 }
@@ -196,9 +196,4 @@ struct RelationshipEditorSheet: View {
         }
     }
 
-    private func formatHalfHour(_ value: Double) -> String {
-        value.truncatingRemainder(dividingBy: 1) == 0
-            ? String(Int(value))
-            : String(format: "%.1f", value)
-    }
 }

@@ -299,8 +299,8 @@ struct ProfileEditorView: View {
             case .parents:
                 let count = try store.sourceMomentCount(for: DimensionReservedID.parents.rawValue)
                 let message = count > 0
-                    ? "你存入父母的 \(count) 个瞬间会被收纳到「其他」时间账户，不会消失。\n重新添加父母时可以收回。"
-                    : ""
+                    ? "你存入父母的 \(Formatter.momentsCount(count))会被收纳到「其他」时间账户，不会消失。\n重新添加父母时可以收回。"
+                    : "你还没存过和父母相关的瞬间。\n移除后任何时候可以重新添加。"
                 request = RelationRemovalRequest(kind: .parents, title: "确定要把父母从时间银行里移除吗？", message: message, count: count)
 
             case .child(let child, let totalCount):
@@ -314,16 +314,16 @@ struct ProfileEditorView: View {
                 } else {
                     let count = try store.sourceMomentCount(for: DimensionReservedID.kids.rawValue)
                     let message = count > 0
-                        ? "你存入孩子的 \(count) 个瞬间会被收纳到「其他」时间账户。\n重新添加孩子时可以收回。"
-                        : ""
+                        ? "你存入孩子的 \(Formatter.momentsCount(count))会被收纳到「其他」时间账户。\n重新添加孩子时可以收回。"
+                        : "你还没存过和孩子相关的瞬间。\n移除后任何时候可以重新添加。"
                     request = RelationRemovalRequest(kind: .child(child, isLast: true), title: "确定要移除最后一个孩子吗？", message: message, count: count)
                 }
 
             case .partner:
                 let count = try store.sourceMomentCount(for: DimensionReservedID.partner.rawValue)
                 let message = count > 0
-                    ? "你存入伴侣的 \(count) 个瞬间不会消失，会被收纳到「其他」时间账户。\n任何时候你重新添加伴侣，都可以选择把它们收回来。"
-                    : ""
+                    ? "你存入伴侣的 \(Formatter.momentsCount(count))不会消失，会被收纳到「其他」时间账户。\n任何时候你重新添加伴侣，都可以选择把它们收回来。"
+                    : "你还没存过和伴侣相关的瞬间。\n移除后任何时候可以重新添加。"
                 request = RelationRemovalRequest(kind: .partner, title: "确定要从时间银行里把伴侣移除吗？", message: message, count: count)
             }
 
@@ -350,7 +350,7 @@ struct ProfileEditorView: View {
                 movedCount = try store.removePartner(from: profile)
             }
 
-            showToast(movedCount > 0 ? "已移除 · \(movedCount) 个瞬间收到了「其他」" : "已移除")
+            showToast(movedCount > 0 ? "已移除 · \(Formatter.momentsCount(movedCount))收到了「其他」" : "已移除")
         } catch {
             showToast("已移除")
         }
@@ -365,7 +365,7 @@ struct ProfileEditorView: View {
             recoveryRequest = RelationRecoveryRequest(
                 dimensionID: dimensionID,
                 count: count,
-                message: "我们在「其他」里看到 \(count) 个原本属于\(recoveryRelationName(for: dimensionID))的瞬间。"
+                message: "我们在「其他」里看到 \(Formatter.momentsCount(count))原本属于\(recoveryRelationName(for: dimensionID))。"
             )
         } catch {
             recoveryRequest = nil
@@ -378,7 +378,7 @@ struct ProfileEditorView: View {
 
         do {
             let count = try DimensionDemotionStore(modelContext: modelContext).restore(dimensionID: request.dimensionID)
-            showToast("收回了 \(count) 个瞬间")
+            showToast("收回了 \(Formatter.momentsCount(count))")
         } catch {
             showToast("已更新")
         }

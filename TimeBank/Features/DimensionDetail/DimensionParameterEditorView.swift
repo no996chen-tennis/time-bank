@@ -110,7 +110,7 @@ struct DimensionParameterEditorView: View {
                 }
                 warningRow(parentsVisitsWarning)
 
-                sliderRow(title: "每次见面时长", valueText: "\(formatHalfHour(parentsHoursPerVisit)) 小时") {
+                sliderRow(title: "每次见面时长", valueText: Formatter.hoursReadable(parentsHoursPerVisit)) {
                     Slider(value: $parentsHoursPerVisit, in: 0.5...72, step: 0.5)
                         .tint(Color.tbPrimary)
                 }
@@ -119,7 +119,7 @@ struct DimensionParameterEditorView: View {
 
         case DimensionReservedID.kids.rawValue:
             parameterCard {
-                sliderRow(title: "每周陪伴时长", valueText: "\(formatHalfHour(kidsWeeklyHours)) 小时") {
+                sliderRow(title: "每周陪伴时长", valueText: Formatter.hoursReadable(kidsWeeklyHours)) {
                     Slider(value: $kidsWeeklyHours, in: 0...80, step: 0.5)
                         .tint(Color.tbPrimary)
                 }
@@ -128,7 +128,7 @@ struct DimensionParameterEditorView: View {
 
         case DimensionReservedID.partner.rawValue:
             parameterCard {
-                sliderRow(title: "每天共处时长", valueText: "\(formatHalfHour(partnerHoursPerDay)) 小时") {
+                sliderRow(title: "每天共处时长", valueText: Formatter.hoursReadable(partnerHoursPerDay)) {
                     Slider(value: $partnerHoursPerDay, in: 0...16, step: 0.5)
                         .tint(Color.tbPrimary)
                 }
@@ -158,7 +158,7 @@ struct DimensionParameterEditorView: View {
                 }
                 warningRow(createEndWarning(profile: profile))
 
-                sliderRow(title: "每周创造时长", valueText: "\(formatHalfHour(createWeeklyHours)) 小时") {
+                sliderRow(title: "每周创造时长", valueText: Formatter.hoursReadable(createWeeklyHours)) {
                     Slider(value: $createWeeklyHours, in: 0...80, step: 0.5)
                         .tint(Color.tbPrimary)
                 }
@@ -166,7 +166,7 @@ struct DimensionParameterEditorView: View {
 
         case DimensionReservedID.free.rawValue:
             parameterCard {
-                sliderRow(title: "每天清醒时长", valueText: "\(formatHalfHour(freeAwakeHoursPerDay)) 小时") {
+                sliderRow(title: "每天清醒时长", valueText: Formatter.hoursReadable(freeAwakeHoursPerDay)) {
                     Slider(value: $freeAwakeHoursPerDay, in: 8...24, step: 0.5)
                         .tint(Color.tbPrimary)
                 }
@@ -563,12 +563,6 @@ struct DimensionParameterEditorView: View {
     private func age(fromBirthYear birthYear: Int) -> Int {
         let currentYear = Calendar(identifier: .gregorian).component(.year, from: .now)
         return max(0, currentYear - birthYear)
-    }
-
-    private func formatHalfHour(_ value: Double) -> String {
-        value.truncatingRemainder(dividingBy: 1) == 0
-            ? String(Int(value))
-            : String(format: "%.1f", value)
     }
 
     private func formatQuarterHour(_ value: Double) -> String {

@@ -9,6 +9,7 @@ struct HomeView: View {
     @Query private var moments: [Moment]
 
     @State private var selectedTab: HomeTab = .home
+    @State private var toastMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -28,6 +29,19 @@ struct HomeView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.tbBg)
+            .overlay(alignment: .bottom) {
+                if let toastMessage {
+                    Text(toastMessage)
+                        .font(.tbBodySm)
+                        .foregroundStyle(Color.tbSurface)
+                        .padding(.horizontal, TBSpace.s4)
+                        .padding(.vertical, TBSpace.s3)
+                        .background(Color.tbInk.opacity(0.9))
+                        .clipShape(Capsule())
+                        .padding(.bottom, 96)
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                }
+            }
         }
     }
 
@@ -94,10 +108,31 @@ struct HomeView: View {
         BottomTabBar(
             selectedTab: selectedTab,
             onSelect: { tab in
-                selectedTab = tab == .account ? .home : tab
+                if tab == .account {
+                    selectedTab = .home
+                    showToast("账户 Tab 还在搭建中")
+                } else {
+                    selectedTab = tab
+                }
             },
-            onCreateMoment: {}
+            onCreateMoment: {
+                showToast("存入功能马上就来")
+            }
         )
+    }
+
+    private func showToast(_ message: String) {
+        withAnimation(.spring(response: 0.28, dampingFraction: 0.86)) {
+            toastMessage = message
+        }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_600_000_000)
+            withAnimation(.easeOut(duration: 0.2)) {
+                if toastMessage == message {
+                    toastMessage = nil
+                }
+            }
+        }
     }
 
     private var visibleAccountDimensions: [Dimension] {
