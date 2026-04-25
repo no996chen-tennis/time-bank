@@ -18,6 +18,7 @@
 		F2B0000B2FAB010100000001 /* Step4DoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B0000A2FAB010100000001 /* Step4DoneView.swift */; };
 		F2B000102FAC010100000001 /* SelectableChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B0000F2FAC010100000001 /* SelectableChip.swift */; };
 		F2B000142FAE010100000001 /* YearInputField.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000132FAE010100000001 /* YearInputField.swift */; };
+		F2F000022FD0010100000001 /* FrequencyUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2F000012FD0010100000001 /* FrequencyUnit.swift */; };
 		F2D000012FB0010100000001 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D000002FB0010100000001 /* HomeView.swift */; };
 		F2D000032FB0010100000001 /* GreetingHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D000022FB0010100000001 /* GreetingHeaderView.swift */; };
 		F2D000052FB0010100000001 /* DoubleLayerAccountCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D000042FB0010100000001 /* DoubleLayerAccountCardView.swift */; };
@@ -28,6 +29,11 @@
 		F2E000052FC1010100000001 /* CalculationSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E000042FC1010100000001 /* CalculationSummaryCard.swift */; };
 		F2E000072FC1010100000001 /* MomentTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E000062FC1010100000001 /* MomentTimelineView.swift */; };
 		F2E000092FC1010100000001 /* DimensionDetailCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E000082FC1010100000001 /* DimensionDetailCopy.swift */; };
+		F2F000042FD0010100000001 /* DimensionParameterEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2F000032FD0010100000001 /* DimensionParameterEditorView.swift */; };
+		F2F000062FD0010100000001 /* SettingsHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2F000052FD0010100000001 /* SettingsHomeView.swift */; };
+		F2F000082FD0010100000001 /* ProfileEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2F000072FD0010100000001 /* ProfileEditorView.swift */; };
+		F2F0000A2FD0010100000001 /* RelationshipEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2F000092FD0010100000001 /* RelationshipEditorSheet.swift */; };
+		F2F0000C2FD0010100000001 /* DimensionDemotionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2F0000B2FD0010100000001 /* DimensionDemotionStore.swift */; };
 		F135277C2F99D3E500847E51 /* DimensionCompute.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527752F99D3E400847E51 /* DimensionCompute.swift */; };
 		F135277D2F99D3E500847E51 /* MediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527702F99D3E400847E51 /* MediaItem.swift */; };
 		F135277E2F99D3E500847E51 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527782F99D3E400847E51 /* DesignTokens.swift */; };
@@ -70,6 +76,7 @@
 		F2B0000A2FAB010100000001 /* Step4DoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step4DoneView.swift; sourceTree = "<group>"; };
 		F2B0000F2FAC010100000001 /* SelectableChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectableChip.swift; sourceTree = "<group>"; };
 		F2B000132FAE010100000001 /* YearInputField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YearInputField.swift; sourceTree = "<group>"; };
+		F2F000012FD0010100000001 /* FrequencyUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrequencyUnit.swift; sourceTree = "<group>"; };
 		F2D000002FB0010100000001 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		F2D000022FB0010100000001 /* GreetingHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GreetingHeaderView.swift; sourceTree = "<group>"; };
 		F2D000042FB0010100000001 /* DoubleLayerAccountCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubleLayerAccountCardView.swift; sourceTree = "<group>"; };
@@ -80,6 +87,11 @@
 		F2E000042FC1010100000001 /* CalculationSummaryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculationSummaryCard.swift; sourceTree = "<group>"; };
 		F2E000062FC1010100000001 /* MomentTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentTimelineView.swift; sourceTree = "<group>"; };
 		F2E000082FC1010100000001 /* DimensionDetailCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionDetailCopy.swift; sourceTree = "<group>"; };
+		F2F000032FD0010100000001 /* DimensionParameterEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionParameterEditorView.swift; sourceTree = "<group>"; };
+		F2F000052FD0010100000001 /* SettingsHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsHomeView.swift; sourceTree = "<group>"; };
+		F2F000072FD0010100000001 /* ProfileEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileEditorView.swift; sourceTree = "<group>"; };
+		F2F000092FD0010100000001 /* RelationshipEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelationshipEditorSheet.swift; sourceTree = "<group>"; };
+		F2F0000B2FD0010100000001 /* DimensionDemotionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionDemotionStore.swift; sourceTree = "<group>"; };
 		F135276F2F99D3E400847E51 /* Dimension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dimension.swift; sourceTree = "<group>"; };
 		F2A000002FAA000100000001 /* DimensionParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionParams.swift; sourceTree = "<group>"; };
 		F13527702F99D3E400847E51 /* MediaItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaItem.swift; sourceTree = "<group>"; };
@@ -154,6 +166,7 @@
 				F2B0000D2FAB010100000001 /* Onboarding */,
 				F2D0000A2FB0010100000001 /* Home */,
 				F2E0000A2FC1010100000001 /* DimensionDetail */,
+				F2F0000D2FD0010100000001 /* SettingsUI */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -166,6 +179,7 @@
 				F2E000042FC1010100000001 /* CalculationSummaryCard.swift */,
 				F2E000062FC1010100000001 /* MomentTimelineView.swift */,
 				F2E000082FC1010100000001 /* DimensionDetailCopy.swift */,
+				F2F000032FD0010100000001 /* DimensionParameterEditorView.swift */,
 			);
 			path = DimensionDetail;
 			sourceTree = "<group>";
@@ -202,8 +216,27 @@
 			children = (
 				F2B0000F2FAC010100000001 /* SelectableChip.swift */,
 				F2B000132FAE010100000001 /* YearInputField.swift */,
+				F2F000012FD0010100000001 /* FrequencyUnit.swift */,
 			);
 			path = Components;
+			sourceTree = "<group>";
+		};
+		F2F0000D2FD0010100000001 /* SettingsUI */ = {
+			isa = PBXGroup;
+			children = (
+				F2F000052FD0010100000001 /* SettingsHomeView.swift */,
+				F2F0000E2FD0010100000001 /* ProfileEditor */,
+			);
+			path = SettingsUI;
+			sourceTree = "<group>";
+		};
+		F2F0000E2FD0010100000001 /* ProfileEditor */ = {
+			isa = PBXGroup;
+			children = (
+				F2F000072FD0010100000001 /* ProfileEditorView.swift */,
+				F2F000092FD0010100000001 /* RelationshipEditorSheet.swift */,
+			);
+			path = ProfileEditor;
 			sourceTree = "<group>";
 		};
 		F13527742F99D3E400847E51 /* Models */ = {
@@ -224,6 +257,7 @@
 			children = (
 				F13527752F99D3E400847E51 /* DimensionCompute.swift */,
 				F13527762F99D3E400847E51 /* MomentStore.swift */,
+				F2F0000B2FD0010100000001 /* DimensionDemotionStore.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -418,6 +452,7 @@
 				F2B0000B2FAB010100000001 /* Step4DoneView.swift in Sources */,
 				F2B000102FAC010100000001 /* SelectableChip.swift in Sources */,
 				F2B000142FAE010100000001 /* YearInputField.swift in Sources */,
+				F2F000022FD0010100000001 /* FrequencyUnit.swift in Sources */,
 				F2D000012FB0010100000001 /* HomeView.swift in Sources */,
 				F2D000032FB0010100000001 /* GreetingHeaderView.swift in Sources */,
 				F2D000052FB0010100000001 /* DoubleLayerAccountCardView.swift in Sources */,
@@ -428,6 +463,11 @@
 				F2E000052FC1010100000001 /* CalculationSummaryCard.swift in Sources */,
 				F2E000072FC1010100000001 /* MomentTimelineView.swift in Sources */,
 				F2E000092FC1010100000001 /* DimensionDetailCopy.swift in Sources */,
+				F2F000042FD0010100000001 /* DimensionParameterEditorView.swift in Sources */,
+				F2F000062FD0010100000001 /* SettingsHomeView.swift in Sources */,
+				F2F000082FD0010100000001 /* ProfileEditorView.swift in Sources */,
+				F2F0000A2FD0010100000001 /* RelationshipEditorSheet.swift in Sources */,
+				F2F0000C2FD0010100000001 /* DimensionDemotionStore.swift in Sources */,
 				F135277C2F99D3E500847E51 /* DimensionCompute.swift in Sources */,
 				F135277D2F99D3E500847E51 /* MediaItem.swift in Sources */,
 				F135277E2F99D3E500847E51 /* DesignTokens.swift in Sources */,

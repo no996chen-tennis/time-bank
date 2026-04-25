@@ -12,19 +12,54 @@ struct SportDimensionParams: Sendable, Equatable {
     var hoursPerWeekBefore50: Double
     var hoursPerWeek50To80: Double
     var hoursPerWeekAfter80: Double
+    var sessionsPerWeek: Int
+    var hoursPerSession: Double
 
-    init(
+    nonisolated init(
         hoursPerWeekBefore50: Double = 5,
         hoursPerWeek50To80: Double = 3,
-        hoursPerWeekAfter80: Double = 1
+        hoursPerWeekAfter80: Double = 1,
+        sessionsPerWeek: Int = 5,
+        hoursPerSession: Double = 1
     ) {
         self.hoursPerWeekBefore50 = hoursPerWeekBefore50
         self.hoursPerWeek50To80 = hoursPerWeek50To80
         self.hoursPerWeekAfter80 = hoursPerWeekAfter80
+        self.sessionsPerWeek = sessionsPerWeek
+        self.hoursPerSession = hoursPerSession
     }
 }
 
-nonisolated extension SportDimensionParams: Codable {}
+nonisolated extension SportDimensionParams: Codable {
+    private enum CodingKeys: String, CodingKey {
+        case hoursPerWeekBefore50
+        case hoursPerWeek50To80
+        case hoursPerWeekAfter80
+        case sessionsPerWeek
+        case hoursPerSession
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            hoursPerWeekBefore50: try container.decodeIfPresent(Double.self, forKey: .hoursPerWeekBefore50) ?? 5,
+            hoursPerWeek50To80: try container.decodeIfPresent(Double.self, forKey: .hoursPerWeek50To80) ?? 3,
+            hoursPerWeekAfter80: try container.decodeIfPresent(Double.self, forKey: .hoursPerWeekAfter80) ?? 1,
+            sessionsPerWeek: try container.decodeIfPresent(Int.self, forKey: .sessionsPerWeek) ?? 5,
+            hoursPerSession: try container.decodeIfPresent(Double.self, forKey: .hoursPerSession) ?? 1
+        )
+    }
+}
+
+struct KidsDimensionParams: Sendable, Equatable {
+    var weeklyHoursOverride: Double?
+
+    nonisolated init(weeklyHoursOverride: Double? = nil) {
+        self.weeklyHoursOverride = weeklyHoursOverride
+    }
+}
+
+nonisolated extension KidsDimensionParams: Codable {}
 
 struct CreateDimensionParams: Sendable, Equatable {
     var focusedPhaseEndAge: Int

@@ -846,6 +846,126 @@ final class DataLayerTests: XCTestCase {
         XCTAssertEqual(bereavedKidsHours, 0, accuracy: 0.001, "所有孩子已故应返回 0")
     }
 
+    func testDimensionDemotionMovesNormalMomentsToOtherAndSkipsPendingDelete() throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        try TimeBank.Dimension.seedReservedDimensionsIfNeeded(in: env.context)
+
+        let kids = try XCTUnwrap(TimeBank.Dimension.fetch(by: DimensionReservedID.kids.rawValue, in: env.context))
+        kids.status = .visible
+
+        let normalMoment = Moment(
+            dimensionId: DimensionReservedID.kids.rawValue,
+            durationSeconds: 3600,
+            status: .normal
+        )
+        let pendingMoment = Moment(
+            dimensionId: DimensionReservedID.kids.rawValue,
+            durationSeconds: 7200,
+            status: .pendingDelete,
+            pendingDeleteAt: .now
+        )
+        env.context.insert(normalMoment)
+        env.context.insert(pendingMoment)
+        try env.context.save()
+
+        let movedCount = try DimensionDemotionStore(modelContext: env.context).demote(dimensionID: DimensionReservedID.kids.rawValue)
+
+        XCTAssertEqual(movedCount, 1)
+        XCTAssertEqual(normalMoment.dimensionId, DimensionReservedID.other.rawValue)
+        XCTAssertEqual(normalMoment.originDimensionId, DimensionReservedID.kids.rawValue)
+        XCTAssertEqual(pendingMoment.dimensionId, DimensionReservedID.kids.rawValue)
+        XCTAssertNil(pendingMoment.originDimensionId)
+        XCTAssertEqual(kids.status, .hidden)
+    }
+
+    func testDimensionDemotionRestoreMovesMomentsBackAndClearsOrigin() throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        try TimeBank.Dimension.seedReservedDimensionsIfNeeded(in: env.context)
+
+        let partner = try XCTUnwrap(TimeBank.Dimension.fetch(by: DimensionReservedID.partner.rawValue, in: env.context))
+        partner.status = .hidden
+
+        let demotedMoment = Moment(
+            dimensionId: DimensionReservedID.other.rawValue,
+            originDimensionId: DimensionReservedID.partner.rawValue,
+            durationSeconds: 3600,
+            status: .normal
+        )
+        env.context.insert(demotedMoment)
+        try env.context.save()
+
+        let restoredCount = try DimensionDemotionStore(modelContext: env.context).restore(dimensionID: DimensionReservedID.partner.rawValue)
+
+        XCTAssertEqual(restoredCount, 1)
+        XCTAssertEqual(demotedMoment.dimensionId, DimensionReservedID.partner.rawValue)
+        XCTAssertNil(demotedMoment.originDimensionId)
+        XCTAssertEqual(partner.status, .visible)
+    }
+
+    func testRemoveChildOnlyDemotesWhenLastChildIsRemoved() throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        try TimeBank.Dimension.seedReservedDimensionsIfNeeded(in: env.context)
+        let kids = try XCTUnwrap(TimeBank.Dimension.fetch(by: DimensionReservedID.kids.rawValue, in: env.context))
+        kids.status = .visible
+
+        let firstChild = ChildInfo(birthYear: 2018)
+        let secondChild = ChildInfo(birthYear: 2021)
+        let profile = UserProfile(
+            birthday: .now,
+            children: [firstChild, secondChild]
+        )
+        env.context.insert(profile)
+
+        let kidsMoment = Moment(
+            dimensionId: DimensionReservedID.kids.rawValue,
+            durationSeconds: 3600,
+            status: .normal
+        )
+        env.context.insert(kidsMoment)
+        try env.context.save()
+
+        let store = DimensionDemotionStore(modelContext: env.context)
+        let partialMovedCount = try store.removeChild(firstChild.id, from: profile)
+
+        XCTAssertEqual(partialMovedCount, 0)
+        XCTAssertEqual(profile.children.count, 1)
+        XCTAssertEqual(kids.status, .visible)
+        XCTAssertEqual(kidsMoment.dimensionId, DimensionReservedID.kids.rawValue)
+        XCTAssertNil(kidsMoment.originDimensionId)
+
+        let finalMovedCount = try store.removeChild(secondChild.id, from: profile)
+
+        XCTAssertEqual(finalMovedCount, 1)
+        XCTAssertTrue(profile.children.isEmpty)
+        XCTAssertEqual(kids.status, .hidden)
+        XCTAssertEqual(kidsMoment.dimensionId, DimensionReservedID.other.rawValue)
+        XCTAssertEqual(kidsMoment.originDimensionId, DimensionReservedID.kids.rawValue)
+    }
+
+    func testSportDimensionParamsDecodeOldJSONWithEditorDefaults() throws {
+        let oldJSON = Data("""
+        {
+          "hoursPerWeekBefore50": 7,
+          "hoursPerWeek50To80": 4,
+          "hoursPerWeekAfter80": 2
+        }
+        """.utf8)
+
+        let params = try JSONDecoder().decode(SportDimensionParams.self, from: oldJSON)
+
+        XCTAssertEqual(params.hoursPerWeekBefore50, 7, accuracy: 0.001)
+        XCTAssertEqual(params.hoursPerWeek50To80, 4, accuracy: 0.001)
+        XCTAssertEqual(params.hoursPerWeekAfter80, 2, accuracy: 0.001)
+        XCTAssertEqual(params.sessionsPerWeek, 5)
+        XCTAssertEqual(params.hoursPerSession, 1, accuracy: 0.001)
+    }
+
     private func makeJPEGData(size: CGSize = CGSize(width: 40, height: 40), color: UIColor = .systemOrange) -> Data {
         let renderer = UIGraphicsImageRenderer(size: size)
         let image = renderer.image { context in

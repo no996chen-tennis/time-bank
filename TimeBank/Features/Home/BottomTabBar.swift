@@ -2,18 +2,38 @@
 
 import SwiftUI
 
+enum HomeTab: Hashable {
+    case home
+    case account
+    case me
+}
+
 struct BottomTabBar: View {
+    let selectedTab: HomeTab
+    let onSelect: (HomeTab) -> Void
+    let onCreateMoment: () -> Void
+
+    init(
+        selectedTab: HomeTab = .home,
+        onSelect: @escaping (HomeTab) -> Void = { _ in },
+        onCreateMoment: @escaping () -> Void = {}
+    ) {
+        self.selectedTab = selectedTab
+        self.onSelect = onSelect
+        self.onCreateMoment = onCreateMoment
+    }
+
     var body: some View {
         ZStack {
             HStack(alignment: .center) {
-                tabItem(icon: "house.fill", title: "主页", isSelected: true)
+                tabItem(icon: "house.fill", title: "主页", tab: .home)
 
-                tabItem(icon: "chart.pie", title: "账户", isSelected: false)
+                tabItem(icon: "chart.pie", title: "账户", tab: .account)
 
                 Spacer()
                     .frame(width: 104)
 
-                tabItem(icon: "person.circle", title: "我", isSelected: false)
+                tabItem(icon: "person.circle", title: "我", tab: .me)
             }
             .padding(.horizontal, TBSpace.s5)
             .frame(height: 84)
@@ -25,7 +45,7 @@ struct BottomTabBar: View {
                     .frame(height: 1)
             }
 
-            Button(action: {}) {
+            Button(action: onCreateMoment) {
                 Image(systemName: "plus")
                     .font(.tbHeadM)
                     .foregroundStyle(Color.white)
@@ -44,9 +64,13 @@ struct BottomTabBar: View {
     private func tabItem(
         icon: String,
         title: String,
-        isSelected: Bool
+        tab: HomeTab
     ) -> some View {
-        Button(action: {}) {
+        let isSelected = selectedTab == tab
+
+        return Button {
+            onSelect(tab)
+        } label: {
             VStack(spacing: TBSpace.s1) {
                 Image(systemName: icon)
                     .font(.tbHeadS)

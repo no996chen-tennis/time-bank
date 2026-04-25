@@ -8,11 +8,18 @@ struct HomeView: View {
     @Query private var dimensions: [Dimension]
     @Query private var moments: [Moment]
 
+    @State private var selectedTab: HomeTab = .home
+
     var body: some View {
         NavigationStack {
             Group {
                 if let profile = profiles.first {
-                    homeContent(profile: profile)
+                    switch selectedTab {
+                    case .home, .account:
+                        homeContent(profile: profile)
+                    case .me:
+                        meContent(profile: profile)
+                    }
                 } else {
                     Text("未找到用户信息")
                         .font(.tbBodySm)
@@ -72,8 +79,25 @@ struct HomeView: View {
                 .padding(.bottom, TBSpace.s7)
             }
 
-            BottomTabBar()
+            tabBar
         }
+    }
+
+    private func meContent(profile: UserProfile) -> some View {
+        VStack(spacing: 0) {
+            SettingsHomeView(profile: profile)
+            tabBar
+        }
+    }
+
+    private var tabBar: some View {
+        BottomTabBar(
+            selectedTab: selectedTab,
+            onSelect: { tab in
+                selectedTab = tab == .account ? .home : tab
+            },
+            onCreateMoment: {}
+        )
     }
 
     private var visibleAccountDimensions: [Dimension] {

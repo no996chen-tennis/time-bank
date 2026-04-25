@@ -46,11 +46,16 @@ struct DimensionDetailView: View {
                     dimensionsByID: dimensionsByID
                 )
 
-                CalculationSummaryCard(
-                    dimension: dimension,
-                    profile: profile,
-                    dimensionsByID: dimensionsByID
-                )
+                NavigationLink {
+                    DimensionParameterEditorView(dimensionID: dimension.id)
+                } label: {
+                    CalculationSummaryCard(
+                        dimension: dimension,
+                        profile: profile,
+                        dimensionsByID: dimensionsByID
+                    )
+                }
+                .buttonStyle(.plain)
 
                 MomentTimelineView(
                     dimension: dimension,

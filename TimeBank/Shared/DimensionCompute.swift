@@ -80,7 +80,7 @@ enum DimensionCompute {
             return parentsHours(profile: profile, now: now)
 
         case DimensionReservedID.kids.rawValue:
-            return kidsHours(profile: profile, now: now)
+            return kidsHours(dimension: dimension, profile: profile, now: now)
 
         case DimensionReservedID.partner.rawValue:
             return partnerHours(profile: profile, now: now)
@@ -135,7 +135,7 @@ enum DimensionCompute {
             return .occurrence(count: parentsTotalMeetings(profile: profile, now: now), noun: "见面")
 
         case DimensionReservedID.kids.rawValue:
-            return .weeklyHours(kidsCurrentHoursPerWeek(profile: profile, now: now))
+            return .weeklyHours(kidsCurrentHoursPerWeek(dimension: dimension, profile: profile, now: now))
 
         case DimensionReservedID.partner.rawValue:
             guard let partner = profile.partner, partner.deceased == false else { return .none }
@@ -226,7 +226,7 @@ enum DimensionCompute {
         return remainingYears * Double(max(0, parents.visitsPerYear)) * max(0, parents.hoursPerVisit)
     }
 
-    private static func kidsHours(profile: UserProfile, now: Date) -> Double {
+    private static func kidsHours(dimension: Dimension, profile: UserProfile, now: Date) -> Double {
         let livingChildren = profile.children.filter { $0.deceased == false }
         guard livingChildren.isEmpty == false else { return 0 }
 
@@ -234,7 +234,12 @@ enum DimensionCompute {
             .map { ageYears(fromBirthYear: $0.birthYear, now: now) }
             .min() ?? 0
 
-        return childQualityHours(fromCurrentAge: youngestAge, remainingYears: Lifespan.remainingYears(profile: profile, now: now))
+        let params = dimension.decodeParams(KidsDimensionParams.self, default: KidsDimensionParams())
+        return childQualityHours(
+            fromCurrentAge: youngestAge,
+            remainingYears: Lifespan.remainingYears(profile: profile, now: now),
+            weeklyHoursOverride: params.weeklyHoursOverride
+        )
     }
 
     private static func partnerHours(profile: UserProfile, now: Date) -> Double {
@@ -276,9 +281,16 @@ enum DimensionCompute {
         return Lifespan.remainingYears(profile: profile, now: now) * weeksPerYear * max(0, params.freePhaseHoursPerWeek)
     }
 
-    private static func childQualityHours(fromCurrentAge age: Double, remainingYears: Double) -> Double {
+    private static func childQualityHours(
+        fromCurrentAge age: Double,
+        remainingYears: Double,
+        weeklyHoursOverride: Double? = nil
+    ) -> Double {
         let positiveAge = max(0, age)
         let cap = max(0, remainingYears)
+        if let weeklyHoursOverride {
+            return cap * weeksPerYear * max(0, weeklyHoursOverride)
+        }
 
         if positiveAge >= 18 {
             return cap * weeksPerYear * 2
@@ -336,9 +348,13 @@ enum DimensionCompute {
         return Int((remainingYears * Double(max(0, parents.visitsPerYear))).rounded())
     }
 
-    private static func kidsCurrentHoursPerWeek(profile: UserProfile, now: Date) -> Double {
+    private static func kidsCurrentHoursPerWeek(dimension: Dimension, profile: UserProfile, now: Date) -> Double {
         let livingChildren = profile.children.filter { $0.deceased == false }
         guard livingChildren.isEmpty == false else { return 0 }
+        let params = dimension.decodeParams(KidsDimensionParams.self, default: KidsDimensionParams())
+        if let override = params.weeklyHoursOverride {
+            return max(0, override)
+        }
 
         let youngestAge = livingChildren
             .map { ageYears(fromBirthYear: $0.birthYear, now: now) }

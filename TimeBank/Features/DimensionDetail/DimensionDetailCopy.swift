@@ -65,7 +65,7 @@ enum DimensionDetailCopy {
             return [Formatter.dailyHoursWith(partner.hoursPerDay, action: "共处")]
 
         case DimensionReservedID.sport.rawValue:
-            let sessionHours = sportSessionHours
+            let sessionHours = sportSessionHours(for: dimension)
             let sessions = Int((consumeHours / sessionHours).rounded())
             return [
                 "约还能运动 · 合 \(max(0, sessions)) 次",
@@ -144,8 +144,9 @@ enum DimensionDetailCopy {
 
         case DimensionReservedID.sport.rawValue:
             let weekly = weeklyHours(from: subtitle)
-            let weeklySessions = Int((weekly / sportSessionHours).rounded())
-            return "每周 \(max(1, weeklySessions)) 次 · 每次 \(Formatter.hoursReadable(sportSessionHours))"
+            let sessionHours = sportSessionHours(for: dimension)
+            let weeklySessions = Int((weekly / sessionHours).rounded())
+            return "每周 \(max(1, weeklySessions)) 次 · 每次 \(Formatter.hoursReadable(sessionHours))"
 
         case DimensionReservedID.create.rawValue:
             let params = dimension.decodeParams(CreateDimensionParams.self, default: CreateDimensionParams())
@@ -206,11 +207,14 @@ enum DimensionDetailCopy {
         return "已存入瞬间 · \(shortCount) · \(Formatter.hoursCompact(storedHours))"
     }
 
-    private static let sportSessionHours = 1.0
-
     private static func occurrenceCount(from subtitle: DimensionCompute.DimensionSubtitle) -> Int {
         guard case .occurrence(let count, _) = subtitle else { return 0 }
         return max(0, count)
+    }
+
+    private static func sportSessionHours(for dimension: Dimension) -> Double {
+        let params = dimension.decodeParams(SportDimensionParams.self, default: SportDimensionParams())
+        return max(0.25, params.hoursPerSession)
     }
 
     private static func weeklyHours(from subtitle: DimensionCompute.DimensionSubtitle) -> Double {
