@@ -4,7 +4,6 @@ import PhotosUI
 import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
-import UIKit
 
 struct MomentEditorView: View {
     @Environment(\.dismiss) private var dismiss
@@ -331,11 +330,21 @@ struct MomentEditorView: View {
                         .foregroundStyle(Color.tbInk3)
                 }
         } else if item.kind == .image,
-                  let data = item.data,
-                  let image = UIImage(data: data) {
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFill()
+                  let data = item.data {
+            AsyncThumbnailImageView(
+                source: .data(
+                    key: "moment-editor-\(item.id.uuidString)",
+                    data: data
+                )
+            ) {
+                Rectangle()
+                    .fill(Color.tbBg3)
+                    .overlay {
+                        Image(systemName: "photo")
+                            .font(.system(size: 22, weight: .medium))
+                            .foregroundStyle(Color.tbInk3)
+                    }
+            }
         } else {
             Rectangle()
                 .fill(Color.tbBg3)

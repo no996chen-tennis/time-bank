@@ -10,9 +10,8 @@ struct DimensionDetailView: View {
     @Query private var dimensions: [Dimension]
     @Query private var moments: [Moment]
 
-    private let fileStore = FileStore()
-
     @State private var momentEditorRoute: MomentEditorRoute?
+    @State private var fileStore = FileStore()
 
     var body: some View {
         Group {

@@ -62,11 +62,11 @@ final class MomentStore {
 
     init(
         modelContext: ModelContext,
-        fileStore: FileStore = FileStore(),
+        fileStore: FileStore? = nil,
         deleteDelaySeconds: TimeInterval = 5.0
     ) {
         self.modelContext = modelContext
-        self.fileStore = fileStore
+        self.fileStore = fileStore ?? FileStore()
         self.deleteDelaySeconds = deleteDelaySeconds
     }
 

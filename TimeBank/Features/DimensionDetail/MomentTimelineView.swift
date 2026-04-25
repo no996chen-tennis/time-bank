@@ -1,12 +1,17 @@
 // TimeBank/Features/DimensionDetail/MomentTimelineView.swift
 
 import SwiftUI
-import UIKit
 
 struct MomentTimelineView: View {
     let dimension: Dimension
     let moments: [Moment]
     let fileStore: FileStore
+
+    @State private var visibleCount = 20
+    @State private var isLoadingNextPage = false
+
+    private let pageSize = 20
+    private let loadMoreThreshold = 5
 
     private var storedHours: Double {
         DimensionCompute.storedHours(for: dimension.id, moments: moments)
@@ -18,13 +23,25 @@ struct MomentTimelineView: View {
 
     private var timelineMoments: [Moment] {
         moments
-            .filter { $0.dimensionId == dimension.id && $0.status == .normal }
+            .filter { $0.dimensionId == dimension.id }
             .sorted { lhs, rhs in
                 if lhs.happenedAt == rhs.happenedAt {
                     return lhs.createdAt > rhs.createdAt
                 }
                 return lhs.happenedAt > rhs.happenedAt
             }
+    }
+
+    private var visibleMoments: [Moment] {
+        Array(timelineMoments.prefix(visibleCount))
+    }
+
+    private var timelineMomentIDs: [UUID] {
+        timelineMoments.map(\.id)
+    }
+
+    private var hasMoreMoments: Bool {
+        visibleCount < timelineMoments.count
     }
 
     var body: some View {
@@ -40,22 +57,40 @@ struct MomentTimelineView: View {
                 .foregroundStyle(Color.tbInk)
 
                 VStack(spacing: TBSpace.s3) {
-                    ForEach(timelineMoments, id: \.id) { moment in
-                        MomentTimelineRowView(
-                            moment: moment,
-                            fileStore: fileStore
-                        )
+                    ForEach(Array(visibleMoments.enumerated()), id: \.element.id) { index, moment in
+                        NavigationLink {
+                            MomentDetailView(momentID: moment.id)
+                        } label: {
+                            MomentTimelineRowView(
+                                moment: moment,
+                                fileStore: fileStore
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .onAppear {
+                            loadNextPageIfNeeded(currentIndex: index)
+                        }
                     }
                 }
 
-                Text(DimensionDetailCopy.timelineEnd)
-                    .font(.tbLabel)
-                    .foregroundStyle(Color.tbInk3)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.top, TBSpace.s2)
+                if isLoadingNextPage {
+                    ProgressView()
+                        .tint(Color.tbPrimary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top, TBSpace.s2)
+                } else if hasMoreMoments == false {
+                    Text(DimensionDetailCopy.timelineEnd)
+                        .font(.tbLabel)
+                        .foregroundStyle(Color.tbInk3)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top, TBSpace.s2)
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .onChange(of: timelineMomentIDs) { _, _ in
+            resetPagination()
+        }
     }
 
     private var emptyState: some View {
@@ -87,6 +122,26 @@ struct MomentTimelineView: View {
         .background(Color.tbSurface)
         .clipShape(RoundedRectangle(cornerRadius: TBRadius.lg))
         .modifier(DimensionDetailSoftShadowModifier())
+    }
+
+    private func loadNextPageIfNeeded(currentIndex: Int) {
+        guard hasMoreMoments, isLoadingNextPage == false else { return }
+
+        let triggerIndex = max(0, visibleMoments.count - loadMoreThreshold)
+        guard currentIndex >= triggerIndex else { return }
+
+        isLoadingNextPage = true
+
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 180_000_000)
+            visibleCount = min(visibleCount + pageSize, timelineMoments.count)
+            isLoadingNextPage = false
+        }
+    }
+
+    private func resetPagination() {
+        visibleCount = pageSize
+        isLoadingNextPage = false
     }
 }
 
@@ -143,6 +198,7 @@ private struct MomentTimelineRowView: View {
 
             Spacer(minLength: 0)
         }
+        .contentShape(Rectangle())
         .padding(TBSpace.s3)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.tbSurface)
@@ -175,7 +231,7 @@ private struct MomentThumbnailView: View {
                     .padding(TBSpace.s1)
             }
         }
-        .overlay(alignment: .bottomTrailing) {
+        .overlay(alignment: .bottomLeading) {
             if firstMedia?.mediaKind == .video {
                 Image(systemName: "play.fill")
                     .font(.tbLabel)
@@ -190,11 +246,9 @@ private struct MomentThumbnailView: View {
 
     @ViewBuilder
     private var thumbnail: some View {
-        if let image = image {
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFill()
-        } else {
+        AsyncThumbnailImageView(
+            source: thumbnailSource
+        ) {
             ZStack {
                 Color.tbBg2
 
@@ -205,11 +259,12 @@ private struct MomentThumbnailView: View {
         }
     }
 
-    private var image: UIImage? {
+    private var thumbnailSource: ThumbnailImageSource? {
         guard let firstMedia else { return nil }
-        let relativePath = firstMedia.thumbnailPath ?? firstMedia.relativePath
-        let url = fileStore.url(forRelativePath: relativePath)
-        return UIImage(contentsOfFile: url.path)
+        return .file(
+            relativePath: firstMedia.thumbnailPath ?? firstMedia.relativePath,
+            fileStore: fileStore
+        )
     }
 }
 
