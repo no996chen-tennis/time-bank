@@ -69,8 +69,6 @@ struct YearInputField: View {
         }
 
         guard let parsed = Int(digits) else {
-            year = range.upperBound
-            text = "\(range.upperBound)"
             return
         }
 
@@ -95,8 +93,9 @@ struct YearInputField: View {
         let digits = text.filter { $0.isNumber }
 
         guard let parsed = Int(digits) else {
-            year = range.upperBound
-            text = "\(range.upperBound)"
+            let validYear = clamped(year)
+            year = validYear
+            text = "\(validYear)"
             return
         }
 

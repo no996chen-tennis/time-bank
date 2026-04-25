@@ -316,6 +316,13 @@ final class DataLayerTests: XCTestCase {
         XCTAssertEqual(TimeBank.Formatter.hoursReadable(48.5), "48.5 小时")
         XCTAssertEqual(TimeBank.Formatter.hoursReadable(0), "0 小时")
 
+        XCTAssertEqual(TimeBank.Formatter.hoursInDays(0), "≈ 0 天")
+        XCTAssertEqual(TimeBank.Formatter.hoursInDays(23), "≈ 0 天")
+        XCTAssertEqual(TimeBank.Formatter.hoursInDays(24), "≈ 1 天")
+        XCTAssertEqual(TimeBank.Formatter.hoursInDays(25), "≈ 1 天")
+        XCTAssertEqual(TimeBank.Formatter.hoursInDays(240), "≈ 10 天")
+        XCTAssertEqual(TimeBank.Formatter.hoursInDays(2_400), "≈ 100 天")
+
         XCTAssertEqual(TimeBank.Formatter.hoursWithMinutes(30 * 60), "30m")
         XCTAssertEqual(TimeBank.Formatter.hoursWithMinutes(2 * 3600), "2h")
         XCTAssertEqual(TimeBank.Formatter.hoursWithMinutes(2 * 3600 + 30 * 60), "2h 30m")

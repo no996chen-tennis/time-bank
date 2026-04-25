@@ -91,7 +91,7 @@ struct DimensionCardView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
 
-            if rawHours >= 1 {
+            if rawHours >= 24 {
                 Text(Formatter.hoursInDays(rawHours))
                     .font(.tbLabel)
                     .foregroundStyle(Color.tbInk3)
