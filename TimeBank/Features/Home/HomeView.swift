@@ -9,17 +9,19 @@ struct HomeView: View {
     @Query private var moments: [Moment]
 
     var body: some View {
-        Group {
-            if let profile = profiles.first {
-                homeContent(profile: profile)
-            } else {
-                Text("未找到用户信息")
-                    .font(.tbBodySm)
-                    .foregroundStyle(Color.tbInk2)
+        NavigationStack {
+            Group {
+                if let profile = profiles.first {
+                    homeContent(profile: profile)
+                } else {
+                    Text("未找到用户信息")
+                        .font(.tbBodySm)
+                        .foregroundStyle(Color.tbInk2)
+                }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.tbBg)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.tbBg)
     }
 
     private func homeContent(profile: UserProfile) -> some View {
@@ -52,12 +54,17 @@ struct HomeView: View {
 
                     VStack(spacing: TBSpace.s3) {
                         ForEach(visibleDimensions, id: \.id) { dimension in
-                            DimensionCardView(
-                                dimension: dimension,
-                                profile: profile,
-                                dimensionsByID: dimensionsByID,
-                                moments: normalMoments
-                            )
+                            NavigationLink {
+                                DimensionDetailView(dimensionID: dimension.id)
+                            } label: {
+                                DimensionCardView(
+                                    dimension: dimension,
+                                    profile: profile,
+                                    dimensionsByID: dimensionsByID,
+                                    moments: normalMoments
+                                )
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                 }

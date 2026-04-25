@@ -23,6 +23,11 @@
 		F2D000052FB0010100000001 /* DoubleLayerAccountCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D000042FB0010100000001 /* DoubleLayerAccountCardView.swift */; };
 		F2D000072FB0010100000001 /* DimensionCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D000062FB0010100000001 /* DimensionCardView.swift */; };
 		F2D000092FB0010100000001 /* BottomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D000082FB0010100000001 /* BottomTabBar.swift */; };
+		F2E000012FC1010100000001 /* DimensionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E000002FC1010100000001 /* DimensionDetailView.swift */; };
+		F2E000032FC1010100000001 /* DimensionDetailHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E000022FC1010100000001 /* DimensionDetailHeaderView.swift */; };
+		F2E000052FC1010100000001 /* CalculationSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E000042FC1010100000001 /* CalculationSummaryCard.swift */; };
+		F2E000072FC1010100000001 /* MomentTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E000062FC1010100000001 /* MomentTimelineView.swift */; };
+		F2E000092FC1010100000001 /* DimensionDetailCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E000082FC1010100000001 /* DimensionDetailCopy.swift */; };
 		F135277C2F99D3E500847E51 /* DimensionCompute.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527752F99D3E400847E51 /* DimensionCompute.swift */; };
 		F135277D2F99D3E500847E51 /* MediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527702F99D3E400847E51 /* MediaItem.swift */; };
 		F135277E2F99D3E500847E51 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527782F99D3E400847E51 /* DesignTokens.swift */; };
@@ -70,6 +75,11 @@
 		F2D000042FB0010100000001 /* DoubleLayerAccountCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubleLayerAccountCardView.swift; sourceTree = "<group>"; };
 		F2D000062FB0010100000001 /* DimensionCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionCardView.swift; sourceTree = "<group>"; };
 		F2D000082FB0010100000001 /* BottomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomTabBar.swift; sourceTree = "<group>"; };
+		F2E000002FC1010100000001 /* DimensionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionDetailView.swift; sourceTree = "<group>"; };
+		F2E000022FC1010100000001 /* DimensionDetailHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionDetailHeaderView.swift; sourceTree = "<group>"; };
+		F2E000042FC1010100000001 /* CalculationSummaryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculationSummaryCard.swift; sourceTree = "<group>"; };
+		F2E000062FC1010100000001 /* MomentTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentTimelineView.swift; sourceTree = "<group>"; };
+		F2E000082FC1010100000001 /* DimensionDetailCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionDetailCopy.swift; sourceTree = "<group>"; };
 		F135276F2F99D3E400847E51 /* Dimension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dimension.swift; sourceTree = "<group>"; };
 		F2A000002FAA000100000001 /* DimensionParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionParams.swift; sourceTree = "<group>"; };
 		F13527702F99D3E400847E51 /* MediaItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaItem.swift; sourceTree = "<group>"; };
@@ -143,8 +153,21 @@
 			children = (
 				F2B0000D2FAB010100000001 /* Onboarding */,
 				F2D0000A2FB0010100000001 /* Home */,
+				F2E0000A2FC1010100000001 /* DimensionDetail */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		F2E0000A2FC1010100000001 /* DimensionDetail */ = {
+			isa = PBXGroup;
+			children = (
+				F2E000002FC1010100000001 /* DimensionDetailView.swift */,
+				F2E000022FC1010100000001 /* DimensionDetailHeaderView.swift */,
+				F2E000042FC1010100000001 /* CalculationSummaryCard.swift */,
+				F2E000062FC1010100000001 /* MomentTimelineView.swift */,
+				F2E000082FC1010100000001 /* DimensionDetailCopy.swift */,
+			);
+			path = DimensionDetail;
 			sourceTree = "<group>";
 		};
 		F2D0000A2FB0010100000001 /* Home */ = {
@@ -400,6 +423,11 @@
 				F2D000052FB0010100000001 /* DoubleLayerAccountCardView.swift in Sources */,
 				F2D000072FB0010100000001 /* DimensionCardView.swift in Sources */,
 				F2D000092FB0010100000001 /* BottomTabBar.swift in Sources */,
+				F2E000012FC1010100000001 /* DimensionDetailView.swift in Sources */,
+				F2E000032FC1010100000001 /* DimensionDetailHeaderView.swift in Sources */,
+				F2E000052FC1010100000001 /* CalculationSummaryCard.swift in Sources */,
+				F2E000072FC1010100000001 /* MomentTimelineView.swift in Sources */,
+				F2E000092FC1010100000001 /* DimensionDetailCopy.swift in Sources */,
 				F135277C2F99D3E500847E51 /* DimensionCompute.swift in Sources */,
 				F135277D2F99D3E500847E51 /* MediaItem.swift in Sources */,
 				F135277E2F99D3E500847E51 /* DesignTokens.swift in Sources */,

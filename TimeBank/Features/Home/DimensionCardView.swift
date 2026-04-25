@@ -62,15 +62,11 @@ struct DimensionCardView: View {
 
             Spacer()
 
-            Button(action: {}) {
-                Image(systemName: "chevron.right")
-                    .font(.tbBodySm)
-                    .foregroundStyle(Color.tbInk3)
-                    .frame(width: 36, height: 36)
-                    .contentShape(Circle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("查看时间账户")
+            Image(systemName: "chevron.right")
+                .font(.tbBodySm)
+                .foregroundStyle(Color.tbInk3)
+                .frame(width: 36, height: 36)
+                .accessibilityHidden(true)
         }
     }
 
