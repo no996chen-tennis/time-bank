@@ -1054,6 +1054,76 @@ final class DataLayerTests: XCTestCase {
         XCTAssertEqual(params.hoursPerSession, 1, accuracy: 0.001)
     }
 
+    func testMomentDetailPresentationUsesTitleFallbackAndDetailRelativeCopy() throws {
+        let calendar = Calendar(identifier: .gregorian)
+        let happenedAt = calendar.date(from: DateComponents(year: 2026, month: 3, day: 22, hour: 12)) ?? .now
+        let now = calendar.date(from: DateComponents(year: 2026, month: 3, day: 25, hour: 12)) ?? .now
+        let moment = Moment(
+            dimensionId: DimensionReservedID.parents.rawValue,
+            title: "   ",
+            happenedAt: happenedAt
+        )
+
+        XCTAssertEqual(MomentDetailPresentation.title(for: moment), "2026-03-22")
+        XCTAssertEqual(MomentDetailPresentation.infoLine(for: moment, now: now), "发生在 3 天前")
+
+        let tenDayMoment = Moment(
+            dimensionId: DimensionReservedID.parents.rawValue,
+            happenedAt: now.addingTimeInterval(-10 * 24 * 3600)
+        )
+        XCTAssertEqual(MomentDetailPresentation.infoLine(for: tenDayMoment, now: now), "10 天前")
+    }
+
+    func testMomentDetailPresentationChipsUseNoDurationFallback() {
+        let dimension = TimeBank.Dimension(
+            id: DimensionReservedID.parents.rawValue,
+            name: "陪父母",
+            kind: .builtin
+        )
+        let moment = Moment(
+            dimensionId: dimension.id,
+            durationSeconds: nil
+        )
+
+        XCTAssertEqual(
+            MomentDetailPresentation.chips(for: moment, dimension: dimension),
+            ["♡ 陪父母", "不计时长"]
+        )
+    }
+
+    func testMomentDetailPresentationChipsIncludeDurationAndMediaCount() {
+        let dimension = TimeBank.Dimension(
+            id: DimensionReservedID.sport.rawValue,
+            name: "运动",
+            kind: .builtin
+        )
+        let moment = Moment(
+            dimensionId: dimension.id,
+            durationSeconds: 48 * 3600
+        )
+        moment.mediaItems = [
+            MediaItem(
+                momentId: moment.id,
+                type: MediaKind.image.rawValue,
+                relativePath: "moments/test/01.heic",
+                sortIndex: 0,
+                moment: moment
+            ),
+            MediaItem(
+                momentId: moment.id,
+                type: MediaKind.video.rawValue,
+                relativePath: "moments/test/02.mov",
+                sortIndex: 1,
+                moment: moment
+            )
+        ]
+
+        XCTAssertEqual(
+            MomentDetailPresentation.chips(for: moment, dimension: dimension),
+            ["♡ 运动", "48 小时", "2 个媒体"]
+        )
+    }
+
     private func makeJPEGData(size: CGSize = CGSize(width: 40, height: 40), color: UIColor = .systemOrange) -> Data {
         let renderer = UIGraphicsImageRenderer(size: size)
         let image = renderer.image { context in
