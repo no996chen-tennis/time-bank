@@ -15,6 +15,12 @@ struct FamilyMember: Codable, Sendable, Equatable {
     var deceased: Bool
     var deceasedAt: Date?
 
+    private enum CodingKeys: String, CodingKey {
+        case birthYear
+        case deceased
+        case deceasedAt
+    }
+
     init(
         birthYear: Int = Calendar.current.component(.year, from: .now) - 60,
         deceased: Bool = false,
@@ -23,6 +29,14 @@ struct FamilyMember: Codable, Sendable, Equatable {
         self.birthYear = birthYear
         self.deceased = deceased
         self.deceasedAt = deceasedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.birthYear = try container.decodeIfPresent(Int.self, forKey: .birthYear)
+            ?? Calendar.current.component(.year, from: .now) - 60
+        self.deceased = try container.decodeIfPresent(Bool.self, forKey: .deceased) ?? false
+        self.deceasedAt = try container.decodeIfPresent(Date.self, forKey: .deceasedAt)
     }
 }
 
@@ -55,6 +69,14 @@ struct ChildInfo: Codable, Sendable, Equatable {
     var deceased: Bool
     var deceasedAt: Date?
 
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case birthYear
+        case gender
+        case deceased
+        case deceasedAt
+    }
+
     init(
         id: UUID = UUID(),
         birthYear: Int = Calendar.current.component(.year, from: .now),
@@ -68,6 +90,16 @@ struct ChildInfo: Codable, Sendable, Equatable {
         self.deceased = deceased
         self.deceasedAt = deceasedAt
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        self.birthYear = try container.decodeIfPresent(Int.self, forKey: .birthYear)
+            ?? Calendar.current.component(.year, from: .now)
+        self.gender = try container.decodeIfPresent(Gender.self, forKey: .gender)
+        self.deceased = try container.decodeIfPresent(Bool.self, forKey: .deceased) ?? false
+        self.deceasedAt = try container.decodeIfPresent(Date.self, forKey: .deceasedAt)
+    }
 }
 
 struct PartnerInfo: Codable, Sendable, Equatable {
@@ -75,6 +107,13 @@ struct PartnerInfo: Codable, Sendable, Equatable {
     var hoursPerDay: Double
     var deceased: Bool
     var deceasedAt: Date?
+
+    private enum CodingKeys: String, CodingKey {
+        case birthYear
+        case hoursPerDay
+        case deceased
+        case deceasedAt
+    }
 
     init(
         birthYear: Int = Calendar.current.component(.year, from: .now) - 30,
@@ -86,6 +125,15 @@ struct PartnerInfo: Codable, Sendable, Equatable {
         self.hoursPerDay = hoursPerDay
         self.deceased = deceased
         self.deceasedAt = deceasedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.birthYear = try container.decodeIfPresent(Int.self, forKey: .birthYear)
+            ?? Calendar.current.component(.year, from: .now) - 30
+        self.hoursPerDay = try container.decodeIfPresent(Double.self, forKey: .hoursPerDay) ?? 4.0
+        self.deceased = try container.decodeIfPresent(Bool.self, forKey: .deceased) ?? false
+        self.deceasedAt = try container.decodeIfPresent(Date.self, forKey: .deceasedAt)
     }
 }
 

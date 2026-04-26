@@ -32,7 +32,7 @@ struct DimensionCardView: View {
                 metricColumn(
                     label: "已存入",
                     rawHours: storedHours,
-                    primary: Formatter.hoursCompact(storedHours),
+                    primary: Formatter.storedDuration(storedHours),
                     secondary: Formatter.momentsCount(storedMomentCount)
                 )
             }

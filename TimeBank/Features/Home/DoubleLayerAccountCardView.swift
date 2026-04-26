@@ -82,7 +82,7 @@ struct DoubleLayerAccountCardView: View {
 
                 Spacer()
 
-                Text(Formatter.hoursReadable(totalAccount.hours))
+                Text(Formatter.storedDuration(totalAccount.hours))
                     .font(.tbHeadM)
                     .foregroundStyle(Color.tbInk)
             }

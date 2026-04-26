@@ -36,13 +36,14 @@ struct HomeView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.tbBg)
-            .overlay(alignment: .bottom) {
-                UndoToastView()
-                    .padding(.bottom, 96)
-            }
             .sheet(item: $momentEditorRoute) { route in
                 MomentEditorView(route: route)
             }
+        }
+        .overlay(alignment: .bottom) {
+            UndoToastView()
+                .environmentObject(undoToastController)
+                .padding(.bottom, 96)
         }
         .environmentObject(undoToastController)
         .environment(\.sharedMomentStore, sharedMomentStore)

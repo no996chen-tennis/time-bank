@@ -269,13 +269,16 @@ struct MomentDetailView: View {
     }
 
     private func delete(moment: Moment) {
-        guard let store = sharedMomentStore else { return }
+        let store = sharedMomentStore ?? MomentStore(modelContext: modelContext)
         do {
             try store.delete(moment: moment)
-            undoToastController.show(message: "已删除") {
-                try? store.undoDelete(moment: moment)
-            }
             dismiss()
+            Task { @MainActor in
+                await Task.yield()
+                undoToastController.show(message: "已删除") {
+                    try? store.undoDelete(moment: moment)
+                }
+            }
         } catch {
             return
         }
@@ -335,7 +338,7 @@ enum MomentDetailPresentation {
         guard let durationSeconds = moment.durationSeconds else {
             return "不计时长"
         }
-        return Formatter.hoursReadable(Double(durationSeconds) / 3600.0)
+        return Formatter.hoursWithMinutes(durationSeconds)
     }
 }
 

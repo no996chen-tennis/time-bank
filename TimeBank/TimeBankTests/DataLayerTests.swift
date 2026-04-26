@@ -678,6 +678,10 @@ final class DataLayerTests: XCTestCase {
         XCTAssertEqual(TimeBank.Formatter.hoursWithMinutes(30 * 60), "30m")
         XCTAssertEqual(TimeBank.Formatter.hoursWithMinutes(2 * 3600), "2h")
         XCTAssertEqual(TimeBank.Formatter.hoursWithMinutes(2 * 3600 + 30 * 60), "2h 30m")
+        XCTAssertEqual(TimeBank.Formatter.storedDuration(0), "0h")
+        XCTAssertEqual(TimeBank.Formatter.storedDuration(0.5), "30m")
+        XCTAssertEqual(TimeBank.Formatter.storedDuration(1), "1h")
+        XCTAssertEqual(TimeBank.Formatter.storedDuration(1.5), "1h 30m")
 
         XCTAssertEqual(TimeBank.Formatter.occurrenceCount(92, noun: "见面"), "约 92 次见面")
         XCTAssertEqual(TimeBank.Formatter.occurrenceCount(40, noun: "通话"), "约 40 次通话")
@@ -726,6 +730,37 @@ final class DataLayerTests: XCTestCase {
         XCTAssertEqual(TimeBank.Formatter.weeklyHours(-5), "每周约 0 小时")
         XCTAssertEqual(TimeBank.Formatter.dailyHoursWith(-3, action: "共处"), "每天约 0 小时共处")
         XCTAssertEqual(TimeBank.Formatter.lifespanSubtitle(years: -10, hoursK: -100), "0 年 · 0 Kh")
+    }
+
+    func testRelationshipCodablesDecodeLegacyMissingMemorialFields() throws {
+        let decoder = JSONDecoder()
+
+        let family = try decoder.decode(
+            TimeBank.FamilyMember.self,
+            from: Data(#"{"birthYear":1958}"#.utf8)
+        )
+        XCTAssertEqual(family.birthYear, 1958)
+        XCTAssertFalse(family.deceased)
+        XCTAssertNil(family.deceasedAt)
+        XCTAssertNoThrow(try decoder.decode(TimeBank.FamilyMember.self, from: Data(#"{}"#.utf8)))
+
+        let child = try decoder.decode(
+            TimeBank.ChildInfo.self,
+            from: Data(#"{"birthYear":2018}"#.utf8)
+        )
+        XCTAssertEqual(child.birthYear, 2018)
+        XCTAssertFalse(child.deceased)
+        XCTAssertNil(child.gender)
+        XCTAssertNoThrow(try decoder.decode(TimeBank.ChildInfo.self, from: Data(#"{}"#.utf8)))
+
+        let partner = try decoder.decode(
+            TimeBank.PartnerInfo.self,
+            from: Data(#"{"birthYear":1988}"#.utf8)
+        )
+        XCTAssertEqual(partner.birthYear, 1988)
+        XCTAssertEqual(partner.hoursPerDay, 4.0)
+        XCTAssertFalse(partner.deceased)
+        XCTAssertNoThrow(try decoder.decode(TimeBank.PartnerInfo.self, from: Data(#"{}"#.utf8)))
     }
 
     func testBuiltinComputeFunctionsProduceStableNonNegativeValues() throws {

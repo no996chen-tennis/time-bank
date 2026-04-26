@@ -75,6 +75,12 @@ enum Formatter {
         }
     }
 
+    static func storedDuration(_ hours: Double) -> String {
+        let seconds = Int((max(0, hours) * 3600.0).rounded())
+        guard seconds > 0 else { return "0h" }
+        return hoursWithMinutes(seconds)
+    }
+
     static func occurrenceCount(_ n: Int, noun: String) -> String {
         "约 \(max(0, n)) 次\(noun)"
     }

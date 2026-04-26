@@ -204,7 +204,7 @@ enum DimensionDetailCopy {
         let shortCount = Formatter.momentsCount(momentCount)
             .replacingOccurrences(of: "瞬间", with: "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        return "已存入瞬间 · \(shortCount) · \(Formatter.hoursCompact(storedHours))"
+        return "已存入瞬间 · \(shortCount) · \(Formatter.storedDuration(storedHours))"
     }
 
     private static func occurrenceCount(from subtitle: DimensionCompute.DimensionSubtitle) -> Int {
