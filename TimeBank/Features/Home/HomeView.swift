@@ -13,7 +13,6 @@ struct HomeView: View {
 
     @StateObject private var undoToastController = UndoToastController()
     @State private var selectedTab: HomeTab = .home
-    @State private var toastMessage: String?
     @State private var momentEditorRoute: MomentEditorRoute?
     @State private var sharedMomentStore: MomentStore?
 
@@ -22,8 +21,10 @@ struct HomeView: View {
             Group {
                 if let profile = profiles.first {
                     switch selectedTab {
-                    case .home, .account:
+                    case .home:
                         homeContent(profile: profile)
+                    case .account:
+                        accountContent()
                     case .me:
                         meContent(profile: profile)
                     }
@@ -36,21 +37,8 @@ struct HomeView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.tbBg)
             .overlay(alignment: .bottom) {
-                VStack(spacing: TBSpace.s2) {
-                    if let toastMessage {
-                        Text(toastMessage)
-                            .font(.tbBodySm)
-                            .foregroundStyle(Color.tbSurface)
-                            .padding(.horizontal, TBSpace.s4)
-                            .padding(.vertical, TBSpace.s3)
-                            .background(Color.tbInk.opacity(0.9))
-                            .clipShape(Capsule())
-                            .transition(.opacity.combined(with: .move(edge: .bottom)))
-                    }
-
-                    UndoToastView()
-                }
-                .padding(.bottom, 96)
+                UndoToastView()
+                    .padding(.bottom, 96)
             }
             .sheet(item: $momentEditorRoute) { route in
                 MomentEditorView(route: route)
@@ -124,35 +112,29 @@ struct HomeView: View {
         }
     }
 
+    private func accountContent() -> some View {
+        VStack(spacing: 0) {
+            AccountTabView(
+                dimensions: dimensions,
+                moments: moments,
+                onCreateMoment: {
+                    momentEditorRoute = .newMoment
+                }
+            )
+            tabBar
+        }
+    }
+
     private var tabBar: some View {
         BottomTabBar(
             selectedTab: selectedTab,
             onSelect: { tab in
-                if tab == .account {
-                    selectedTab = .home
-                    showToast("账户 Tab 还在搭建中")
-                } else {
-                    selectedTab = tab
-                }
+                selectedTab = tab
             },
             onCreateMoment: {
                 momentEditorRoute = .newMoment
             }
         )
-    }
-
-    private func showToast(_ message: String) {
-        withAnimation(.spring(response: 0.28, dampingFraction: 0.86)) {
-            toastMessage = message
-        }
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 1_600_000_000)
-            withAnimation(.easeOut(duration: 0.2)) {
-                if toastMessage == message {
-                    toastMessage = nil
-                }
-            }
-        }
     }
 
     private var visibleAccountDimensions: [Dimension] {

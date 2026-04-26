@@ -456,7 +456,7 @@ struct MomentEditorView: View {
                 (dimension.kind == .builtin || dimension.kind == .custom)
                     && dimension.name.hasPrefix("__") == false
                     && (dimension.status == .visible || dimension.id == route.initialDimensionID)
-                    && dimension.mode == .normal
+                    && (dimension.mode == .normal || canKeepInitialMemorialDimension(dimension))
             }
             .sorted { lhs, rhs in
                 if lhs.sortIndex == rhs.sortIndex {
@@ -464,6 +464,14 @@ struct MomentEditorView: View {
                 }
                 return lhs.sortIndex < rhs.sortIndex
             }
+    }
+
+    private func canKeepInitialMemorialDimension(_ dimension: Dimension) -> Bool {
+        guard dimension.id == route.initialDimensionID else { return false }
+        if case .edit = route.mode {
+            return true
+        }
+        return false
     }
 
     private var availableDimensionIDs: [String] {

@@ -35,11 +35,16 @@ struct DimensionDetailView: View {
                dimension.kind == .builtin || dimension.kind == .custom {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        momentEditorRoute = .dimension(dimension)
+                        if dimension.mode == .normal {
+                            momentEditorRoute = .dimension(dimension)
+                        }
                     } label: {
                         Image(systemName: "plus")
                     }
-                    .accessibilityLabel(DimensionDetailCopy.depositAccessibilityLabel)
+                    .disabled(dimension.mode == .memorial)
+                    .accessibilityLabel(dimension.mode == .memorial
+                        ? "\(dimension.name)已标记纪念，不再添加新瞬间"
+                        : DimensionDetailCopy.depositAccessibilityLabel)
                 }
             }
         }

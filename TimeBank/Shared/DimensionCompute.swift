@@ -19,6 +19,42 @@ enum DimensionCompute {
         let dimensionCount: Int
     }
 
+    struct AccountTabAggregate: Sendable, Equatable {
+        let totalHours: Double
+        let totalMoments: Int
+        let dimensionCount: Int
+        let slices: [AccountTabSlice]
+        let yearGroups: [AccountYearGroup]
+    }
+
+    struct AccountTabSlice: Identifiable, Sendable, Equatable {
+        let dimensionID: String
+        let name: String
+        let hours: Double
+        let moments: Int
+        let percent: Int
+        let isOther: Bool
+        let isMemorial: Bool
+
+        var id: String { dimensionID }
+    }
+
+    struct AccountYearGroup: Identifiable, Sendable, Equatable {
+        let year: Int
+        let months: [AccountMonthGroup]
+
+        var id: Int { year }
+    }
+
+    struct AccountMonthGroup: Identifiable, Sendable, Equatable {
+        let year: Int
+        let month: Int
+        let hours: Double
+        let moments: Int
+
+        var id: String { "\(year)-\(month)" }
+    }
+
     /// 时间账户卡片副文案的结构化结果（参考 PRD §22.3.1）。
     /// View 层根据 case 调对应 Formatter 接口（参考 PRD §21）。
     enum DimensionSubtitle: Sendable, Equatable {
@@ -208,6 +244,91 @@ enum DimensionCompute {
         let dimensions = try modelContext.fetch(FetchDescriptor<Dimension>())
         let moments = try modelContext.fetch(FetchDescriptor<Moment>())
         return totalAccount(dimensions: dimensions, moments: moments)
+    }
+
+    static func accountTabAggregate(
+        dimensions: [Dimension],
+        moments: [Moment],
+        calendar: Calendar = Calendar(identifier: .gregorian)
+    ) -> AccountTabAggregate {
+        let includedDimensions = accountTabDimensions(from: dimensions)
+        let includedDimensionIDs = Set(includedDimensions.map(\.id))
+        let normalMoments = moments.filter {
+            $0.status == .normal && includedDimensionIDs.contains($0.dimensionId)
+        }
+
+        let totalSeconds = normalMoments.reduce(0) { partial, moment in
+            partial + (moment.durationSeconds ?? 0)
+        }
+        let totalHours = Double(totalSeconds) / 3600.0
+        let totalMoments = normalMoments.count
+        let activeDimensionIDs = Set(normalMoments.map(\.dimensionId))
+        let usesHourWeight = totalSeconds > 0
+        let totalWeight = usesHourWeight ? Double(totalSeconds) : Double(max(1, totalMoments))
+
+        let slices = includedDimensions.compactMap { dimension -> AccountTabSlice? in
+            let dimensionMoments = normalMoments.filter { $0.dimensionId == dimension.id }
+            guard dimensionMoments.isEmpty == false else { return nil }
+
+            let dimensionSeconds = dimensionMoments.reduce(0) { partial, moment in
+                partial + (moment.durationSeconds ?? 0)
+            }
+            let weight = usesHourWeight ? Double(dimensionSeconds) : Double(dimensionMoments.count)
+            let percent = Int((weight / totalWeight * 100).rounded())
+
+            return AccountTabSlice(
+                dimensionID: dimension.id,
+                name: accountTabDisplayName(for: dimension),
+                hours: Double(dimensionSeconds) / 3600.0,
+                moments: dimensionMoments.count,
+                percent: max(0, percent),
+                isOther: dimension.id == DimensionReservedID.other.rawValue,
+                isMemorial: dimension.mode == .memorial
+            )
+        }
+
+        let monthBuckets = Dictionary(grouping: normalMoments) { moment -> String in
+            let components = calendar.dateComponents([.year, .month], from: moment.happenedAt)
+            return "\(components.year ?? 0)-\(components.month ?? 0)"
+        }
+
+        let monthGroups = monthBuckets.compactMap { _, bucket -> AccountMonthGroup? in
+            guard let first = bucket.first else { return nil }
+            let components = calendar.dateComponents([.year, .month], from: first.happenedAt)
+            guard let year = components.year, let month = components.month else { return nil }
+            let seconds = bucket.reduce(0) { partial, moment in
+                partial + (moment.durationSeconds ?? 0)
+            }
+            return AccountMonthGroup(
+                year: year,
+                month: month,
+                hours: Double(seconds) / 3600.0,
+                moments: bucket.count
+            )
+        }
+
+        let yearGroups = Dictionary(grouping: monthGroups, by: \.year)
+            .map { year, months in
+                AccountYearGroup(
+                    year: year,
+                    months: months.sorted { lhs, rhs in lhs.month > rhs.month }
+                )
+            }
+            .sorted { lhs, rhs in lhs.year > rhs.year }
+
+        return AccountTabAggregate(
+            totalHours: totalHours,
+            totalMoments: totalMoments,
+            dimensionCount: activeDimensionIDs.count,
+            slices: slices,
+            yearGroups: yearGroups
+        )
+    }
+
+    static func accountTabAggregate(modelContext: ModelContext) throws -> AccountTabAggregate {
+        let dimensions = try modelContext.fetch(FetchDescriptor<Dimension>())
+        let moments = try modelContext.fetch(FetchDescriptor<Moment>())
+        return accountTabAggregate(dimensions: dimensions, moments: moments)
     }
 
     private static func parentsHours(profile: UserProfile, now: Date) -> Double {
@@ -495,5 +616,35 @@ enum DimensionCompute {
                 params: Dimension.encodedParams(EmptyDimensionParams())
             )
         }
+    }
+
+    private static func accountTabDimensions(from dimensions: [Dimension]) -> [Dimension] {
+        dimensions
+            .filter { dimension in
+                guard dimension.status != .deleted else { return false }
+                if dimension.id == DimensionReservedID.other.rawValue {
+                    return true
+                }
+                guard dimension.id != DimensionReservedID.lifespan.rawValue,
+                      dimension.id != DimensionReservedID.daily.rawValue,
+                      dimension.name.hasPrefix("__") == false else {
+                    return false
+                }
+                return dimension.status == .visible
+                    && (dimension.kind == .builtin || dimension.kind == .custom)
+            }
+            .sorted { lhs, rhs in
+                if lhs.sortIndex == rhs.sortIndex {
+                    return lhs.name < rhs.name
+                }
+                return lhs.sortIndex < rhs.sortIndex
+            }
+    }
+
+    private static func accountTabDisplayName(for dimension: Dimension) -> String {
+        if dimension.id == DimensionReservedID.other.rawValue {
+            return "其他"
+        }
+        return dimension.name
     }
 }

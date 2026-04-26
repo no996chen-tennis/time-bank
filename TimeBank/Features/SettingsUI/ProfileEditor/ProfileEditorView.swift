@@ -13,6 +13,7 @@ struct ProfileEditorView: View {
     @State private var actionTarget: RelationActionTarget?
     @State private var removalRequest: RelationRemovalRequest?
     @State private var recoveryRequest: RelationRecoveryRequest?
+    @State private var memorialRequest: RelationMemorialRequest?
     @State private var toastMessage: String?
 
     private var currentYear: Int {
@@ -49,13 +50,21 @@ struct ProfileEditorView: View {
             titleVisibility: .visible
         ) {
             if let target = actionTarget {
-                Button("编辑信息") {
-                    editorRoute = target.editorRoute
-                    actionTarget = nil
-                }
+                if isMemorial(target) {
+                    Button("取消纪念标记") {
+                        prepareMemorial(for: target, entering: false)
+                        actionTarget = nil
+                    }
+                } else {
+                    Button("编辑信息") {
+                        editorRoute = target.editorRoute
+                        actionTarget = nil
+                    }
 
-                Button("标记\(target.relationName)已故") {
-                    actionTarget = nil
+                    Button(target.memorialEntryTitle) {
+                        prepareMemorial(for: target, entering: true)
+                        actionTarget = nil
+                    }
                 }
 
                 Button(target.removalTitle, role: .destructive) {
@@ -95,6 +104,20 @@ struct ProfileEditorView: View {
             }
         } message: {
             Text(recoveryRequest?.message ?? "")
+        }
+        .alert(memorialRequest?.title ?? "", isPresented: Binding(
+            get: { memorialRequest != nil },
+            set: { if $0 == false { memorialRequest = nil } }
+        )) {
+            Button("取消", role: .cancel) {
+                memorialRequest = nil
+            }
+
+            Button(memorialRequest?.confirmTitle ?? "", role: .destructive) {
+                confirmMemorial()
+            }
+        } message: {
+            Text(memorialRequest?.message ?? "")
         }
         .overlay(alignment: .bottom) {
             if let toastMessage {
@@ -384,6 +407,33 @@ struct ProfileEditorView: View {
         }
     }
 
+    private func prepareMemorial(for target: RelationActionTarget, entering: Bool) {
+        memorialRequest = RelationMemorialRequest(
+            dimensionID: target.dimensionID,
+            relationName: target.relationName,
+            entering: entering
+        )
+    }
+
+    private func confirmMemorial() {
+        guard let request = memorialRequest else { return }
+        memorialRequest = nil
+
+        do {
+            guard let dimension = dimensions.first(where: { $0.id == request.dimensionID }) else { return }
+            dimension.mode = request.entering ? .memorial : .normal
+            dimension.updatedAt = .now
+            try modelContext.save()
+            showToast(request.entering ? "已标记纪念" : "已取消标记")
+        } catch {
+            return
+        }
+    }
+
+    private func isMemorial(_ target: RelationActionTarget) -> Bool {
+        dimensions.first(where: { $0.id == target.dimensionID })?.mode == .memorial
+    }
+
     private func persistProfile() {
         profile.updatedAt = .now
         try? modelContext.save()
@@ -565,6 +615,28 @@ private enum RelationActionTarget {
         }
     }
 
+    var dimensionID: String {
+        switch self {
+        case .parents:
+            return DimensionReservedID.parents.rawValue
+        case .child:
+            return DimensionReservedID.kids.rawValue
+        case .partner:
+            return DimensionReservedID.partner.rawValue
+        }
+    }
+
+    var memorialEntryTitle: String {
+        switch self {
+        case .parents:
+            return "标记父母已故"
+        case .child:
+            return "标记这个孩子已故"
+        case .partner:
+            return "标记伴侣已故"
+        }
+    }
+
     var editorRoute: ProfileEditorRoute {
         switch self {
         case .parents(let parents):
@@ -607,4 +679,25 @@ private struct RelationRecoveryRequest {
     let message: String
 
     var title: String { "要把它们收回来吗？" }
+}
+
+private struct RelationMemorialRequest {
+    let dimensionID: String
+    let relationName: String
+    let entering: Bool
+
+    var title: String {
+        entering ? "标记\(relationName)已故" : "取消纪念标记"
+    }
+
+    var message: String {
+        if entering {
+            return "\(relationName)的时间倒计时会停下来。\n已存入的瞬间不会消失，永远在这里。\n这个标记你随时可以取消。"
+        }
+        return "\(relationName)会回到正常状态，时间倒计时重新开始。\n已存入的瞬间不变。"
+    }
+
+    var confirmTitle: String {
+        entering ? "确定标记" : "确定取消"
+    }
 }

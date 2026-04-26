@@ -14,12 +14,16 @@ struct DimensionCardView: View {
                 .frame(height: 48)
 
             HStack(spacing: TBSpace.s4) {
-                metricColumn(
-                    label: consumeLabel,
-                    rawHours: consumeHours,
-                    primary: Formatter.hoursCompact(consumeHours),
-                    secondary: subtitleText
-                )
+                if isMemorial {
+                    memorialColumn
+                } else {
+                    metricColumn(
+                        label: consumeLabel,
+                        rawHours: consumeHours,
+                        primary: Formatter.hoursCompact(consumeHours),
+                        secondary: subtitleText
+                    )
+                }
 
                 Rectangle()
                     .fill(Color.tbHair)
@@ -41,6 +45,8 @@ struct DimensionCardView: View {
         .background(Color.tbSurface)
         .clipShape(RoundedRectangle(cornerRadius: TBRadius.lg))
         .modifier(TBSoftShadowModifier())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(isMemorial ? "这是 \(dimension.name) 的纪念账户" : dimension.name)
     }
 
     private var header: some View {
@@ -61,6 +67,16 @@ struct DimensionCardView: View {
                 .lineLimit(1)
 
             Spacer()
+
+            if isMemorial {
+                Text("纪念")
+                    .font(.tbLabel)
+                    .foregroundStyle(Color.tbInk2)
+                    .padding(.horizontal, TBSpace.s2)
+                    .padding(.vertical, TBSpace.s1)
+                    .background(Color.tbInk2.opacity(0.10))
+                    .clipShape(Capsule())
+            }
 
             Image(systemName: "chevron.right")
                 .font(.tbBodySm)
@@ -100,6 +116,21 @@ struct DimensionCardView: View {
                 .foregroundStyle(Color.tbInk2)
                 .lineLimit(1)
                 .minimumScaleFactor(0.82)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var memorialColumn: some View {
+        VStack(alignment: .leading, spacing: TBSpace.s1) {
+            Text(consumeLabel)
+                .font(.tbLabel)
+                .foregroundStyle(Color.tbInk3)
+
+            Text("记录这一段。")
+                .font(.tbHeadS)
+                .foregroundStyle(Color.tbInk)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -175,6 +206,10 @@ struct DimensionCardView: View {
         default:
             return dimension.iconKey
         }
+    }
+
+    private var isMemorial: Bool {
+        dimension.mode == .memorial
     }
 }
 

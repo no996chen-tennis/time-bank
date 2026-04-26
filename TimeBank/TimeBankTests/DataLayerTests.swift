@@ -582,6 +582,82 @@ final class DataLayerTests: XCTestCase {
         XCTAssertEqual(totalAccount.dimensionCount, 2)
     }
 
+    func testAccountTabAggregateIncludesOtherWhileHomeTotalExcludesIt() throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        try TimeBank.Dimension.seedReservedDimensionsIfNeeded(in: env.context)
+        let parentsDimension = try XCTUnwrap(TimeBank.Dimension.fetch(by: DimensionReservedID.parents.rawValue, in: env.context))
+        let otherDimension = try XCTUnwrap(TimeBank.Dimension.fetch(by: DimensionReservedID.other.rawValue, in: env.context))
+        let lifespanDimension = try XCTUnwrap(TimeBank.Dimension.fetch(by: DimensionReservedID.lifespan.rawValue, in: env.context))
+
+        parentsDimension.status = .visible
+        parentsDimension.mode = .memorial
+
+        env.context.insert(Moment(
+            dimensionId: parentsDimension.id,
+            durationSeconds: 3600,
+            status: .normal
+        ))
+        env.context.insert(Moment(
+            dimensionId: otherDimension.id,
+            durationSeconds: 7200,
+            status: .normal
+        ))
+        env.context.insert(Moment(
+            dimensionId: lifespanDimension.id,
+            durationSeconds: 10_800,
+            status: .normal
+        ))
+        try env.context.save()
+
+        let allMoments = try env.context.fetch(FetchDescriptor<Moment>())
+        let allDimensions = try env.context.fetch(FetchDescriptor<TimeBank.Dimension>())
+
+        let homeTotal = DimensionCompute.totalAccount(dimensions: allDimensions, moments: allMoments)
+        XCTAssertEqual(homeTotal.hours, 1.0, accuracy: 0.0001)
+        XCTAssertEqual(homeTotal.moments, 1)
+
+        let accountTab = DimensionCompute.accountTabAggregate(dimensions: allDimensions, moments: allMoments)
+        XCTAssertEqual(accountTab.totalHours, 3.0, accuracy: 0.0001)
+        XCTAssertEqual(accountTab.totalMoments, 2)
+        XCTAssertEqual(accountTab.dimensionCount, 2)
+        XCTAssertTrue(accountTab.slices.contains { $0.dimensionID == DimensionReservedID.other.rawValue && $0.isOther })
+        XCTAssertTrue(accountTab.slices.contains { $0.dimensionID == DimensionReservedID.parents.rawValue && $0.isMemorial })
+    }
+
+    func testMemorialModeFlagDoesNotMoveMoments() async throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        let store = env.makeMomentStore()
+        _ = try store.bootstrapReservedData()
+        let parentsDimension = try XCTUnwrap(TimeBank.Dimension.fetch(by: DimensionReservedID.parents.rawValue, in: env.context))
+        parentsDimension.status = .visible
+        try env.context.save()
+
+        let moment = try await store.save(moment: MomentStore.SaveRequest(
+            dimensionId: DimensionReservedID.parents.rawValue,
+            title: "一次回家"
+        ))
+
+        parentsDimension.mode = .memorial
+        parentsDimension.updatedAt = .now
+        try env.context.save()
+
+        var fetched = try XCTUnwrap(try store.fetchMoment(id: moment.id))
+        XCTAssertEqual(fetched.dimensionId, DimensionReservedID.parents.rawValue)
+        XCTAssertNil(fetched.originDimensionId)
+
+        parentsDimension.mode = .normal
+        parentsDimension.updatedAt = .now
+        try env.context.save()
+
+        fetched = try XCTUnwrap(try store.fetchMoment(id: moment.id))
+        XCTAssertEqual(fetched.dimensionId, DimensionReservedID.parents.rawValue)
+        XCTAssertNil(fetched.originDimensionId)
+    }
+
     func testFormatterMatrixCoversAllInterfaces() {
         // 既有 7 接口
         XCTAssertEqual(TimeBank.Formatter.hoursCompact(552), "552h")
