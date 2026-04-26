@@ -211,39 +211,91 @@ final class FileStore {
     }
 
     func writeMedia(_ media: [PendingMedia], to momentID: UUID) throws -> [WrittenMedia] {
+        try writeMedia(
+            media,
+            to: momentID,
+            startingSortIndex: 0,
+            startingFileNumber: 1,
+            cleanupOnFailure: false
+        )
+    }
+
+    func writeAdditionalMedia(
+        _ media: [PendingMedia],
+        to momentID: UUID,
+        startingSortIndex: Int,
+        startingFileNumber: Int
+    ) throws -> [WrittenMedia] {
+        try writeMedia(
+            media,
+            to: momentID,
+            startingSortIndex: startingSortIndex,
+            startingFileNumber: startingFileNumber,
+            cleanupOnFailure: true
+        )
+    }
+
+    func removeFilesIfExist(atRelativePaths relativePaths: [String]) throws {
+        for relativePath in relativePaths {
+            let url = url(forRelativePath: relativePath)
+            if fileManager.fileExists(atPath: url.path) {
+                try fileManager.removeItem(at: url)
+            }
+        }
+    }
+
+    private func writeMedia(
+        _ media: [PendingMedia],
+        to momentID: UUID,
+        startingSortIndex: Int,
+        startingFileNumber: Int,
+        cleanupOnFailure: Bool
+    ) throws -> [WrittenMedia] {
         let momentDir = try createMomentDirectory(for: momentID)
         var written: [WrittenMedia] = []
+        var createdURLs: [URL] = []
 
-        for (index, item) in media.enumerated() {
-            let ext = resolvedExtension(for: item)
-            let basename = String(format: "%02d", index + 1)
-            let fileURL = momentDir.appendingPathComponent("\(basename).\(ext)", isDirectory: false)
-            let thumbURL = momentDir.appendingPathComponent("\(basename).thumb.jpg", isDirectory: false)
+        do {
+            for (index, item) in media.enumerated() {
+                let ext = resolvedExtension(for: item)
+                let basename = String(format: "%02d", startingFileNumber + index)
+                let fileURL = momentDir.appendingPathComponent("\(basename).\(ext)", isDirectory: false)
+                let thumbURL = momentDir.appendingPathComponent("\(basename).thumb.jpg", isDirectory: false)
 
-            try failureInjector?(item, index, .beforeWriteOriginal)
-            try persistOriginal(item, to: fileURL)
-            try failureInjector?(item, index, .afterWriteOriginal)
+                try failureInjector?(item, index, .beforeWriteOriginal)
+                try persistOriginal(item, to: fileURL)
+                createdURLs.append(fileURL)
+                try failureInjector?(item, index, .afterWriteOriginal)
 
-            let fileSize = try fileSize(at: fileURL)
+                let fileSize = try fileSize(at: fileURL)
 
-            try failureInjector?(item, index, .beforeGenerateThumbnail)
-            try generateThumbnail(from: fileURL, type: item.type, output: thumbURL, maxPixelSize: 200)
-            try failureInjector?(item, index, .afterGenerateThumbnail)
+                try failureInjector?(item, index, .beforeGenerateThumbnail)
+                try generateThumbnail(from: fileURL, type: item.type, output: thumbURL, maxPixelSize: 200)
+                createdURLs.append(thumbURL)
+                try failureInjector?(item, index, .afterGenerateThumbnail)
 
-            let savedOriginalPath = try relativePath(forAbsoluteURL: fileURL)
-            let savedThumbnailPath = try relativePath(forAbsoluteURL: thumbURL)
-            let durationSeconds = try resolvedDurationSeconds(for: item, fileURL: fileURL)
+                let savedOriginalPath = try relativePath(forAbsoluteURL: fileURL)
+                let savedThumbnailPath = try relativePath(forAbsoluteURL: thumbURL)
+                let durationSeconds = try resolvedDurationSeconds(for: item, fileURL: fileURL)
 
-            written.append(
-                WrittenMedia(
-                    kind: item.type,
-                    relativePath: savedOriginalPath,
-                    thumbnailPath: savedThumbnailPath,
-                    fileSize: fileSize,
-                    durationSeconds: durationSeconds,
-                    sortIndex: index
+                written.append(
+                    WrittenMedia(
+                        kind: item.type,
+                        relativePath: savedOriginalPath,
+                        thumbnailPath: savedThumbnailPath,
+                        fileSize: fileSize,
+                        durationSeconds: durationSeconds,
+                        sortIndex: startingSortIndex + index
+                    )
                 )
-            )
+            }
+        } catch {
+            if cleanupOnFailure {
+                for url in createdURLs where fileManager.fileExists(atPath: url.path) {
+                    try? fileManager.removeItem(at: url)
+                }
+            }
+            throw error
         }
 
         return written

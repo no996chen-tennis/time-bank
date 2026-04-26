@@ -223,6 +223,116 @@ final class DataLayerTests: XCTestCase {
         XCTAssertTrue(orphans.isEmpty)
     }
 
+    func testUpdateMomentHappyPathEditsFieldsAndAddsMedia() async throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        let store = env.makeMomentStore()
+        _ = try store.bootstrapReservedData()
+
+        let moment = try await store.save(moment: MomentStore.SaveRequest(
+            dimensionId: DimensionReservedID.parents.rawValue,
+            title: "旧标题",
+            note: "旧笔记",
+            happenedAt: Date(timeIntervalSince1970: 1_713_000_000),
+            durationSeconds: 30 * 60,
+            media: [.image(data: makeJPEGData(color: .systemOrange))]
+        ))
+        let existingMedia = try XCTUnwrap(moment.mediaItems.first)
+        let newDate = Date(timeIntervalSince1970: 1_714_000_000)
+
+        try await store.update(moment: MomentStore.UpdateRequest(
+            id: moment.id,
+            dimensionId: DimensionReservedID.sport.rawValue,
+            title: "新标题",
+            note: "新笔记",
+            happenedAt: newDate,
+            durationSeconds: 90 * 60,
+            media: [
+                .existing(id: existingMedia.id),
+                .new(.image(data: makeJPEGData(color: .systemBlue)))
+            ]
+        ))
+
+        let fetched = try XCTUnwrap(try store.fetchMoment(id: moment.id))
+        XCTAssertEqual(fetched.dimensionId, DimensionReservedID.sport.rawValue)
+        XCTAssertEqual(fetched.title, "新标题")
+        XCTAssertEqual(fetched.note, "新笔记")
+        XCTAssertEqual(fetched.happenedAt, newDate)
+        XCTAssertEqual(fetched.durationSeconds, 90 * 60)
+        XCTAssertEqual(fetched.mediaItems.count, 2)
+        XCTAssertTrue(fetched.mediaItems.allSatisfy { env.fileStore.fileExists(atRelativePath: $0.relativePath) })
+    }
+
+    func testUpdateMomentReordersMediaBySortIndex() async throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        let store = env.makeMomentStore()
+        _ = try store.bootstrapReservedData()
+
+        let moment = try await store.save(moment: MomentStore.SaveRequest(
+            dimensionId: DimensionReservedID.parents.rawValue,
+            media: [
+                .image(data: makeJPEGData(color: .systemRed)),
+                .image(data: makeJPEGData(color: .systemGreen)),
+                .image(data: makeJPEGData(color: .systemBlue))
+            ]
+        ))
+        let originalOrder = moment.mediaItems.sorted { $0.sortIndex < $1.sortIndex }.map(\.id)
+        let reversedOrder = Array(originalOrder.reversed())
+
+        try await store.update(moment: MomentStore.UpdateRequest(
+            id: moment.id,
+            dimensionId: DimensionReservedID.parents.rawValue,
+            media: reversedOrder.map { .existing(id: $0) }
+        ))
+
+        let fetched = try XCTUnwrap(try store.fetchMoment(id: moment.id))
+        let updatedOrder = fetched.mediaItems.sorted { $0.sortIndex < $1.sortIndex }.map(\.id)
+        XCTAssertEqual(updatedOrder, reversedOrder)
+    }
+
+    func testUpdateMomentFailureRollsBackDatabaseAndNewFiles() async throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        let store = env.makeMomentStore()
+        _ = try store.bootstrapReservedData()
+
+        let moment = try await store.save(moment: MomentStore.SaveRequest(
+            dimensionId: DimensionReservedID.parents.rawValue,
+            title: "原始标题",
+            media: [.image(data: makeJPEGData(color: .systemOrange))]
+        ))
+        let existingMedia = try XCTUnwrap(moment.mediaItems.first)
+
+        let failingFileStore = FileStore(baseURL: env.documentsRootURL) { _, index, stage in
+            if index == 0 && stage == .afterWriteOriginal {
+                throw FileStore.FileStoreError.injectedFailure("Simulated update media failure.")
+            }
+        }
+        let failingStore = MomentStore(modelContext: env.context, fileStore: failingFileStore)
+
+        await XCTAssertThrowsErrorAsync {
+            _ = try await failingStore.update(moment: MomentStore.UpdateRequest(
+                id: moment.id,
+                dimensionId: DimensionReservedID.sport.rawValue,
+                title: "不应写入",
+                media: [
+                    .existing(id: existingMedia.id),
+                    .new(.image(data: self.makeJPEGData(color: .systemBlue)))
+                ]
+            ))
+        }
+
+        let fetched = try XCTUnwrap(try store.fetchMoment(id: moment.id))
+        XCTAssertEqual(fetched.dimensionId, DimensionReservedID.parents.rawValue)
+        XCTAssertEqual(fetched.title, "原始标题")
+        XCTAssertEqual(fetched.mediaItems.count, 1)
+        XCTAssertFalse(env.fileStore.fileExists(atRelativePath: "moments/\(moment.id.uuidString)/02.heic"))
+    }
+
     func testDeleteThenUndoWithinWindowRestoresMoment() async throws {
         let env = try TestEnvironment()
         defer { env.cleanup() }
@@ -272,6 +382,84 @@ final class DataLayerTests: XCTestCase {
 
         XCTAssertNil(try store.fetchMoment(id: savedMoment.id))
         XCTAssertFalse(FileManager.default.fileExists(atPath: momentDirectory.path))
+    }
+
+    func testUndoAfterDeleteWindowFailsBecauseMomentIsGone() async throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        let store = env.makeMomentStore(deleteDelaySeconds: 0.15)
+        _ = try store.bootstrapReservedData()
+
+        let savedMoment = try await store.save(moment: MomentStore.SaveRequest(
+            dimensionId: DimensionReservedID.parents.rawValue,
+            media: [.image(data: makeJPEGData())]
+        ))
+
+        try store.delete(moment: savedMoment)
+        try await Task.sleep(nanoseconds: 350_000_000)
+
+        XCTAssertNil(try store.fetchMoment(id: savedMoment.id))
+        await XCTAssertThrowsErrorAsync {
+            try store.undoDelete(moment: savedMoment)
+        }
+    }
+
+    func testBatchDeleteCanBeRestoredWithOneUndoAction() async throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        let store = env.makeMomentStore(deleteDelaySeconds: 0.4)
+        _ = try store.bootstrapReservedData()
+
+        let first = try await store.save(moment: MomentStore.SaveRequest(
+            dimensionId: DimensionReservedID.parents.rawValue,
+            title: "第一条"
+        ))
+        let second = try await store.save(moment: MomentStore.SaveRequest(
+            dimensionId: DimensionReservedID.parents.rawValue,
+            title: "第二条"
+        ))
+        let deletedMoments = [first, second]
+
+        for moment in deletedMoments {
+            try store.delete(moment: moment)
+        }
+
+        XCTAssertTrue(deletedMoments.allSatisfy { $0.status == .pendingDelete })
+
+        try await Task.sleep(nanoseconds: 120_000_000)
+        for moment in deletedMoments {
+            try store.undoDelete(moment: moment)
+        }
+
+        let restored = try store.fetchAllMoments()
+        XCTAssertEqual(restored.count, 2)
+        XCTAssertTrue(restored.allSatisfy { $0.status == .normal })
+    }
+
+    func testBatchMoveSwitchesAllSelectedMomentsToTargetDimension() async throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        let store = env.makeMomentStore()
+        _ = try store.bootstrapReservedData()
+
+        let first = try await store.save(moment: MomentStore.SaveRequest(
+            dimensionId: DimensionReservedID.parents.rawValue,
+            title: "第一条"
+        ))
+        let second = try await store.save(moment: MomentStore.SaveRequest(
+            dimensionId: DimensionReservedID.parents.rawValue,
+            title: "第二条"
+        ))
+
+        try store.move(moments: [first, second], to: DimensionReservedID.partner.rawValue)
+
+        let moved = try store.fetchAllMoments()
+        XCTAssertEqual(moved.count, 2)
+        XCTAssertTrue(moved.allSatisfy { $0.dimensionId == DimensionReservedID.partner.rawValue })
+        XCTAssertTrue(moved.allSatisfy { $0.originDimensionId == nil })
     }
 
     func testCommitPendingDeletesOnRestartImmediatelyPurgesData() async throws {
@@ -1071,7 +1259,7 @@ final class DataLayerTests: XCTestCase {
             dimensionId: DimensionReservedID.parents.rawValue,
             happenedAt: now.addingTimeInterval(-10 * 24 * 3600)
         )
-        XCTAssertEqual(MomentDetailPresentation.infoLine(for: tenDayMoment, now: now), "10 天前")
+        XCTAssertEqual(MomentDetailPresentation.infoLine(for: tenDayMoment, now: now), "发生在 10 天前")
     }
 
     func testMomentDetailPresentationChipsUseNoDurationFallback() {

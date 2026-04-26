@@ -1,14 +1,26 @@
 // TimeBank/Features/DimensionDetail/MomentTimelineView.swift
 
 import SwiftUI
+import SwiftData
 
 struct MomentTimelineView: View {
+    @Environment(\.sharedMomentStore) private var sharedMomentStore
+    @EnvironmentObject private var undoToastController: UndoToastController
+    @Query private var dimensions: [Dimension]
+
     let dimension: Dimension
     let moments: [Moment]
     let fileStore: FileStore
 
     @State private var visibleCount = 20
     @State private var isLoadingNextPage = false
+    @State private var momentEditorRoute: MomentEditorRoute?
+    @State private var deleteCandidate: Moment?
+    @State private var isSelectionMode = false
+    @State private var selectedMomentIDs: Set<UUID> = []
+    @State private var showBatchDimensionPicker = false
+    @State private var toastMessage: String?
+    @State private var toastDismissTask: Task<Void, Never>?
 
     private let pageSize = 20
     private let loadMoreThreshold = 5
@@ -36,6 +48,10 @@ struct MomentTimelineView: View {
         Array(timelineMoments.prefix(visibleCount))
     }
 
+    private var selectedMoments: [Moment] {
+        timelineMoments.filter { selectedMomentIDs.contains($0.id) }
+    }
+
     private var timelineMomentIDs: [UUID] {
         timelineMoments.map(\.id)
     }
@@ -49,6 +65,10 @@ struct MomentTimelineView: View {
             if timelineMoments.isEmpty {
                 emptyState
             } else {
+                if isSelectionMode {
+                    selectionHeader
+                }
+
                 Text(DimensionDetailCopy.depositedSectionHeader(
                     momentCount: storedMomentCount,
                     storedHours: storedHours
@@ -58,19 +78,12 @@ struct MomentTimelineView: View {
 
                 VStack(spacing: TBSpace.s3) {
                     ForEach(Array(visibleMoments.enumerated()), id: \.element.id) { index, moment in
-                        NavigationLink {
-                            MomentDetailView(momentID: moment.id)
-                        } label: {
-                            MomentTimelineRowView(
-                                moment: moment,
-                                fileStore: fileStore
-                            )
-                        }
-                        .buttonStyle(.plain)
-                        .onAppear {
-                            loadNextPageIfNeeded(currentIndex: index)
-                        }
+                        timelineRow(moment: moment, index: index)
                     }
+                }
+
+                if isSelectionMode, selectedMomentIDs.isEmpty == false {
+                    batchActionBar
                 }
 
                 if isLoadingNextPage {
@@ -90,6 +103,146 @@ struct MomentTimelineView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .onChange(of: timelineMomentIDs) { _, _ in
             resetPagination()
+            reconcileSelection()
+        }
+        .sheet(item: $momentEditorRoute) { route in
+            MomentEditorView(route: route)
+        }
+        .sheet(isPresented: $showBatchDimensionPicker) {
+            DimensionPickerSheet(
+                title: "换时间账户",
+                dimensions: dimensions,
+                excludedDimensionID: nil
+            ) { targetDimension in
+                moveSelectedMoments(to: targetDimension)
+            }
+        }
+        .alert("确定删除这个时刻？", isPresented: deleteAlertBinding) {
+            Button("取消", role: .cancel) {
+                deleteCandidate = nil
+            }
+            Button("删除", role: .destructive) {
+                if let deleteCandidate {
+                    delete(moment: deleteCandidate)
+                }
+            }
+        } message: {
+            if let deleteCandidate {
+                Text(MomentActionCopy.deleteMessage(mediaCount: deleteCandidate.mediaItems.count))
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if let toastMessage {
+                Text(toastMessage)
+                    .font(.tbLabel)
+                    .foregroundStyle(Color.tbSurface)
+                    .padding(.horizontal, TBSpace.s4)
+                    .padding(.vertical, TBSpace.s3)
+                    .background(Color.tbInk.opacity(0.88))
+                    .clipShape(Capsule())
+                    .padding(.bottom, TBSpace.s2)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(response: 0.28, dampingFraction: 0.86), value: toastMessage)
+    }
+
+    private var selectionHeader: some View {
+        HStack(spacing: TBSpace.s3) {
+            Button("取消") {
+                exitSelectionMode()
+            }
+            .font(.tbBodySm)
+            .foregroundStyle(Color.tbInk2)
+
+            Spacer()
+
+            Text("已选 \(selectedMomentIDs.count)")
+                .font(.tbBody)
+                .foregroundStyle(Color.tbInk)
+
+            Spacer()
+
+            Button("全选") {
+                selectedMomentIDs = Set(timelineMomentIDs)
+            }
+            .font(.tbBodySm)
+            .foregroundStyle(Color.tbPrimary)
+        }
+        .padding(.horizontal, TBSpace.s3)
+        .padding(.vertical, TBSpace.s2)
+        .background(Color.tbSurface)
+        .clipShape(RoundedRectangle(cornerRadius: TBRadius.md))
+    }
+
+    private var batchActionBar: some View {
+        HStack(spacing: TBSpace.s3) {
+            Button {
+                showBatchDimensionPicker = true
+            } label: {
+                Label("换时间账户", systemImage: "arrow.left.arrow.right")
+            }
+            .buttonStyle(MomentTimelineBatchActionButtonStyle())
+
+            Button(role: .destructive) {
+                deleteSelectedMoments()
+            } label: {
+                Label("删除", systemImage: "trash")
+            }
+            .buttonStyle(MomentTimelineBatchActionButtonStyle(isDestructive: true))
+        }
+        .padding(.top, TBSpace.s1)
+    }
+
+    @ViewBuilder
+    private func timelineRow(moment: Moment, index: Int) -> some View {
+        if isSelectionMode {
+            Button {
+                toggleSelection(for: moment)
+            } label: {
+                HStack(spacing: TBSpace.s3) {
+                    MomentSelectionIndicator(isSelected: selectedMomentIDs.contains(moment.id))
+
+                    MomentTimelineRowView(
+                        moment: moment,
+                        fileStore: fileStore
+                    )
+                }
+            }
+            .buttonStyle(.plain)
+            .onAppear {
+                loadNextPageIfNeeded(currentIndex: index)
+            }
+        } else {
+            NavigationLink {
+                MomentDetailView(momentID: moment.id)
+            } label: {
+                MomentTimelineRowView(
+                    moment: moment,
+                    fileStore: fileStore
+                )
+            }
+            .buttonStyle(.plain)
+            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                Button(role: .destructive) {
+                    deleteCandidate = moment
+                } label: {
+                    Label("删除", systemImage: "trash")
+                }
+
+                Button {
+                    momentEditorRoute = .edit(moment)
+                } label: {
+                    Label("编辑", systemImage: "pencil")
+                }
+                .tint(Color.tbInk3)
+            }
+            .onLongPressGesture(minimumDuration: 0.5) {
+                enterSelectionMode(selecting: moment)
+            }
+            .onAppear {
+                loadNextPageIfNeeded(currentIndex: index)
+            }
         }
     }
 
@@ -142,6 +295,144 @@ struct MomentTimelineView: View {
     private func resetPagination() {
         visibleCount = pageSize
         isLoadingNextPage = false
+    }
+
+    private func enterSelectionMode(selecting moment: Moment) {
+        isSelectionMode = true
+        selectedMomentIDs = [moment.id]
+    }
+
+    private func exitSelectionMode() {
+        isSelectionMode = false
+        selectedMomentIDs = []
+    }
+
+    private func toggleSelection(for moment: Moment) {
+        if selectedMomentIDs.contains(moment.id) {
+            selectedMomentIDs.remove(moment.id)
+        } else {
+            selectedMomentIDs.insert(moment.id)
+        }
+    }
+
+    private func reconcileSelection() {
+        let currentIDs = Set(timelineMomentIDs)
+        selectedMomentIDs.formIntersection(currentIDs)
+        if selectedMomentIDs.isEmpty {
+            isSelectionMode = false
+        }
+    }
+
+    private var deleteAlertBinding: Binding<Bool> {
+        Binding(
+            get: { deleteCandidate != nil },
+            set: { newValue in
+                if newValue == false {
+                    deleteCandidate = nil
+                }
+            }
+        )
+    }
+
+    private func delete(moment: Moment) {
+        guard let store = sharedMomentStore else { return }
+        do {
+            try store.delete(moment: moment)
+            undoToastController.show(message: "已删除") {
+                try? store.undoDelete(moment: moment)
+            }
+            deleteCandidate = nil
+        } catch {
+            deleteCandidate = nil
+        }
+    }
+
+    private func deleteSelectedMoments() {
+        guard let store = sharedMomentStore else { return }
+        let momentsToDelete = selectedMoments
+        guard momentsToDelete.isEmpty == false else { return }
+
+        var deletedMoments: [Moment] = []
+        for moment in momentsToDelete {
+            do {
+                try store.delete(moment: moment)
+                deletedMoments.append(moment)
+            } catch {
+                continue
+            }
+        }
+
+        exitSelectionMode()
+
+        guard deletedMoments.isEmpty == false else { return }
+        undoToastController.show(message: "已删除 \(Formatter.momentsCount(deletedMoments.count))") {
+            for moment in deletedMoments {
+                try? store.undoDelete(moment: moment)
+            }
+        }
+    }
+
+    private func moveSelectedMoments(to targetDimension: Dimension) {
+        guard let store = sharedMomentStore else { return }
+        let momentsToMove = selectedMoments
+        guard momentsToMove.isEmpty == false else { return }
+
+        do {
+            try store.move(moments: momentsToMove, to: targetDimension.id)
+            let count = momentsToMove.count
+            exitSelectionMode()
+            showToast("\(Formatter.momentsCount(count))换到了 \(targetDimension.name)")
+        } catch {
+            return
+        }
+    }
+
+    private func showToast(_ message: String) {
+        toastDismissTask?.cancel()
+        toastMessage = message
+        toastDismissTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            if toastMessage == message {
+                toastMessage = nil
+            }
+        }
+    }
+}
+
+private struct MomentSelectionIndicator: View {
+    let isSelected: Bool
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .strokeBorder(isSelected ? Color.tbPrimary : Color.tbInk3.opacity(0.5), lineWidth: 1.5)
+                .background(
+                    Circle()
+                        .fill(isSelected ? Color.tbPrimary : Color.clear)
+                )
+
+            if isSelected {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(Color.tbSurface)
+            }
+        }
+        .frame(width: 24, height: 24)
+    }
+}
+
+private struct MomentTimelineBatchActionButtonStyle: ButtonStyle {
+    var isDestructive = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.tbBodySm)
+            .foregroundStyle(isDestructive ? Color.tbDanger : Color.tbInk)
+            .labelStyle(.titleAndIcon)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, TBSpace.s3)
+            .background(Color.tbSurface.opacity(configuration.isPressed ? 0.72 : 1))
+            .clipShape(Capsule())
     }
 }
 

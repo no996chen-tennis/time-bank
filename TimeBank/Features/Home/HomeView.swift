@@ -1,16 +1,21 @@
 // TimeBank/Features/Home/HomeView.swift
 
+import Combine
 import SwiftData
 import SwiftUI
 
 struct HomeView: View {
+    @Environment(\.modelContext) private var modelContext
+
     @Query private var profiles: [UserProfile]
     @Query private var dimensions: [Dimension]
     @Query private var moments: [Moment]
 
+    @StateObject private var undoToastController = UndoToastController()
     @State private var selectedTab: HomeTab = .home
     @State private var toastMessage: String?
     @State private var momentEditorRoute: MomentEditorRoute?
+    @State private var sharedMomentStore: MomentStore?
 
     var body: some View {
         NavigationStack {
@@ -31,20 +36,31 @@ struct HomeView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.tbBg)
             .overlay(alignment: .bottom) {
-                if let toastMessage {
-                    Text(toastMessage)
-                        .font(.tbBodySm)
-                        .foregroundStyle(Color.tbSurface)
-                        .padding(.horizontal, TBSpace.s4)
-                        .padding(.vertical, TBSpace.s3)
-                        .background(Color.tbInk.opacity(0.9))
-                        .clipShape(Capsule())
-                        .padding(.bottom, 96)
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                VStack(spacing: TBSpace.s2) {
+                    if let toastMessage {
+                        Text(toastMessage)
+                            .font(.tbBodySm)
+                            .foregroundStyle(Color.tbSurface)
+                            .padding(.horizontal, TBSpace.s4)
+                            .padding(.vertical, TBSpace.s3)
+                            .background(Color.tbInk.opacity(0.9))
+                            .clipShape(Capsule())
+                            .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    }
+
+                    UndoToastView()
                 }
+                .padding(.bottom, 96)
             }
             .sheet(item: $momentEditorRoute) { route in
                 MomentEditorView(route: route)
+            }
+        }
+        .environmentObject(undoToastController)
+        .environment(\.sharedMomentStore, sharedMomentStore)
+        .onAppear {
+            if sharedMomentStore == nil {
+                sharedMomentStore = MomentStore(modelContext: modelContext)
             }
         }
     }
@@ -152,5 +168,86 @@ struct HomeView: View {
                 }
                 return lhs.sortIndex < rhs.sortIndex
             }
+    }
+}
+
+@MainActor
+final class UndoToastController: ObservableObject {
+    @Published private(set) var message: String?
+    @Published private(set) var actionTitle: String?
+
+    private var action: (() -> Void)?
+    private var dismissTask: Task<Void, Never>?
+
+    func show(
+        message: String,
+        actionTitle: String = "撤销",
+        duration: TimeInterval = 5.0,
+        action: @escaping () -> Void
+    ) {
+        dismissTask?.cancel()
+        self.message = message
+        self.actionTitle = actionTitle
+        self.action = action
+
+        dismissTask = Task { @MainActor in
+            let nanoseconds = UInt64(max(0, duration) * 1_000_000_000)
+            try? await Task.sleep(nanoseconds: nanoseconds)
+            clear()
+        }
+    }
+
+    func performAction() {
+        action?()
+        clear()
+    }
+
+    func clear() {
+        dismissTask?.cancel()
+        dismissTask = nil
+        message = nil
+        actionTitle = nil
+        action = nil
+    }
+}
+
+private struct UndoToastView: View {
+    @EnvironmentObject private var controller: UndoToastController
+
+    var body: some View {
+        if let message = controller.message,
+           let actionTitle = controller.actionTitle {
+            HStack(spacing: TBSpace.s2) {
+                Text(message)
+                    .font(.tbBodySm)
+                    .foregroundStyle(Color.tbSurface)
+
+                Text("·")
+                    .font(.tbBodySm)
+                    .foregroundStyle(Color.tbSurface.opacity(0.72))
+
+                Button(actionTitle) {
+                    controller.performAction()
+                }
+                .font(.tbBodySm)
+                .foregroundStyle(Color.tbSurface)
+            }
+            .padding(.horizontal, TBSpace.s4)
+            .padding(.vertical, TBSpace.s3)
+            .background(Color.tbInk.opacity(0.92))
+            .clipShape(Capsule())
+            .transition(.opacity.combined(with: .move(edge: .bottom)))
+        }
+    }
+}
+
+private struct SharedMomentStoreKey: EnvironmentKey {
+    static let defaultValue: MomentStore? = nil
+}
+
+extension EnvironmentValues {
+    var sharedMomentStore: MomentStore? {
+        get { self[SharedMomentStoreKey.self] }
+        set { self[SharedMomentStoreKey.self] = newValue }
     }
 }

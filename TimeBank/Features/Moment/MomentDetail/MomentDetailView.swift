@@ -5,11 +5,19 @@ import SwiftData
 import SwiftUI
 
 struct MomentDetailView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.sharedMomentStore) private var sharedMomentStore
+    @EnvironmentObject private var undoToastController: UndoToastController
+
     let momentID: UUID
 
     @State private var fileStore = FileStore()
     @State private var selectedMediaID: UUID?
     @State private var playableVideo: PlayableVideo?
+    @State private var momentEditorRoute: MomentEditorRoute?
+    @State private var showDimensionPicker = false
+    @State private var showDeleteAlert = false
 
     @Query private var dimensions: [Dimension]
     @Query private var moments: [Moment]
@@ -30,6 +38,33 @@ struct MomentDetailView: View {
         .sheet(item: $playableVideo) { video in
             SystemVideoPlayerView(url: video.url)
                 .ignoresSafeArea()
+        }
+        .sheet(item: $momentEditorRoute) { route in
+            MomentEditorView(route: route)
+        }
+        .sheet(isPresented: $showDimensionPicker) {
+            if let moment,
+               let dimension = dimension(for: moment) {
+                DimensionPickerSheet(
+                    title: "换时间账户",
+                    dimensions: dimensions,
+                    excludedDimensionID: dimension.id
+                ) { targetDimension in
+                    move(moment: moment, to: targetDimension)
+                }
+            }
+        }
+        .alert("确定删除这个时刻？", isPresented: $showDeleteAlert) {
+            Button("取消", role: .cancel) {}
+            Button("删除", role: .destructive) {
+                if let moment {
+                    delete(moment: moment)
+                }
+            }
+        } message: {
+            if let moment {
+                Text(MomentActionCopy.deleteMessage(mediaCount: moment.mediaItems.count))
+            }
         }
     }
 
@@ -100,6 +135,8 @@ struct MomentDetailView: View {
                 .background(Color.tbSurface)
                 .clipShape(RoundedRectangle(cornerRadius: TBRadius.lg, style: .continuous))
                 .modifier(DimensionDetailSoftShadowModifier())
+
+                bottomActions(for: moment)
             }
             .padding(.horizontal, TBSpace.s5)
             .padding(.top, TBSpace.s4)
@@ -195,6 +232,54 @@ struct MomentDetailView: View {
             .clipShape(Capsule())
             .accessibilityLabel(text)
     }
+
+    private func bottomActions(for moment: Moment) -> some View {
+        HStack(spacing: TBSpace.s3) {
+            Button {
+                momentEditorRoute = .edit(moment)
+            } label: {
+                Label("编辑", systemImage: "pencil")
+            }
+            .buttonStyle(MomentDetailActionButtonStyle())
+
+            Button {
+                showDimensionPicker = true
+            } label: {
+                Label("换时间账户", systemImage: "arrow.left.arrow.right")
+            }
+            .buttonStyle(MomentDetailActionButtonStyle())
+
+            Button(role: .destructive) {
+                showDeleteAlert = true
+            } label: {
+                Label("删除", systemImage: "trash")
+            }
+            .buttonStyle(MomentDetailActionButtonStyle(isDestructive: true))
+        }
+    }
+
+    private func move(moment: Moment, to dimension: Dimension) {
+        let store = sharedMomentStore ?? MomentStore(modelContext: modelContext)
+        do {
+            try store.move(moment: moment, to: dimension.id)
+            showDimensionPicker = false
+        } catch {
+            showDimensionPicker = false
+        }
+    }
+
+    private func delete(moment: Moment) {
+        guard let store = sharedMomentStore else { return }
+        do {
+            try store.delete(moment: moment)
+            undoToastController.show(message: "已删除") {
+                try? store.undoDelete(moment: moment)
+            }
+            dismiss()
+        } catch {
+            return
+        }
+    }
 }
 
 enum MomentDetailPresentation {
@@ -218,11 +303,8 @@ enum MomentDetailPresentation {
         }
 
         let days = calendar.dateComponents([.day], from: moment.happenedAt, to: referenceNow).day ?? 0
-        if days < 7 {
-            return "发生在 \(max(1, days)) 天前"
-        }
         if days < 30 {
-            return Formatter.relativeTime(moment.happenedAt, relativeTo: referenceNow)
+            return "发生在 \(max(1, days)) 天前"
         }
 
         let months = calendar.dateComponents([.month], from: moment.happenedAt, to: referenceNow).month ?? 0
@@ -276,5 +358,93 @@ private struct SystemVideoPlayerView: UIViewControllerRepresentable {
 
     static func dismantleUIViewController(_ viewController: AVPlayerViewController, coordinator: ()) {
         viewController.player?.pause()
+    }
+}
+
+enum MomentActionCopy {
+    static func deleteMessage(mediaCount: Int) -> String {
+        if let mediaText = DimensionDetailCopy.mediaCountText(mediaCount) {
+            return "存入的内容（包括 \(mediaText)）会从这里消失。你的手机相册里不受影响。"
+        }
+        return "存入的内容会从这里消失。你的手机相册里不受影响。"
+    }
+}
+
+struct DimensionPickerSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let title: String
+    let dimensions: [Dimension]
+    let excludedDimensionID: String?
+    let onSelect: (Dimension) -> Void
+
+    private var availableDimensions: [Dimension] {
+        dimensions
+            .filter { dimension in
+                dimension.id != excludedDimensionID
+                    && dimension.status == .visible
+                    && dimension.mode == .normal
+                    && (dimension.kind == .builtin || dimension.kind == .custom)
+                    && dimension.name.hasPrefix("__") == false
+            }
+            .sorted { lhs, rhs in
+                if lhs.sortIndex == rhs.sortIndex {
+                    return lhs.name < rhs.name
+                }
+                return lhs.sortIndex < rhs.sortIndex
+            }
+    }
+
+    var body: some View {
+        NavigationStack {
+            List(availableDimensions, id: \.id) { dimension in
+                Button {
+                    onSelect(dimension)
+                    dismiss()
+                } label: {
+                    HStack(spacing: TBSpace.s3) {
+                        Circle()
+                            .fill(DimensionPalette.soft(for: dimension.id))
+                            .frame(width: 28, height: 28)
+                            .overlay {
+                                Image(systemName: DimensionDetailCopy.iconSystemName(for: dimension))
+                                    .font(.tbLabel)
+                                    .foregroundStyle(DimensionPalette.color(for: dimension.id))
+                            }
+
+                        Text(dimension.name)
+                            .font(.tbBody)
+                            .foregroundStyle(Color.tbInk)
+                    }
+                }
+            }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(Color.tbBg)
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("取消") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct MomentDetailActionButtonStyle: ButtonStyle {
+    var isDestructive = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.tbLabel)
+            .foregroundStyle(isDestructive ? Color.tbDanger : Color.tbInk2)
+            .labelStyle(.titleAndIcon)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, TBSpace.s3)
+            .background(Color.tbSurface.opacity(configuration.isPressed ? 0.72 : 1))
+            .clipShape(Capsule())
     }
 }

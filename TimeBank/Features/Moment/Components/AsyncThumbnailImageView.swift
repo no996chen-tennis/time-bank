@@ -80,10 +80,12 @@ enum ThumbnailImageSource {
             return UIImage(data: data)
 
         case .data(_, let data):
-            guard let image = UIImage(data: data) else {
-                return nil
-            }
-            return image.preparingThumbnail(of: CGSize(width: 256, height: 256)) ?? image
+            return await Task.detached(priority: .utility) {
+                guard let image = UIImage(data: data) else {
+                    return nil
+                }
+                return image.preparingThumbnail(of: CGSize(width: 256, height: 256)) ?? image
+            }.value
         }
     }
 }

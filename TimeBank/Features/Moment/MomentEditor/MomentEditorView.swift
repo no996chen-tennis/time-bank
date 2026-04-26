@@ -10,16 +10,20 @@ struct MomentEditorView: View {
     @Environment(\.modelContext) private var modelContext
 
     @Query private var dimensions: [Dimension]
+    @Query private var moments: [Moment]
 
     let route: MomentEditorRoute
 
     @State private var draft: MomentEditorDraft
     @State private var pickerItems: [PhotosPickerItem] = []
+    @State private var fileStore = FileStore()
     @State private var isSaving = false
     @State private var isLoadingMedia = false
     @State private var showDiscardAlert = false
     @State private var toastMessage: String?
     @State private var slowSaveTask: Task<Void, Never>?
+    @State private var didPrefillEditDraft = false
+    @State private var draggingMediaID: UUID?
 
     init(route: MomentEditorRoute) {
         self.route = route
@@ -58,7 +62,7 @@ struct MomentEditorView: View {
                             ProgressView()
                                 .tint(Color.tbPrimary)
                         } else {
-                            Text("存入时间银行")
+                            Text(saveButtonTitle)
                         }
                     }
                     .disabled(isSaving || draft.canSave == false)
@@ -78,7 +82,11 @@ struct MomentEditorView: View {
                 toastView
             }
             .onAppear {
+                prefillEditDraftIfNeeded()
                 ensureSelectedDimension()
+            }
+            .onChange(of: editMoment?.id) { _, _ in
+                prefillEditDraftIfNeeded()
             }
             .onChange(of: availableDimensionIDs) { _, _ in
                 ensureSelectedDimension()
@@ -253,6 +261,18 @@ struct MomentEditorView: View {
         ) {
             ForEach(draft.mediaItems) { item in
                 mediaTile(item)
+                    .onDrag {
+                        draggingMediaID = item.id
+                        return NSItemProvider(object: item.id.uuidString as NSString)
+                    }
+                    .onDrop(
+                        of: [UTType.text],
+                        delegate: MomentEditorMediaDropDelegate(
+                            targetItem: item,
+                            mediaItems: $draft.mediaItems,
+                            draggingMediaID: $draggingMediaID
+                        )
+                    )
             }
 
             if remainingMediaSlots > 0 {
@@ -329,6 +349,21 @@ struct MomentEditorView: View {
                         .font(.system(size: 22, weight: .medium))
                         .foregroundStyle(Color.tbInk3)
                 }
+        } else if let relativePath = item.thumbnailPath ?? item.relativePath {
+            AsyncThumbnailImageView(
+                source: .file(
+                    relativePath: relativePath,
+                    fileStore: fileStore
+                )
+            ) {
+                Rectangle()
+                    .fill(Color.tbBg3)
+                    .overlay {
+                        Image(systemName: item.kind == .video ? "video.fill" : "photo")
+                            .font(.system(size: 22, weight: .medium))
+                            .foregroundStyle(Color.tbInk3)
+                    }
+            }
         } else if item.kind == .image,
                   let data = item.data {
             AsyncThumbnailImageView(
@@ -421,6 +456,7 @@ struct MomentEditorView: View {
                 (dimension.kind == .builtin || dimension.kind == .custom)
                     && dimension.name.hasPrefix("__") == false
                     && (dimension.status == .visible || dimension.id == route.initialDimensionID)
+                    && dimension.mode == .normal
             }
             .sorted { lhs, rhs in
                 if lhs.sortIndex == rhs.sortIndex {
@@ -440,9 +476,28 @@ struct MomentEditorView: View {
 
     private var saveAccessibilityLabel: String {
         if draft.canSave {
-            return "存入时间银行"
+            return saveButtonTitle
         }
-        return draft.disabledSaveAccessibilityLabel ?? "存入时间银行"
+        return draft.disabledSaveAccessibilityLabel ?? saveButtonTitle
+    }
+
+    private var saveButtonTitle: String {
+        switch route.mode {
+        case .create:
+            return "存入时间银行"
+        case .edit:
+            return "保存"
+        }
+    }
+
+    private var editMoment: Moment? {
+        guard case .edit(let momentID) = route.mode else { return nil }
+        return moments.first { $0.id == momentID }
+    }
+
+    private var editMomentID: UUID? {
+        guard case .edit(let momentID) = route.mode else { return nil }
+        return momentID
     }
 
     private func ensureSelectedDimension() {
@@ -451,6 +506,16 @@ struct MomentEditorView: View {
             return
         }
         draft.selectedDimensionID = availableDimensions.first?.id
+    }
+
+    private func prefillEditDraftIfNeeded() {
+        guard didPrefillEditDraft == false,
+              case .edit = route.mode,
+              let editMoment else {
+            return
+        }
+        draft = MomentEditorDraft.editing(moment: editMoment)
+        didPrefillEditDraft = true
     }
 
     private func loadPickedItems(_ items: [PhotosPickerItem]) {
@@ -524,7 +589,7 @@ struct MomentEditorView: View {
     }
 
     private func saveMoment() {
-        guard let request = draft.makeSaveRequest() else { return }
+        guard draft.canSave else { return }
 
         isSaving = true
         slowSaveTask?.cancel()
@@ -538,12 +603,31 @@ struct MomentEditorView: View {
         Task { @MainActor in
             do {
                 let store = MomentStore(modelContext: modelContext)
-                _ = try await store.save(moment: request)
-                isSaving = false
-                slowSaveTask?.cancel()
-                showToast("存下了。")
-                try? await Task.sleep(nanoseconds: 650_000_000)
-                dismiss()
+                switch route.mode {
+                case .create:
+                    guard let request = draft.makeSaveRequest() else {
+                        isSaving = false
+                        slowSaveTask?.cancel()
+                        return
+                    }
+                    _ = try await store.save(moment: request)
+                    isSaving = false
+                    slowSaveTask?.cancel()
+                    showToast("存下了。")
+                    try? await Task.sleep(nanoseconds: 650_000_000)
+                    dismiss()
+
+                case .edit(let momentID):
+                    guard let updateRequest = draft.makeUpdateRequest(momentID: momentID) else {
+                        isSaving = false
+                        slowSaveTask?.cancel()
+                        return
+                    }
+                    _ = try await store.update(moment: updateRequest)
+                    isSaving = false
+                    slowSaveTask?.cancel()
+                    dismiss()
+                }
             } catch {
                 isSaving = false
                 slowSaveTask?.cancel()
@@ -564,5 +648,34 @@ struct MomentEditorView: View {
                 }
             }
         }
+    }
+}
+
+private struct MomentEditorMediaDropDelegate: DropDelegate {
+    let targetItem: MomentEditorMediaItem
+    @Binding var mediaItems: [MomentEditorMediaItem]
+    @Binding var draggingMediaID: UUID?
+
+    func dropEntered(info: DropInfo) {
+        guard let draggingMediaID,
+              draggingMediaID != targetItem.id,
+              let fromIndex = mediaItems.firstIndex(where: { $0.id == draggingMediaID }),
+              let toIndex = mediaItems.firstIndex(where: { $0.id == targetItem.id }) else {
+            return
+        }
+
+        withAnimation(.spring(response: 0.24, dampingFraction: 0.86)) {
+            let item = mediaItems.remove(at: fromIndex)
+            mediaItems.insert(item, at: toIndex)
+        }
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        draggingMediaID = nil
+        return true
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
     }
 }
