@@ -74,7 +74,7 @@ Memorial mode       · 任何关系时间账户可进入（纪念模式，只保
 Widget              · 1 个锁屏 Widget family（小号）+ 基础时间账户偏好
 通知                 · 每天最多 1 次（默认中性文案，关系型提醒为 opt-in）
 导出                 · Raw ZIP（原媒体 + JSON + README，一种格式）
-外观                 · Light Mode Only（设计方向见 `设计提示词-浅色5风格.md`）
+外观                 · Light Mode Only（设计方向见 `设计探索 V2 进行中（multi-tool · 2026-04-26 启动）`）
 本地存储             · SwiftData + FileManager 沙盒
 ```
 
@@ -379,7 +379,7 @@ As a 用户, I want to 导出我所有存入的时刻, so that 我不会担心 A
 | P0-14 | 每日温暖通知（opt-in） | 默认中性文案；**关系型提醒（"你上次见爸妈是 X 天前"）默认关闭**，用户主动在设置里 opt-in 并可随时关闭 |
 | P0-15 | 本地数据存储 | SwiftData + FileManager 沙盒；无联网、无账号 |
 | P0-16 | 数据导出 | 单一格式：Raw ZIP（原图/原视频 + JSON 索引 + 人类可读 README）。**V1 不做 Markdown 导出、转码导出、从 ZIP 恢复**|
-| P0-17 | Light Mode 完整适配 | Release Criteria 只验收 Light，不含 Dark；设计方向见 `设计提示词-浅色5风格.md` |
+| P0-17 | Light Mode 完整适配 | Release Criteria 只验收 Light，不含 Dark；设计方向见 `设计探索 V2 进行中（multi-tool · 2026-04-26 启动）` |
 | P0-18 | 孤儿文件清理 | App 启动时自动扫描并清理沙盒中"无 SwiftData 记录"的媒体文件夹 |
 | P0-19 | 无障碍基线 | VoiceOver 标签齐全；44pt 触控；Dynamic Type 到 `.accessibility1` |
 | P0-20 | Privacy Manifest + 最小权限 | 仅需 PhotosPicker（免权限）；不索相册写入权限、不索麦克风权限、不索相机权限（V1） |
