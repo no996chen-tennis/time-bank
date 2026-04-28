@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>时间银行 · iOS 原型可视化</title>
+  <style>
+    :root {
+      --bg: #e1d2c0;
+      --paper: #f7f1e7;
+      --ink: #25231f;
+      --muted: #6f675d;
+      --line: rgba(37, 35, 31, 0.16);
+      --rust: #9d3f2f;
+      --green: #243d32;
+      --shadow: rgba(51, 36, 24, 0.18);
+      --serif: "Songti SC", "Noto Serif SC", Georgia, serif;
+      --sans: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px),
+        linear-gradient(rgba(255,255,255,0.14) 1px, transparent 1px),
+        var(--bg);
+      background-size: 34px 34px;
+      font-family: var(--sans);
+      letter-spacing: 0;
+    }
+
+    .page {
+      width: min(100%, 1280px);
+      margin: 0 auto;
+      padding: 36px 28px 64px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: end;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: clamp(36px, 5vw, 64px);
+      line-height: 1;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .lead {
+      max-width: 720px;
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .meta {
+      text-align: right;
+      color: var(--rust);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.7;
+      text-transform: uppercase;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 24px;
+      align-items: stretch;
+      margin-bottom: 24px;
+    }
+
+    .preview {
+      min-height: 640px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      box-shadow: 0 22px 70px var(--shadow);
+      overflow: hidden;
+    }
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: 640px;
+      border: 0;
+      background: var(--paper);
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      background: rgba(247, 241, 231, 0.72);
+      padding: 22px;
+    }
+
+    .panel h2 {
+      margin: 0 0 12px;
+      font-family: var(--serif);
+      font-size: 30px;
+      line-height: 1.1;
+      color: var(--green);
+    }
+
+    .panel p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 16px;
+      border: 1px solid var(--green);
+      background: var(--green);
+      color: #fff8ed;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .link-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      min-height: 56px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      text-decoration: none;
+      background: rgba(255, 250, 241, 0.5);
+    }
+
+    .link-card strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .link-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .arrow {
+      color: var(--rust);
+      font-family: var(--serif);
+      font-size: 26px;
+    }
+
+    .thumbs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .thumb {
+      border: 1px solid var(--line);
+      background: rgba(247, 241, 231, 0.72);
+      padding: 12px;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .thumb img {
+      width: 100%;
+      display: block;
+      border: 1px solid var(--line);
+      background: var(--paper);
+    }
+
+    .thumb strong {
+      display: block;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 920px) {
+      header,
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .meta {
+        text-align: left;
+      }
+
+      iframe {
+        height: 560px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div>
+        <h1>时间银行 · iOS 原型可视化</h1>
+        <p class="lead">网页形式集中展示当前 iOS 原型。主预览嵌入「UI 主题评审页」，并在右侧索引中保留 UI 主题 1/2/3/4/5 五个 App 主题入口，方便横向评审。</p>
+      </div>
+      <div class="meta">Prototype Web<br>2026.04.28<br>Local Preview</div>
+    </header>
+
+    <section class="hero">
+      <div class="preview">
+        <iframe src="./ui-theme-1-magazine-apartamento.html" title="UI 主题 1 · 杂志 Apartamento 风 iOS 原型"></iframe>
+      </div>
+
+      <aside class="panel">
+        <h2>UI 主题 1</h2>
+        <p>当前主视觉稿集合：主题 1 杂志 Apartamento 风完整 5 屏，并在同一评审页合入主题 4「禅意宋瓷茶道」与主题 5「Local Remote Editorial」。这个文件可作为后续 SwiftUI 可变主题实现的主要参考。</p>
+        <a class="button" href="./ui-theme-1-magazine-apartamento.html" target="_blank" rel="noreferrer">打开主题评审页</a>
+
+        <div class="list" aria-label="其他设计稿">
+          <a class="link-card" href="./ui-theme-1-magazine-apartamento.html" target="_blank" rel="noreferrer">
+            <span><strong>UI 主题 1 · Apartamento</strong><span>5 屏 + lifespan 变体 A</span></span><b class="arrow">›</b>
+          </a>
+          <a class="link-card" href="./time-bank-artbook-showcase.html" target="_blank" rel="noreferrer">
+            <span><strong>UI 主题 2 · Art Book</strong><span>装帧方向网页展示</span></span><b class="arrow">›</b>
+          </a>
+          <a class="link-card" href="./ui-theme-3-gallery.html" target="_blank" rel="noreferrer">
+            <span><strong>UI 主题 3 · Gallery</strong><span>当代艺术白盒子方向</span></span><b class="arrow">›</b>
+          </a>
+          <a class="link-card" href="./ui-theme-1-magazine-apartamento.html#theme-4" target="_blank" rel="noreferrer">
+            <span><strong>UI 主题 4 · 禅意宋瓷茶道</strong><span>已合入主题评审页</span></span><b class="arrow">›</b>
+          </a>
+          <a class="link-card" href="./ui-theme-1-magazine-apartamento.html#theme-5" target="_blank" rel="noreferrer">
+            <span><strong>UI 主题 5 · Local Remote Editorial</strong><span>变体 B · 已合入主题评审页</span></span><b class="arrow">›</b>
+          </a>
+          <a class="link-card" href="./time-bank-artbook.html" target="_blank" rel="noreferrer">
+            <span><strong>Art Book 完整画布</strong><span>5 屏 + lifespan A/B/C</span></span><b class="arrow">›</b>
+          </a>
+          <a class="link-card" href="./time-bank-magazine-apartamento.html" target="_blank" rel="noreferrer">
+            <span><strong>杂志 Apartamento 风</strong><span>慢杂志排版方向</span></span><b class="arrow">›</b>
+          </a>
+          <a class="link-card" href="./time-bank-gallery-showcase.html" target="_blank" rel="noreferrer">
+            <span><strong>Gallery 网页展示</strong><span>当代艺术方向展示页</span></span><b class="arrow">›</b>
+          </a>
+          <a class="link-card" href="./mockup-自定义账户-2026-04-27.html" target="_blank" rel="noreferrer">
+            <span><strong>自定义账户 Mockup</strong><span>2026-04-27 功能原型</span></span><b class="arrow">›</b>
+          </a>
+          <a class="link-card" href="./time-bank-zen-cn.html" target="_blank" rel="noreferrer">
+            <span><strong>禅意中文风</strong><span>CN mood exploration</span></span><b class="arrow">›</b>
+          </a>
+          <a class="link-card" href="./time-bank-swiss-linwan-v1.html" target="_blank" rel="noreferrer">
+            <span><strong>Swiss 林晚 v1</strong><span>理性网格方向</span></span><b class="arrow">›</b>
+          </a>
+          <a class="link-card" href="./v1-ui-final.html" target="_blank" rel="noreferrer">
+            <span><strong>V1 UI Final</strong><span>旧定稿 bundle</span></span><b class="arrow">›</b>
+          </a>
+        </div>
+      </aside>
+    </section>
+
+    <section class="thumbs" aria-label="Swiss PNG preview">
+      <a class="thumb" href="./linwan-swiss-S1-home.png" target="_blank" rel="noreferrer">
+        <img src="./linwan-swiss-S1-home.png" alt="Swiss S1 主页">
+        <strong>Swiss S1 · 主页</strong>
+      </a>
+      <a class="thumb" href="./linwan-swiss-S2-parents-detail.png" target="_blank" rel="noreferrer">
+        <img src="./linwan-swiss-S2-parents-detail.png" alt="Swiss S2 陪父母详情">
+        <strong>Swiss S2 · 陪父母详情</strong>
+      </a>
+      <a class="thumb" href="./linwan-swiss-S3-moment-detail.png" target="_blank" rel="noreferrer">
+        <img src="./linwan-swiss-S3-moment-detail.png" alt="Swiss S3 时刻详情">
+        <strong>Swiss S3 · 时刻详情</strong>
+      </a>
+      <a class="thumb" href="./linwan-swiss-S4-moment-editor.png" target="_blank" rel="noreferrer">
+        <img src="./linwan-swiss-S4-moment-editor.png" alt="Swiss S4 存时刻编辑器">
+        <strong>Swiss S4 · 存时刻编辑器</strong>
+      </a>
+      <a class="thumb" href="./linwan-swiss-S5-accounts.png" target="_blank" rel="noreferrer">
+        <img src="./linwan-swiss-S5-accounts.png" alt="Swiss S5 账户">
+        <strong>Swiss S5 · 账户</strong>
+      </a>
+    </section>
+  </main>
+</body>
+</html>

@@ -7,7 +7,18 @@
 
 | 文件 | 用途 |
 |------|------|
+| `index.html` | 设计稿网页入口页：嵌入主原型，并链接其他 HTML / PNG 可视化稿 |
+| `ui-theme-1-magazine-apartamento.html` | **UI 主题评审页**：主题 1 杂志 Apartamento 风完整画板 + 主题 4 禅意宋瓷茶道嵌入预览 + 主题 5 Local Remote Editorial |
+| `ui-theme-3-gallery.html` | **UI 主题 3**：当代艺术 Gallery 风 iOS 原型（5 屏 + lifespan 3 变体） |
+| `time-bank-artbook-showcase.html` | **UI 主题 2**：Art Book / 装帧方向网页展示页（说明 + iframe 预览 + 设计要点） |
 | `v1-ui-final.html` | Claude Design UI 定稿（6 屏 React 组件 + tokens + 插画）· 7.7MB bundle · 双击本地打开查看 |
+| `time-bank-magazine-apartamento.html` | 2026-04-26 杂志 Apartamento 风 iOS 原型（5 屏 + lifespan 3 变体）· 本地 HTML 可直接打开 |
+| `time-bank-artbook.html` | 2026-04-26 Art Book / 装帧方向 iOS 原型（5 屏 + lifespan A/B/C 变体）· 林晚真实数据 |
+| `time-bank-gallery.html` | 2026-04-26 当代艺术 Gallery 风 iOS 原型（5 屏 + lifespan 3 变体）· 林晚真实数据 |
+| `time-bank-gallery-showcase.html` | Gallery 方向网页展示页（摘要 + 指标 + 内嵌完整原型）· 浏览器评审入口 |
+| `time-bank-zen-cn.html` | 2026-04-26 禅意宋瓷茶道方向 iOS 原型（5 屏 + S1 lifespan A/B/C 变体）· 林晚真实数据 |
+| `time-bank-zen-jp.html` | 2026-04-26 禅意日式无印方向 iOS 原型（5 屏 + S1 lifespan A/B/C 变体）· 林晚真实数据 |
+| `zen-cn-png/` | `time-bank-zen-cn.html` 导出的 1179×2556 PNG 视觉稿 |
 | `DesignTokens.swift` | 从 HTML 里提取的 Swift 常量文件，ChatGPT 可直接放入工程的 `Utility/Tokens.swift` |
 
 ## ChatGPT 写代码时如何用

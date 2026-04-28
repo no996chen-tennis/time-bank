@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<title>V1.1 自定义时间账户 · 简版 UI 草图</title>
+<style>
+  /* Design tokens · 跟 DesignTokens.swift 同步 */
+  :root {
+    --tbBg:        #FBF4EC;
+    --tbBg2:       #F5EADD;
+    --tbBg3:       #EFE0CE;
+    --tbSurface:   #FFFFFF;
+    --tbInk:       #3A2E24;
+    --tbInk2:      #6B5A47;
+    --tbInk3:      #A8957C;
+    --tbHair:      #E8D9C4;
+    --tbDimParents:#E89A7C;
+    --tbDimKids:   #E8C47C;
+    --tbDimPartner:#C29DD4;
+    --tbDimCreate: #A8C4D9;
+    --tbDimSport:  #8EC7A8;
+    --tbDimFree:   #D6B89A;
+    --tbDimCoral:  #E8857C;
+    --tbDimMint:   #7CD9B5;
+    --tbDimDenim:  #7C9DC2;
+    --tbDimMauve:  #C27C9D;
+    --tbPrimary:   #E89A7C;
+    --tbDanger:    #C66B5A;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 40px 24px 80px;
+    background: #ECE3D5;
+    font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+    color: var(--tbInk);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 500;
+    margin: 0 0 8px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: var(--tbInk2);
+    margin-bottom: 40px;
+  }
+  .frames {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .frame {
+    width: 320px;
+    flex-shrink: 0;
+  }
+  .frame-label {
+    font-size: 13px;
+    color: var(--tbInk2);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  .frame-arrow {
+    text-align: center;
+    font-size: 11px;
+    color: var(--tbInk3);
+    margin: 4px 0 0;
+  }
+  .phone {
+    background: var(--tbBg);
+    border-radius: 36px;
+    padding: 12px 0 24px;
+    height: 640px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(58,46,36,0.18), 0 8px 16px rgba(232,154,124,0.16);
+    border: 1px solid rgba(232,154,124,0.2);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 24px 12px;
+    font-size: 12px;
+    color: var(--tbInk);
+    font-weight: 600;
+  }
+  .nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px 12px;
+    height: 44px;
+  }
+  .nav-title {
+    font-size: 17px;
+    font-weight: 500;
+  }
+  .nav-btn {
+    background: var(--tbSurface);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--tbInk);
+    font-size: 16px;
+    box-shadow: 0 2px 6px rgba(58,46,36,0.06);
+    border: none;
+    cursor: pointer;
+  }
+  .nav-btn-text {
+    font-size: 15px;
+    color: var(--tbInk2);
+    background: none;
+    border: none;
+    padding: 8px 0;
+  }
+  .nav-btn-primary {
+    color: var(--tbPrimary);
+    font-weight: 500;
+  }
+  .scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px 24px;
+  }
+  .section-title {
+    font-size: 26px;
+    font-weight: 500;
+    margin: 12px 0 24px;
+    padding: 0 8px;
+  }
+
+  /* --- Generic settings row --- */
+  .row {
+    background: var(--tbSurface);
+    border-radius: 24px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 6px rgba(58,46,36,0.04);
+  }
+  .row-icon-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(232,154,124,0.12);
+    color: var(--tbPrimary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .row-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .row-title {
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .row-subtitle {
+    font-size: 13px;
+    color: var(--tbInk2);
+    margin-top: 2px;
+  }
+  .row-chevron {
+    color: var(--tbInk3);
+    font-size: 14px;
+  }
+  .row-highlighted {
+    box-shadow: 0 0 0 2px var(--tbPrimary), 0 4px 12px rgba(232,154,124,0.24);
+    background: #FFF8F1;
+  }
+
+  /* --- Dimension row in manager --- */
+  .dim-row {
+    background: var(--tbSurface);
+    border-radius: 20px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .dim-row .dim-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: white;
+    flex-shrink: 0;
+  }
+  .dim-name {
+    flex: 1;
+    font-size: 15px;
+  }
+  .dim-meta {
+    font-size: 11px;
+    color: var(--tbInk3);
+    background: var(--tbBg2);
+    padding: 3px 8px;
+    border-radius: 100px;
+  }
+  .dim-row .row-chevron {
+    margin-left: 4px;
+  }
+
+  /* --- Empty state on Manager --- */
+  .empty-hint {
+    margin: 16px 8px 24px;
+    font-size: 13px;
+    color: var(--tbInk2);
+    line-height: 1.6;
+  }
+
+  /* --- Add button --- */
+  .add-btn {
+    width: 100%;
+    background: var(--tbPrimary);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 100px;
+    font-size: 15px;
+    font-weight: 500;
+    margin-top: 16px;
+    box-shadow: 0 6px 16px rgba(232,154,124,0.24);
+  }
+  .add-btn-disabled {
+    background: var(--tbBg3);
+    color: var(--tbInk3);
+    box-shadow: none;
+  }
+
+  /* --- Editor sheet --- */
+  .sheet {
+    background: var(--tbBg);
+    border-radius: 28px 28px 0 0;
+    padding: 12px 16px 24px;
+    margin-top: auto;
+    flex: 1;
+    overflow-y: auto;
+    box-shadow: 0 -8px 24px rgba(58,46,36,0.08);
+  }
+  .sheet-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--tbHair);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+  .sheet-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 0 4px;
+  }
+  .sheet-title {
+    font-size: 17px;
+    font-weight: 500;
+  }
+  .field-card {
+    background: var(--tbSurface);
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .field-label {
+    font-size: 12px;
+    color: var(--tbInk3);
+    margin-bottom: 8px;
+  }
+  .field-input {
+    font-size: 17px;
+    color: var(--tbInk);
+    border: none;
+    background: transparent;
+    padding: 0;
+    width: 100%;
+  }
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .icon-cell {
+    aspect-ratio: 1;
+    background: var(--tbBg2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--tbInk2);
+    font-size: 14px;
+  }
+  .icon-cell.active {
+    background: rgba(232,154,124,0.18);
+    color: var(--tbPrimary);
+    box-shadow: 0 0 0 2px var(--tbPrimary);
+  }
+  .color-strip {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .color-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .color-dot.active {
+    box-shadow: 0 0 0 2px var(--tbBg), 0 0 0 4px var(--tbInk);
+  }
+  .formula-segments {
+    display: flex;
+    background: var(--tbBg2);
+    border-radius: 100px;
+    padding: 4px;
+    margin-bottom: 16px;
+  }
+  .formula-segment {
+    flex: 1;
+    text-align: center;
+    padding: 8px;
+    border-radius: 100px;
+    font-size: 13px;
+    color: var(--tbInk2);
+  }
+  .formula-segment.active {
+    background: var(--tbSurface);
+    color: var(--tbInk);
+    box-shadow: 0 1px 3px rgba(58,46,36,0.08);
+  }
+  .slider-container {
+    margin-top: 12px;
+  }
+  .slider-track {
+    height: 6px;
+    background: var(--tbBg2);
+    border-radius: 3px;
+    position: relative;
+    margin: 8px 0;
+  }
+  .slider-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--tbPrimary);
+    border-radius: 3px;
+  }
+  .slider-thumb {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 18px;
+    height: 18px;
+    background: white;
+    border: 2px solid var(--tbPrimary);
+    border-radius: 50%;
+  }
+  .slider-row-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--tbInk2);
+  }
+  .slider-row-meta .val {
+    color: var(--tbPrimary);
+    font-weight: 500;
+  }
+  .preview-card {
+    background: linear-gradient(135deg, rgba(124,217,181,0.16), rgba(124,217,181,0.04));
+    border-radius: 20px;
+    padding: 16px;
+    margin-top: 16px;
+  }
+  .preview-label {
+    font-size: 11px;
+    color: var(--tbInk3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .preview-value {
+    font-size: 26px;
+    font-weight: 500;
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+  .preview-sub {
+    font-size: 12px;
+    color: var(--tbInk2);
+    margin-top: 4px;
+  }
+
+  /* --- Home dim card --- */
+  .home-dim-card {
+    background: var(--tbSurface);
+    border-radius: 24px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .home-dim-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .home-dim-name {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .home-dim-stats {
+    display: flex;
+    gap: 16px;
+  }
+  .home-dim-col {
+    flex: 1;
+    border-left: 1px solid var(--tbHair);
+    padding-left: 12px;
+  }
+  .home-dim-col:first-child { border-left: 0; padding-left: 0; }
+  .home-dim-col-label {
+    font-size: 11px;
+    color: var(--tbInk3);
+    margin-bottom: 4px;
+  }
+  .home-dim-col-value {
+    font-size: 18px;
+    font-weight: 500;
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+  .home-dim-col-sub {
+    font-size: 11px;
+    color: var(--tbInk2);
+    margin-top: 2px;
+  }
+  /* Jiggle 抖动 — 模拟 iOS 长按主屏 app 图标 */
+  @keyframes jiggle-a {
+    0%, 100% { transform: rotate(-1.2deg); }
+    50%      { transform: rotate(1deg); }
+  }
+  @keyframes jiggle-b {
+    0%, 100% { transform: rotate(1.4deg); }
+    50%      { transform: rotate(-0.9deg); }
+  }
+  .jiggle-a {
+    animation: jiggle-a 0.32s ease-in-out infinite;
+    transform-origin: center;
+  }
+  .jiggle-b {
+    animation: jiggle-b 0.28s ease-in-out infinite;
+    transform-origin: center;
+  }
+
+  /* SF Symbol-style monochrome glyph (in colored dim icon) */
+  .sf-glyph {
+    font-family: -apple-system, "SF Pro", system-ui;
+    font-weight: 400;
+    color: white;
+    font-size: 16px;
+    line-height: 1;
+  }
+  .icon-cell .sf-glyph {
+    color: var(--tbInk2);
+  }
+  .icon-cell.active .sf-glyph {
+    color: var(--tbPrimary);
+  }
+  .alert-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(58,46,36,0.42);
+    border-radius: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .alert {
+    background: var(--tbSurface);
+    border-radius: 16px;
+    padding: 20px;
+    width: 100%;
+    box-shadow: 0 8px 24px rgba(58,46,36,0.18);
+  }
+  .alert-title {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .alert-msg {
+    font-size: 13px;
+    color: var(--tbInk2);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .alert-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .alert-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 12px;
+    border: none;
+    font-size: 14px;
+    background: var(--tbBg2);
+    color: var(--tbInk);
+    font-weight: 500;
+  }
+  .alert-btn-danger {
+    background: var(--tbDanger);
+    color: white;
+  }
+
+  /* --- Notes --- */
+  .notes {
+    margin-top: 64px;
+    background: var(--tbSurface);
+    border-radius: 16px;
+    padding: 24px 28px;
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.7;
+    box-shadow: 0 4px 16px rgba(58,46,36,0.06);
+  }
+  .notes h2 {
+    font-size: 18px;
+    margin: 0 0 12px;
+  }
+  .notes h3 {
+    font-size: 15px;
+    margin: 16px 0 6px;
+    color: var(--tbInk);
+  }
+  .notes p, .notes li {
+    font-size: 14px;
+    color: var(--tbInk2);
+    margin: 0;
+  }
+  .notes ul { padding-left: 20px; margin: 4px 0 0; }
+  .notes code {
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 12px;
+    background: var(--tbBg2);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .meta-line {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--tbInk3);
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+
+<h1>V1.1 自定义时间账户 · 简版 UI 草图</h1>
+<div class="meta-line">
+  <span>📅 2026-04-27</span>
+  <span>🎨 沿用当前 V1.3.2 配色（rebrand 前的过渡稿）</span>
+  <span>📄 详见 <code>方案-V1.1-自定义时间账户-2026-04-27.md</code></span>
+</div>
+<div class="subtitle">主页时间账户区双 + 入口 + iOS jiggle 编辑模式（右上「编辑」或长按卡片触发，抖动 + 拖排序 + 删自定义），设置 Tab 完整管理路径。</div>
+
+<div class="frames">
+
+  <!-- ============ Frame 1: Settings tab ============ -->
+  <div class="frame">
+    <div class="frame-label">① 「我」Tab · 加新入口</div>
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>·｜·</span></div>
+      <div class="nav-bar">
+        <span style="width:36px"></span>
+        <span class="nav-title"></span>
+        <span style="width:36px"></span>
+      </div>
+      <div class="scroll">
+        <div class="section-title">我</div>
+        <div class="row">
+          <div class="row-icon-circle">👤</div>
+          <div class="row-text">
+            <div class="row-title">个人信息</div>
+            <div class="row-subtitle">生日 · 家人 · 预期寿命</div>
+          </div>
+          <div class="row-chevron">›</div>
+        </div>
+        <div class="row row-highlighted">
+          <div class="row-icon-circle">▦</div>
+          <div class="row-text">
+            <div class="row-title">时间账户管理</div>
+            <div class="row-subtitle">新增 / 编辑 / 删除自定义账户</div>
+          </div>
+          <div class="row-chevron">›</div>
+        </div>
+        <div class="row">
+          <div class="row-icon-circle">🔒</div>
+          <div class="row-text">
+            <div class="row-title">你的数据去哪了</div>
+          </div>
+          <div class="row-chevron">›</div>
+        </div>
+        <div class="row">
+          <div class="row-icon-circle">ℹ︎</div>
+          <div class="row-text">
+            <div class="row-title">关于时间银行</div>
+          </div>
+          <div class="row-chevron">›</div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-arrow">↓ 点击新入口</div>
+  </div>
+
+  <!-- ============ Frame 2: Manager list ============ -->
+  <div class="frame">
+    <div class="frame-label">② 时间账户管理 · 列表</div>
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>·｜·</span></div>
+      <div class="nav-bar">
+        <button class="nav-btn">‹</button>
+        <span class="nav-title">时间账户管理</span>
+        <button class="nav-btn">+</button>
+      </div>
+      <div class="scroll" style="padding-top:8px">
+        <div style="font-size:12px; color:var(--tbInk3); padding: 0 8px 12px">内置（不可删，可改参数）</div>
+        <div class="dim-row">
+          <div class="dim-icon" style="background:var(--tbDimParents)">♥</div>
+          <div class="dim-name">陪父母</div>
+          <div class="dim-meta">每年 4 次</div>
+          <div class="row-chevron">›</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-icon" style="background:var(--tbDimKids)">👨‍👧</div>
+          <div class="dim-name">陪孩子</div>
+          <div class="dim-meta">每周 30h</div>
+          <div class="row-chevron">›</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-icon" style="background:var(--tbDimPartner)">♥</div>
+          <div class="dim-name">陪伴侣</div>
+          <div class="dim-meta">每天 4h</div>
+          <div class="row-chevron">›</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-icon" style="background:var(--tbDimSport)">🏃</div>
+          <div class="dim-name">运动</div>
+          <div class="dim-meta">每周 5h</div>
+          <div class="row-chevron">›</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-icon" style="background:var(--tbDimCreate)">🎨</div>
+          <div class="dim-name">创造</div>
+          <div class="dim-meta">每周 40h</div>
+          <div class="row-chevron">›</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-icon" style="background:var(--tbDimFree)">☼</div>
+          <div class="dim-name">自由</div>
+          <div class="dim-meta">每天 16h</div>
+          <div class="row-chevron">›</div>
+        </div>
+
+        <div style="font-size:12px; color:var(--tbInk3); padding: 16px 8px 12px">自定义 · 0 / 10</div>
+        <div style="text-align:center; padding: 16px; color: var(--tbInk2); font-size: 13px; line-height: 1.6;">
+          你可以追踪任何对你重要的时间，<br>比如阅读、旅行、冥想。
+        </div>
+        <button class="add-btn">+ 添加新时间账户</button>
+      </div>
+    </div>
+    <div class="frame-arrow">↓ 点 + 弹 sheet</div>
+  </div>
+
+  <!-- ============ Frame 3: Editor sheet ============ -->
+  <div class="frame">
+    <div class="frame-label">③ 创建自定义账户 · sheet</div>
+    <div class="phone" style="padding-top:0">
+      <!-- Background dimmed -->
+      <div style="background:rgba(58,46,36,0.1); flex:0 0 60px"></div>
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-toolbar">
+          <button class="nav-btn-text">取消</button>
+          <span class="sheet-title">新时间账户</span>
+          <button class="nav-btn-text nav-btn-primary">保存</button>
+        </div>
+
+        <div class="field-card">
+          <div class="field-label">名称</div>
+          <input class="field-input" value="读书" placeholder="比如「读书」「健身」">
+        </div>
+
+        <div class="field-card">
+          <div class="field-label">图标 · SF Symbols</div>
+          <div class="icon-grid">
+            <!-- SF Symbol 风格示意：实际实现用 Image(systemName: "book.fill") 等 -->
+            <div class="icon-cell active" title="book.fill"><span class="sf-glyph">📖</span></div>
+            <div class="icon-cell" title="pencil.tip"><span class="sf-glyph">✎</span></div>
+            <div class="icon-cell" title="graduationcap.fill"><span class="sf-glyph">🎓</span></div>
+            <div class="icon-cell" title="paintbrush.pointed.fill"><span class="sf-glyph">✏︎</span></div>
+            <div class="icon-cell" title="music.note"><span class="sf-glyph">♪</span></div>
+            <div class="icon-cell" title="camera.fill"><span class="sf-glyph">▣</span></div>
+            <div class="icon-cell" title="cup.and.saucer.fill"><span class="sf-glyph">☕</span></div>
+            <div class="icon-cell" title="fork.knife"><span class="sf-glyph">⏚</span></div>
+            <div class="icon-cell" title="bed.double.fill"><span class="sf-glyph">⏑</span></div>
+            <div class="icon-cell" title="airplane"><span class="sf-glyph">✈</span></div>
+            <div class="icon-cell" title="figure.walk"><span class="sf-glyph">⇡</span></div>
+            <div class="icon-cell" title="bicycle"><span class="sf-glyph">⊙⊙</span></div>
+            <div class="icon-cell" title="person.2.fill"><span class="sf-glyph">○○</span></div>
+            <div class="icon-cell" title="dog.fill"><span class="sf-glyph">⌒</span></div>
+            <div class="icon-cell" title="star.fill"><span class="sf-glyph">★</span></div>
+            <div class="icon-cell" title="heart.fill"><span class="sf-glyph">♥</span></div>
+          </div>
+          <div style="font-size:10px; color:var(--tbInk3); margin-top:8px; line-height:1.5;">
+            ⓘ 草图字符代替；真实实现用 SF Symbols（book.fill / pencil.tip / star.fill 等单色矢量图标）。鼠标 hover 看 symbol 名。
+          </div>
+        </div>
+
+        <div class="field-card">
+          <div class="field-label">颜色</div>
+          <div class="color-strip">
+            <div class="color-dot" style="background:var(--tbDimParents)"></div>
+            <div class="color-dot" style="background:var(--tbDimKids)"></div>
+            <div class="color-dot" style="background:var(--tbDimPartner)"></div>
+            <div class="color-dot" style="background:var(--tbDimCreate)"></div>
+            <div class="color-dot" style="background:var(--tbDimSport)"></div>
+            <div class="color-dot" style="background:var(--tbDimFree)"></div>
+            <div class="color-dot" style="background:var(--tbDimCoral)"></div>
+            <div class="color-dot active" style="background:var(--tbDimMint)"></div>
+            <div class="color-dot" style="background:var(--tbDimDenim)"></div>
+            <div class="color-dot" style="background:var(--tbDimMauve)"></div>
+          </div>
+        </div>
+
+        <div class="field-card">
+          <div class="field-label">计算方式</div>
+          <div class="formula-segments">
+            <div class="formula-segment active">每周</div>
+            <div class="formula-segment">每天</div>
+            <div class="formula-segment">每年 N 次</div>
+          </div>
+          <div class="slider-row-meta">
+            <span>每周陪伴时长</span>
+            <span class="val">5 小时</span>
+          </div>
+          <div class="slider-track">
+            <div class="slider-fill" style="width:6%"></div>
+            <div class="slider-thumb" style="left:6%"></div>
+          </div>
+        </div>
+
+        <div class="preview-card">
+          <div class="preview-label">按这些数算下来</div>
+          <div class="preview-value">1.4 万小时</div>
+          <div class="preview-sub">约还能读书 · 共 2,857 周 · 每周约 5 小时</div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-arrow">↓ 保存后回主页</div>
+  </div>
+
+  <!-- ============ Frame 4: Home with new card ============ -->
+  <div class="frame">
+    <div class="frame-label">④ 主页 · 双入口（右上 + 下方）</div>
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>·｜·</span></div>
+      <div class="nav-bar">
+        <span style="font-size:22px; font-weight:500; padding-left:8px">早上好</span>
+      </div>
+      <div class="scroll" style="padding-top:0">
+        <!-- Lifespan card (shrunk) -->
+        <div style="background:linear-gradient(135deg,#E8C47C,#E89A7C,#D6B89A); border-radius:24px; padding:14px; color:#3A2E24; margin-bottom:12px">
+          <div style="font-size:11px; opacity:0.7">⏳ 时间余额</div>
+          <div style="font-size:24px; font-weight:600; text-align:center; margin:8px 0">约 2,560 周</div>
+          <div style="font-size:11px; opacity:0.7; text-align:center">49 年 · 42.9 万小时</div>
+        </div>
+
+        <!-- Section header with right-side [编辑] + [+] buttons -->
+        <div style="display:flex; align-items:center; padding: 4px 4px 12px; gap: 8px;">
+          <div style="font-size:13px; color:var(--tbInk2); flex:1">时间账户 · 7 个</div>
+          <button style="background: transparent; border: none; color: var(--tbInk2); font-size: 13px; padding: 4px 10px;">编辑</button>
+          <button style="background: var(--tbBg2); border: none; width: 28px; height: 28px; border-radius: 50%; color: var(--tbPrimary); font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center;">+</button>
+        </div>
+
+        <!-- 陪父母 -->
+        <div class="home-dim-card">
+          <div class="home-dim-header">
+            <div class="dim-icon" style="background:var(--tbDimParents); width:36px; height:36px;">♥</div>
+            <div class="home-dim-name">陪父母</div>
+            <div class="row-chevron">›</div>
+          </div>
+          <div class="home-dim-stats">
+            <div class="home-dim-col">
+              <div class="home-dim-col-label">还能共度</div>
+              <div class="home-dim-col-value">576 小时</div>
+              <div class="home-dim-col-sub">约 96 次见面</div>
+            </div>
+            <div class="home-dim-col">
+              <div class="home-dim-col-label">已存入</div>
+              <div class="home-dim-col-value">12 小时</div>
+              <div class="home-dim-col-sub">3 个瞬间</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 陪孩子 -->
+        <div class="home-dim-card">
+          <div class="home-dim-header">
+            <div class="dim-icon" style="background:var(--tbDimKids); width:36px; height:36px;">👨‍👧</div>
+            <div class="home-dim-name">陪孩子</div>
+            <div class="row-chevron">›</div>
+          </div>
+          <div class="home-dim-stats">
+            <div class="home-dim-col">
+              <div class="home-dim-col-label">还能共度</div>
+              <div class="home-dim-col-value">1.9 万小时</div>
+              <div class="home-dim-col-sub">每周约 30 小时</div>
+            </div>
+            <div class="home-dim-col">
+              <div class="home-dim-col-label">已存入</div>
+              <div class="home-dim-col-value">0 小时</div>
+              <div class="home-dim-col-sub">0 个瞬间</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 自定义：读书（NEW） -->
+        <div class="home-dim-card" style="box-shadow:0 0 0 2px var(--tbDimMint), 0 4px 12px rgba(124,217,181,0.18);">
+          <div class="home-dim-header">
+            <div class="dim-icon" style="background:var(--tbDimMint); width:36px; height:36px;"><span class="sf-glyph">📖</span></div>
+            <div class="home-dim-name">读书</div>
+            <div class="row-chevron">›</div>
+          </div>
+          <div class="home-dim-stats">
+            <div class="home-dim-col">
+              <div class="home-dim-col-label">未来</div>
+              <div class="home-dim-col-value">1.4 万小时</div>
+              <div class="home-dim-col-sub">每周约 5 小时</div>
+            </div>
+            <div class="home-dim-col">
+              <div class="home-dim-col-label">已存入</div>
+              <div class="home-dim-col-value">0 小时</div>
+              <div class="home-dim-col-sub">0 个瞬间</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 运动 hint (peeking) -->
+        <div class="home-dim-card" style="opacity:0.6">
+          <div class="home-dim-header">
+            <div class="dim-icon" style="background:var(--tbDimSport); width:36px; height:36px;">🏃</div>
+            <div class="home-dim-name">运动</div>
+          </div>
+        </div>
+
+        <!-- Bottom add button -->
+        <button style="width: 100%; padding: 14px; margin-top: 8px; border-radius: 100px; border: 1.5px dashed var(--tbPrimary); background: rgba(232,154,124,0.06); color: var(--tbPrimary); font-size: 14px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          <span style="font-size: 17px; line-height: 1;">+</span>
+          <span>添加自定义时间账户</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ Bonus: Delete confirm ============ -->
+<div class="frames" style="margin-top:32px">
+  <div class="frame">
+    <div class="frame-label">⑤ 删除确认（右滑「读书」后）</div>
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>·｜·</span></div>
+      <div class="nav-bar">
+        <button class="nav-btn">‹</button>
+        <span class="nav-title">时间账户管理</span>
+        <button class="nav-btn">+</button>
+      </div>
+      <div class="scroll" style="padding-top:8px">
+        <div style="font-size:12px; color:var(--tbInk3); padding: 0 8px 12px">自定义 · 1 / 10</div>
+        <div class="dim-row">
+          <div class="dim-icon" style="background:var(--tbDimMint)">📖</div>
+          <div class="dim-name">读书</div>
+          <div class="dim-meta">每周 5h</div>
+          <div class="row-chevron">›</div>
+        </div>
+      </div>
+      <div class="alert-overlay">
+        <div class="alert">
+          <div class="alert-title">删除「读书」？</div>
+          <div class="alert-msg">已存入的 8 个瞬间会移到「其他」时间账户，仍然可以查看。</div>
+          <div class="alert-actions">
+            <button class="alert-btn">取消</button>
+            <button class="alert-btn alert-btn-danger">删除</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="frame-label">⑦ 预览卡 sticky 顶部（推荐）</div>
+    <div class="phone" style="padding-top:0">
+      <div style="background:rgba(58,46,36,0.1); flex:0 0 60px"></div>
+      <div class="sheet" style="display:flex; flex-direction:column;">
+        <div class="sheet-handle"></div>
+        <div class="sheet-toolbar">
+          <button class="nav-btn-text">取消</button>
+          <span class="sheet-title">新时间账户</span>
+          <button class="nav-btn-text nav-btn-primary">保存</button>
+        </div>
+        <!-- Sticky preview at top -->
+        <div class="preview-card" style="background:linear-gradient(135deg, rgba(124,217,181,0.22), rgba(124,217,181,0.08)); border:1px solid rgba(124,217,181,0.3); margin-bottom:16px; margin-top:0;">
+          <div class="preview-label">按这些数算下来</div>
+          <div class="preview-value">1.4 万小时</div>
+          <div class="preview-sub">约还能读书 · 共 2,857 周 · 每周约 5 小时</div>
+        </div>
+        <div style="font-size:11px; color:var(--tbInk3); text-align:center; margin: -8px 0 12px;">
+          ↑ 滑 slider 时数字实时跳动
+        </div>
+        <div class="field-card">
+          <div class="field-label">名称</div>
+          <input class="field-input" value="读书">
+        </div>
+        <div class="field-card" style="opacity:0.6">
+          <div class="field-label">图标 · SF Symbols</div>
+          <div style="font-size:11px; color:var(--tbInk3); padding:8px 0">（图标 + 颜色 + 公式 都在下面，preview 始终可见）</div>
+        </div>
+        <div class="field-card">
+          <div class="field-label">计算方式</div>
+          <div class="formula-segments">
+            <div class="formula-segment active">每周</div>
+            <div class="formula-segment">每天</div>
+            <div class="formula-segment">每年 N 次</div>
+          </div>
+          <div class="slider-row-meta">
+            <span>每周陪伴时长</span>
+            <span class="val">5 小时</span>
+          </div>
+          <div class="slider-track">
+            <div class="slider-fill" style="width:6%"></div>
+            <div class="slider-thumb" style="left:6%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="frame-label">⑧ 编辑模式 · iOS jiggle 风（卡片抖动）</div>
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>·｜·</span></div>
+      <div class="nav-bar">
+        <span style="font-size:22px; font-weight:500; padding-left:8px">早上好</span>
+      </div>
+      <div class="scroll" style="padding-top:0">
+        <!-- Lifespan dimmed -->
+        <div style="background:linear-gradient(135deg,#E8C47C,#E89A7C,#D6B89A); border-radius:24px; padding:14px; color:#3A2E24; margin-bottom:12px; opacity:0.4">
+          <div style="font-size:11px; opacity:0.7">⏳ 时间余额（编辑下不可改）</div>
+          <div style="font-size:16px; font-weight:600; text-align:center; margin:4px 0">约 2,560 周</div>
+        </div>
+
+        <!-- Header: 完成 button replaces [编辑][+] -->
+        <div style="display:flex; align-items:center; padding: 4px 4px 12px;">
+          <div style="font-size:13px; color:var(--tbInk2); flex:1">长按拖动 · 调整顺序</div>
+          <button style="background: var(--tbPrimary); border: none; color: white; font-size: 13px; padding: 6px 14px; border-radius: 100px; font-weight: 500;">完成</button>
+        </div>
+
+        <!-- Cards jiggle, custom has top-left X like iOS app icons -->
+        <div class="home-dim-card jiggle-a" style="position: relative;">
+          <div class="home-dim-header" style="margin-bottom:0">
+            <div class="dim-icon" style="background:var(--tbDimParents); width:36px; height:36px;"><span class="sf-glyph">♥</span></div>
+            <div class="home-dim-name">陪父母</div>
+            <div style="font-size: 10px; color: var(--tbInk3); background: var(--tbBg2); padding: 2px 8px; border-radius: 100px;">内置</div>
+          </div>
+        </div>
+
+        <div class="home-dim-card jiggle-b" style="position: relative;">
+          <div class="home-dim-header" style="margin-bottom:0">
+            <div class="dim-icon" style="background:var(--tbDimKids); width:36px; height:36px;"><span class="sf-glyph">👨</span></div>
+            <div class="home-dim-name">陪孩子</div>
+            <div style="font-size: 10px; color: var(--tbInk3); background: var(--tbBg2); padding: 2px 8px; border-radius: 100px;">内置</div>
+          </div>
+        </div>
+
+        <!-- Custom: 读书 with iOS-style top-left X delete -->
+        <div class="home-dim-card jiggle-a" style="position: relative; box-shadow:0 0 0 2px var(--tbDimMint), 0 4px 12px rgba(124,217,181,0.18);">
+          <button style="position:absolute; top:-8px; left:-8px; background: var(--tbInk); border: 2px solid white; width: 22px; height: 22px; border-radius: 50%; color: white; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 2;">−</button>
+          <div class="home-dim-header" style="margin-bottom:0">
+            <div class="dim-icon" style="background:var(--tbDimMint); width:36px; height:36px;"><span class="sf-glyph">📖</span></div>
+            <div class="home-dim-name">读书</div>
+          </div>
+        </div>
+
+        <div class="home-dim-card jiggle-b" style="position: relative;">
+          <div class="home-dim-header" style="margin-bottom:0">
+            <div class="dim-icon" style="background:var(--tbDimSport); width:36px; height:36px;"><span class="sf-glyph">🏃</span></div>
+            <div class="home-dim-name">运动</div>
+            <div style="font-size: 10px; color: var(--tbInk3); background: var(--tbBg2); padding: 2px 8px; border-radius: 100px;">内置</div>
+          </div>
+        </div>
+
+        <div style="font-size:11px; color:var(--tbInk3); text-align:center; margin-top: 16px; line-height: 1.6;">
+          ⋆ 进入方式：右上「编辑」 或 长按任一卡片<br>
+          ⋆ 自定义账户左上 − 可删 · 内置账户不可删<br>
+          ⋆ 点「完成」或空白处退出
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="frame-label">⑥ 上限提示（已有 10 个）</div>
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>·｜·</span></div>
+      <div class="nav-bar">
+        <button class="nav-btn">‹</button>
+        <span class="nav-title">时间账户管理</span>
+        <button class="nav-btn" style="opacity:0.4">+</button>
+      </div>
+      <div class="scroll" style="padding-top:8px">
+        <div style="font-size:12px; color:var(--tbInk3); padding: 0 8px 12px">自定义 · 10 / 10</div>
+        <!-- 简化展示几个 -->
+        <div class="dim-row"><div class="dim-icon" style="background:var(--tbDimMint)">📖</div><div class="dim-name">读书</div><div class="dim-meta">每周 5h</div><div class="row-chevron">›</div></div>
+        <div class="dim-row"><div class="dim-icon" style="background:var(--tbDimDenim)">✈︎</div><div class="dim-name">旅行</div><div class="dim-meta">每年 8 次</div><div class="row-chevron">›</div></div>
+        <div class="dim-row"><div class="dim-icon" style="background:var(--tbDimCoral)">☕</div><div class="dim-name">咖啡</div><div class="dim-meta">每天 1h</div><div class="row-chevron">›</div></div>
+        <div class="dim-row"><div class="dim-icon" style="background:var(--tbDimMauve)">♪</div><div class="dim-name">音乐</div><div class="dim-meta">每天 2h</div><div class="row-chevron">›</div></div>
+        <div style="text-align:center; margin-top:8px; padding:12px; background:var(--tbBg2); border-radius:12px; font-size:12px; color:var(--tbInk2);">
+          已达上限 10 个 · 删除一个才能加
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Notes ============ -->
+<div class="notes">
+  <h2>这个草图覆盖什么、不覆盖什么</h2>
+
+  <h3>✅ 覆盖</h3>
+  <ul>
+    <li>「我」Tab 加入口的位置（在「个人信息」下面，不动其他行）</li>
+    <li>列表分组（内置 / 自定义），内置可改参数但不可删；自定义可右滑删除</li>
+    <li>创建 sheet 的 4 个字段（名称 / 图标 16 选 1 / 颜色 10 选 1 / 计算公式 3 种）</li>
+    <li>实时预览卡（右下绿色那个，跟着 slider 变）</li>
+    <li>主页混排效果（自定义卡用所选颜色，跟内置卡视觉等同）</li>
+    <li>删除流程（弹 confirm + 提示瞬间转去「其他」）</li>
+    <li>10 个上限的处理（顶部 + 按钮 disable + 提示文案）</li>
+  </ul>
+
+  <h3>⚠️ 不覆盖（这是简版的边界）</h3>
+  <ul>
+    <li>编辑模式（跟创建 sheet 同 layout，不重画）</li>
+    <li>排序（V1.2 才做）</li>
+    <li>右滑删除的具体 swipe 动效（系统标准 swipe）</li>
+    <li>详情页 / 时间公式编辑器（复用现有，预留 default case 渲染 CustomDimensionParams 编辑器）</li>
+    <li>visual rebrand 后的最终视觉（这只是过渡稿，rebrand 时颜色/icon/字体可能全换）</li>
+  </ul>
+
+  <h3>📐 关键决策可视化</h3>
+  <ul>
+    <li><strong>主页双入口 + 设置 Tab 完整管理路径</strong> —— 主页"时间账户 · N 个"标题右侧 + 卡片列表下方都有"+"按钮（frame ④），符合 PRD §5 原始描述；设置 Tab 的「时间账户管理」（frame ①）保留作为完整 CRUD 路径（改名/改色/改公式/删除/调内置参数）</li>
+    <li><strong>主页 + 走快速创建</strong> —— 直接弹 sheet，不经过列表页</li>
+    <li><strong>设置入口 = 完整管理</strong> —— 看到所有内置 + 自定义，可改可删可调参数</li>
+    <li><strong>10 个颜色刚好够 PRD 的"最多 10 个"</strong> —— 6 内置色 + 4 新色，用户最多 10 个自定义账户每个能选一个不重复的颜色</li>
+    <li><strong>计算方式收敛成 3 种 preset</strong> —— 不开放任意公式，用户选段控件后下面 slider/picker 跟着变</li>
+    <li><strong>主页卡片复用现有结构</strong> —— frame ④「读书」卡跟「陪父母」「陪孩子」结构完全一致，只是颜色和数字不同；不需要给自定义卡设计新组件</li>
+  </ul>
+
+  <h3>✅ Adam 已确定的决策（2026-04-27 全部锁定）</h3>
+  <ol>
+    <li>入口位置：主页双入口（标题右上 + + 列表下方"+ 添加自定义时间账户"）+ 设置 Tab 完整管理</li>
+    <li>图标库：SF Symbols（不用 Emoji）；16 个 symbol 名见方案文档</li>
+    <li>颜色：10 色够（6 内置色 + coral / mint / denim / mauve）</li>
+    <li>NEW 标签：不要</li>
+    <li>主页两个 + 按钮：都留</li>
+    <li>预览卡位置：sheet 顶部 sticky（frame ⑦）</li>
+    <li><strong>主页编辑模式</strong>（新增 · frame ⑧）：两个入口
+      <ul>
+        <li>右上「编辑」按钮（显式）</li>
+        <li>长按任一卡片 0.5s（隐式 · iOS 主屏 jiggle 风）</li>
+      </ul>
+      进入后所有卡片像 iOS app 图标一样小幅抖动 · 拖动排序 · 自定义账户左上角 − 删除按钮 · 内置不可删但可拖 · 点「完成」或空白处退出
+    </li>
+  </ol>
+</div>
+
+</body>
+</html>

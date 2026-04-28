@@ -1,0 +1,1420 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>时间银行 · Mood A 克制晨光原型</title>
+  <style>
+    :root {
+      --bg: #FAF7F1;
+      --paper: #FFFFFF;
+      --line: #EDE5D6;
+      --ink: #2A2A26;
+      --muted: #6B6862;
+      --tertiary: #A8A39A;
+      --accent: #E89A7A;
+      --gold: #D7B981;
+      --sage: #A9B7A0;
+      --sky: #AFC4CF;
+      --rose: #D8AAA0;
+      --lavender: #BBB3CA;
+      --radius: 16px;
+      --shadow: 0 2px 8px rgba(42, 42, 38, 0.04);
+      --serif: "Cormorant Garamond", "Times New Roman", "Noto Serif SC", serif;
+      --sans: Inter, -apple-system, BlinkMacSystemFont, "Noto Sans SC", "PingFang SC", sans-serif;
+      --mono: "JetBrains Mono", "SF Mono", "IBM Plex Mono", ui-monospace, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      letter-spacing: 0;
+    }
+
+    .page {
+      min-height: 100vh;
+      padding: 36px 28px 64px;
+    }
+
+    .page-header {
+      max-width: 1180px;
+      margin: 0 auto 28px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 20px;
+    }
+
+    .page-header h1 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 34px;
+      font-weight: 400;
+      line-height: 1.15;
+    }
+
+    .page-header p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .page-kicker {
+      font-family: var(--mono);
+      color: var(--tertiary);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .gallery {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(393px, 1fr));
+      gap: 28px 24px;
+      align-items: start;
+    }
+
+    .shot-label {
+      height: 32px;
+      padding: 0 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .shot-label span:first-child {
+      font-family: var(--serif);
+      font-size: 17px;
+      color: var(--ink);
+    }
+
+    .phone {
+      width: 393px;
+      height: 852px;
+      overflow: hidden;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 34px;
+      box-shadow: 0 24px 70px rgba(42, 42, 38, 0.10);
+      position: relative;
+    }
+
+    .status {
+      height: 48px;
+      padding: 17px 24px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink);
+    }
+
+    .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .signal {
+      width: 18px;
+      height: 11px;
+      border-left: 3px solid var(--ink);
+      border-bottom: 3px solid var(--ink);
+      transform: skew(-12deg);
+      opacity: .8;
+    }
+
+    .battery {
+      width: 24px;
+      height: 12px;
+      border: 1.5px solid var(--ink);
+      border-radius: 4px;
+      position: relative;
+    }
+
+    .battery:after {
+      content: "";
+      position: absolute;
+      right: -4px;
+      top: 3px;
+      width: 2px;
+      height: 5px;
+      border-radius: 2px;
+      background: var(--ink);
+    }
+
+    .battery:before {
+      content: "";
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      width: 15px;
+      height: 6px;
+      border-radius: 2px;
+      background: var(--ink);
+      opacity: .75;
+    }
+
+    .screen {
+      height: calc(100% - 48px);
+      padding: 0 20px 92px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .scroll-screen {
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+
+    .scroll-screen::-webkit-scrollbar { display: none; }
+
+    .bottom-tabs {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 82px;
+      background: rgba(250, 247, 241, 0.92);
+      backdrop-filter: blur(18px);
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr 74px 1fr 1fr;
+      align-items: center;
+      padding: 8px 32px 18px;
+      z-index: 5;
+    }
+
+    .tab {
+      text-align: center;
+      color: var(--tertiary);
+      font-size: 11px;
+      line-height: 1.25;
+    }
+
+    .tab.current { color: var(--accent); }
+
+    .tab-icon {
+      display: block;
+      font-size: 17px;
+      margin-bottom: 4px;
+      font-family: var(--mono);
+    }
+
+    .fab {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 26px;
+      line-height: 1;
+      box-shadow: 0 8px 22px rgba(232, 154, 122, 0.28);
+    }
+
+    .home-greeting {
+      padding-top: 8px;
+      margin-bottom: 14px;
+    }
+
+    .time-label {
+      margin: 0 0 3px;
+      font-family: var(--mono);
+      color: var(--tertiary);
+      font-size: 11px;
+    }
+
+    .home-greeting h2,
+    .page-title {
+      margin: 0;
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 30px;
+      line-height: 1.18;
+    }
+
+    .variant-note {
+      margin: 0 0 9px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--tertiary);
+    }
+
+    .life-card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 18px;
+    }
+
+    .life-card-a {
+      min-height: 218px;
+    }
+
+    .life-half {
+      padding: 18px 18px 17px;
+    }
+
+    .life-half + .life-half {
+      border-top: 1px solid var(--line);
+    }
+
+    .life-eyebrow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .life-eyebrow strong {
+      font-family: var(--serif);
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--accent);
+    }
+
+    .life-number {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 48px;
+      font-weight: 400;
+      line-height: .98;
+      color: var(--ink);
+    }
+
+    .life-number small {
+      font-size: 24px;
+      color: var(--muted);
+    }
+
+    .mono-sub {
+      margin: 8px 0 0;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .life-card-b {
+      min-height: 226px;
+      padding: 20px 18px 18px;
+      position: relative;
+      background:
+        radial-gradient(circle at 15% 12%, rgba(42,42,38,.035) 0 1px, transparent 1.2px),
+        linear-gradient(90deg, rgba(237,229,214,.36) 1px, transparent 1px),
+        #fff;
+      background-size: 9px 9px, 100% 100%, auto;
+    }
+
+    .ledger-rule {
+      width: 100%;
+      height: 1px;
+      background: var(--gold);
+      opacity: .8;
+      margin-bottom: 15px;
+    }
+
+    .ledger-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: end;
+      padding: 6px 0 17px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .ledger-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .ledger-chapter {
+      font-family: var(--serif);
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.2;
+      margin-bottom: 7px;
+    }
+
+    .ledger-number {
+      font-family: var(--mono);
+      font-size: 34px;
+      line-height: 1;
+      color: var(--ink);
+    }
+
+    .ledger-right {
+      text-align: right;
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    .life-card-c {
+      height: 262px;
+      padding: 26px 18px 22px;
+      display: grid;
+      grid-template-rows: 1fr auto 1fr;
+      background: #fff;
+    }
+
+    .haiku-top,
+    .haiku-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .haiku-label {
+      font-family: var(--mono);
+      color: var(--tertiary);
+      font-size: 10px;
+      writing-mode: vertical-rl;
+      letter-spacing: 0;
+    }
+
+    .haiku-number {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 74px;
+      font-weight: 400;
+      line-height: .9;
+      letter-spacing: 0;
+    }
+
+    .haiku-number.small {
+      font-size: 66px;
+      align-self: flex-end;
+    }
+
+    .haiku-meta {
+      align-self: center;
+      justify-self: center;
+      width: 100%;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 0;
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .section-title {
+      margin: 18px 0 12px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      font-family: var(--serif);
+      font-size: 18px;
+      color: var(--ink);
+    }
+
+    .section-title small {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--tertiary);
+    }
+
+    .account-card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .account-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .dim-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #FBF1EB;
+      color: var(--accent);
+      font-family: var(--serif);
+      font-size: 18px;
+    }
+
+    .account-name {
+      flex: 1;
+      font-size: 15px;
+      color: var(--ink);
+    }
+
+    .chev {
+      color: var(--tertiary);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .numbers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .num-col + .num-col {
+      border-left: 1px solid var(--line);
+      padding-left: 12px;
+    }
+
+    .num-label {
+      margin: 0 0 5px;
+      color: var(--tertiary);
+      font-size: 11px;
+    }
+
+    .num-main {
+      margin: 0;
+      font-family: var(--mono);
+      font-size: 19px;
+      line-height: 1.12;
+      color: var(--ink);
+    }
+
+    .num-main.compact { font-size: 17px; }
+
+    .num-sub {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .nav {
+      height: 44px;
+      display: grid;
+      grid-template-columns: 44px 1fr 44px;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 17px;
+    }
+
+    .nav-title {
+      text-align: center;
+      font-size: 16px;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .nav-action {
+      text-align: center;
+      color: var(--ink);
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .detail-hero {
+      text-align: center;
+      padding: 8px 0 18px;
+    }
+
+    .hero-icon {
+      width: 58px;
+      height: 58px;
+      margin: 0 auto 10px;
+      border-radius: 50%;
+      background: #FBF1EB;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      font-size: 25px;
+      font-family: var(--serif);
+    }
+
+    .detail-hero h2 {
+      margin: 0 0 8px;
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 24px;
+    }
+
+    .hero-big {
+      margin: 0;
+      font-family: var(--mono);
+      font-size: 48px;
+      line-height: 1;
+    }
+
+    .hero-sub {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .insight {
+      margin: 0 0 12px;
+      padding: 0 6px;
+      color: var(--muted);
+      font-family: var(--serif);
+      font-size: 18px;
+      line-height: 1.55;
+      text-align: center;
+    }
+
+    .plain-card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .calc-card {
+      display: grid;
+      grid-template-columns: 1fr 20px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .card-title {
+      margin: 0 0 5px;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .card-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-line;
+    }
+
+    .timeline-row {
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .timeline-row:last-of-type {
+      border-bottom: 0;
+    }
+
+    .thumb,
+    .media-main,
+    .chosen-thumb {
+      background:
+        linear-gradient(135deg, rgba(232,154,122,.34), rgba(250,247,241,.9)),
+        radial-gradient(circle at 64% 28%, rgba(169,183,160,.56), transparent 26%),
+        radial-gradient(circle at 18% 72%, rgba(175,196,207,.52), transparent 25%);
+      border: 1px solid var(--line);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .thumb {
+      width: 64px;
+      height: 64px;
+      border-radius: 14px;
+    }
+
+    .thumb:after,
+    .media-main:after,
+    .chosen-thumb:after {
+      content: "";
+      position: absolute;
+      left: 13%;
+      right: 13%;
+      bottom: 14%;
+      height: 22%;
+      background: rgba(255,255,255,.42);
+      border-radius: 999px;
+    }
+
+    .timeline-copy h3 {
+      margin: 0 0 5px;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .timeline-meta {
+      margin: 0 0 5px;
+      color: var(--tertiary);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .timeline-note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .end-note {
+      margin: 18px 0 0;
+      text-align: center;
+      color: var(--tertiary);
+      font-size: 12px;
+    }
+
+    .moment-screen {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    .media-main {
+      width: 100%;
+      height: 286px;
+      border-radius: 22px;
+      margin-top: 6px;
+    }
+
+    .media-main:before {
+      content: "";
+      position: absolute;
+      width: 112px;
+      height: 112px;
+      border-radius: 50%;
+      right: 30px;
+      top: 36px;
+      background: rgba(255,255,255,.30);
+      border: 1px solid rgba(255,255,255,.32);
+    }
+
+    .dots {
+      display: flex;
+      justify-content: center;
+      gap: 7px;
+      margin: 10px 0 22px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--line);
+    }
+
+    .dot.active { background: var(--accent); }
+
+    .moment-title {
+      margin: 0 0 8px;
+      font-family: var(--serif);
+      font-size: 30px;
+      font-weight: 400;
+      line-height: 1.18;
+    }
+
+    .moment-meta {
+      margin: 0 0 14px;
+      font-size: 13px;
+      color: var(--tertiary);
+    }
+
+    .chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 999px;
+      padding: 7px 11px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .chip.primary {
+      border-color: rgba(232,154,122,.36);
+      color: #B36F55;
+      background: #FEF3ED;
+    }
+
+    .note-copy {
+      margin: 0;
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.75;
+    }
+
+    .action-bar {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 22px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+    }
+
+    .action-btn {
+      height: 44px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
+      font-size: 13px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sheet-screen {
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+
+    .sheet-nav {
+      height: 50px;
+      display: grid;
+      grid-template-columns: 64px 1fr 108px;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .sheet-nav .title {
+      text-align: center;
+      font-size: 16px;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .sheet-nav .cancel {
+      color: var(--muted);
+    }
+
+    .sheet-nav .save {
+      color: var(--accent);
+      text-align: right;
+      font-size: 13px;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 82px 1fr;
+      gap: 8px;
+      align-items: center;
+      min-height: 44px;
+    }
+
+    .field-row + .field-row {
+      border-top: 1px solid var(--line);
+    }
+
+    .field-label {
+      color: var(--tertiary);
+      font-size: 13px;
+    }
+
+    .field-value {
+      color: var(--ink);
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .input-inline {
+      display: inline-flex;
+      align-items: baseline;
+      justify-content: flex-end;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .input-box {
+      min-width: 52px;
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-family: var(--mono);
+      text-align: right;
+      background: #FFFCF7;
+    }
+
+    .textarea-row {
+      align-items: start;
+      padding: 12px 0;
+    }
+
+    .textarea-value {
+      line-height: 1.55;
+      color: var(--ink);
+    }
+
+    .media-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .media-card-head span:first-child {
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .media-card-head span:last-child {
+      color: var(--tertiary);
+      font-size: 12px;
+    }
+
+    .media-grid {
+      display: grid;
+      grid-template-columns: 76px 76px;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .chosen-thumb,
+    .add-tile {
+      width: 76px;
+      height: 76px;
+      border-radius: 14px;
+    }
+
+    .remove {
+      position: absolute;
+      right: 6px;
+      top: 6px;
+      width: 20px;
+      height: 20px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(42,42,38,.64);
+      color: #fff;
+      font-size: 14px;
+      z-index: 2;
+    }
+
+    .add-tile {
+      display: grid;
+      place-items: center;
+      border: 1px dashed #DCCFBE;
+      color: var(--tertiary);
+      font-size: 28px;
+      background: #FFFCF7;
+    }
+
+    .privacy-note {
+      margin: 0;
+      color: var(--tertiary);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .summary-card {
+      text-align: center;
+      padding: 20px 18px 16px;
+    }
+
+    .summary-number {
+      margin: 0;
+      font-family: var(--mono);
+      font-size: 48px;
+      line-height: 1;
+    }
+
+    .summary-sub {
+      margin: 8px 0 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .summary-line {
+      height: 1px;
+      background: var(--line);
+      margin-bottom: 13px;
+    }
+
+    .summary-stats {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .donut-card {
+      display: grid;
+      grid-template-columns: 128px 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .donut {
+      width: 128px;
+      height: 128px;
+      border-radius: 50%;
+      background: conic-gradient(
+        #E89A7A 0 44%,
+        #AFC4CF 44% 62%,
+        #A9B7A0 62% 76%,
+        #D7B981 76% 88%,
+        #BBB3CA 88% 99%,
+        #EDE5D6 99% 100%
+      );
+      position: relative;
+    }
+
+    .donut:after {
+      content: "128h";
+      position: absolute;
+      inset: 34px;
+      border-radius: 50%;
+      background: #fff;
+      display: grid;
+      place-items: center;
+      font-family: var(--mono);
+      font-size: 17px;
+      color: var(--ink);
+    }
+
+    .legend {
+      display: grid;
+      gap: 7px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      line-height: 1.2;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
+
+    .year-head {
+      margin: 0 0 8px;
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 400;
+    }
+
+    .month-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 14px;
+      min-height: 42px;
+      align-items: center;
+      border-top: 1px solid var(--line);
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .month-row span:not(:first-child) {
+      font-family: var(--mono);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 480px) {
+      .page { padding: 20px 12px 36px; }
+      .page-header { display: block; }
+      .page-kicker { margin-top: 12px; display: block; }
+      .gallery { grid-template-columns: 1fr; }
+      .phone { width: 100%; max-width: 393px; margin: 0 auto; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <div>
+        <h1>时间银行 · Mood A「克制晨光」原型</h1>
+        <p>393×852 pt 静态手机画布。S1 展示 3 个 lifespan 顶部卡变体，其余屏幕按满数据状态落稿。</p>
+      </div>
+      <span class="page-kicker">Light Mode · #FAF7F1 · 2026-04-26</span>
+    </header>
+
+    <section class="gallery">
+      <article>
+        <div class="shot-label"><span>S1 主页</span><small>变体 A · 上下双层</small></div>
+        <div class="phone">
+          <div class="status"><span>10:30</span><span class="status-icons"><span class="signal"></span><span class="battery"></span></span></div>
+          <div class="screen scroll-screen">
+            <div class="home-greeting">
+              <p class="time-label">上午好</p>
+              <h2>你好，林晚</h2>
+            </div>
+            <p class="variant-note">变体 A · 保守双层账户</p>
+            <section class="life-card life-card-a">
+              <div class="life-half">
+                <div class="life-eyebrow"><strong>时间余额</strong><span>lifespan</span></div>
+                <p class="life-number">约还剩 2,288 <small>周</small></p>
+                <p class="mono-sub">44 年 · 386 Kh</p>
+              </div>
+              <div class="life-half">
+                <div class="life-eyebrow"><strong>已存入</strong><span>deposit</span></div>
+                <p class="life-number">128 <small>小时</small></p>
+                <p class="mono-sub">27 个瞬间 · 跨 5 个时间账户</p>
+              </div>
+            </section>
+            <div class="section-title">时间账户 · 6 个<small>双数字</small></div>
+            <section class="account-card">
+              <div class="account-head"><span class="dim-icon">♡</span><span class="account-name">陪父母</span><span class="chev">›</span></div>
+              <div class="numbers">
+                <div class="num-col"><p class="num-label">还能共度</p><p class="num-main">552h</p><p class="num-sub">≈ 23 天 · 约 92 次见面</p></div>
+                <div class="num-col"><p class="num-label">已存入</p><p class="num-main">56h</p><p class="num-sub">≈ 2.3 天 · 12 个瞬间</p></div>
+              </div>
+            </section>
+            <section class="account-card">
+              <div class="account-head"><span class="dim-icon">○</span><span class="account-name">陪孩子</span><span class="chev">›</span></div>
+              <div class="numbers">
+                <div class="num-col"><p class="num-label">还能共度</p><p class="num-main">6,840h</p><p class="num-sub">≈ 285 天 · 每周约 14 小时</p></div>
+                <div class="num-col"><p class="num-label">已存入</p><p class="num-main">23h</p><p class="num-sub">8 个瞬间</p></div>
+              </div>
+            </section>
+            <section class="account-card">
+              <div class="account-head"><span class="dim-icon">∞</span><span class="account-name">陪伴侣</span><span class="chev">›</span></div>
+              <div class="numbers">
+                <div class="num-col"><p class="num-label">还能共度</p><p class="num-main compact">43,800h</p><p class="num-sub">≈ 1,825 天 · 每天约 4 小时</p></div>
+                <div class="num-col"><p class="num-label">已存入</p><p class="num-main">14h</p><p class="num-sub">5 个瞬间</p></div>
+              </div>
+            </section>
+            <section class="account-card">
+              <div class="account-head"><span class="dim-icon">△</span><span class="account-name">运动</span><span class="chev">›</span></div>
+              <div class="numbers">
+                <div class="num-col"><p class="num-label">未来</p><p class="num-main">9,560h</p><p class="num-sub">≈ 398 天 · 每周约 5 小时</p></div>
+                <div class="num-col"><p class="num-label">已存入</p><p class="num-main">18h</p><p class="num-sub">6 个瞬间</p></div>
+              </div>
+            </section>
+            <section class="account-card">
+              <div class="account-head"><span class="dim-icon">✧</span><span class="account-name">创造</span><span class="chev">›</span></div>
+              <div class="numbers">
+                <div class="num-col"><p class="num-label">未来</p><p class="num-main compact">39,000h</p><p class="num-sub">≈ 1,625 天 · 每周约 40 小时</p></div>
+                <div class="num-col"><p class="num-label">已存入</p><p class="num-main">15h</p><p class="num-sub">4 个瞬间</p></div>
+              </div>
+            </section>
+            <section class="account-card">
+              <div class="account-head"><span class="dim-icon">·</span><span class="account-name">自由</span><span class="chev">›</span></div>
+              <div class="numbers">
+                <div class="num-col"><p class="num-label">清醒时间</p><p class="num-main">56%</p><p class="num-sub">自由可支配</p></div>
+                <div class="num-col"><p class="num-label">已存入</p><p class="num-main">2h</p><p class="num-sub">2 个瞬间</p></div>
+              </div>
+            </section>
+          </div>
+          <nav class="bottom-tabs"><div class="tab current"><span class="tab-icon">⌂</span>主页</div><div class="fab">+</div><div class="tab"><span class="tab-icon">☉</span>账户</div><div class="tab"><span class="tab-icon">◦</span>我</div></nav>
+        </div>
+      </article>
+
+      <article>
+        <div class="shot-label"><span>S1 主页</span><small>变体 B · 账本一页</small></div>
+        <div class="phone">
+          <div class="status"><span>10:30</span><span class="status-icons"><span class="signal"></span><span class="battery"></span></span></div>
+          <div class="screen scroll-screen">
+            <div class="home-greeting">
+              <p class="time-label">上午好</p>
+              <h2>你好，林晚</h2>
+            </div>
+            <p class="variant-note">变体 B · 账本一页</p>
+            <section class="life-card life-card-b">
+              <div class="ledger-rule"></div>
+              <div class="ledger-row">
+                <div>
+                  <div class="ledger-chapter">约还剩</div>
+                  <div class="ledger-number">2,288 周</div>
+                </div>
+                <div class="ledger-right">时间余额<br>44 年 · 386 Kh</div>
+              </div>
+              <div class="ledger-row">
+                <div>
+                  <div class="ledger-chapter">已存入</div>
+                  <div class="ledger-number">128 小时</div>
+                </div>
+                <div class="ledger-right">27 个瞬间<br>跨 5 个账户</div>
+              </div>
+            </section>
+            <div class="section-title">时间账户 · 6 个<small>双数字</small></div>
+            <section class="account-card">
+              <div class="account-head"><span class="dim-icon">♡</span><span class="account-name">陪父母</span><span class="chev">›</span></div>
+              <div class="numbers">
+                <div class="num-col"><p class="num-label">还能共度</p><p class="num-main">552h</p><p class="num-sub">≈ 23 天 · 约 92 次见面</p></div>
+                <div class="num-col"><p class="num-label">已存入</p><p class="num-main">56h</p><p class="num-sub">≈ 2.3 天 · 12 个瞬间</p></div>
+              </div>
+            </section>
+            <section class="account-card">
+              <div class="account-head"><span class="dim-icon">○</span><span class="account-name">陪孩子</span><span class="chev">›</span></div>
+              <div class="numbers">
+                <div class="num-col"><p class="num-label">还能共度</p><p class="num-main">6,840h</p><p class="num-sub">≈ 285 天 · 每周约 14 小时</p></div>
+                <div class="num-col"><p class="num-label">已存入</p><p class="num-main">23h</p><p class="num-sub">8 个瞬间</p></div>
+              </div>
+            </section>
+            <section class="account-card">
+              <div class="account-head"><span class="dim-icon">△</span><span class="account-name">运动</span><span class="chev">›</span></div>
+              <div class="numbers">
+                <div class="num-col"><p class="num-label">未来</p><p class="num-main">9,560h</p><p class="num-sub">≈ 398 天 · 每周约 5 小时</p></div>
+                <div class="num-col"><p class="num-label">已存入</p><p class="num-main">18h</p><p class="num-sub">6 个瞬间</p></div>
+              </div>
+            </section>
+            <section class="account-card">
+              <div class="account-head"><span class="dim-icon">∞</span><span class="account-name">陪伴侣</span><span class="chev">›</span></div>
+              <div class="numbers">
+                <div class="num-col"><p class="num-label">还能共度</p><p class="num-main compact">43,800h</p><p class="num-sub">≈ 1,825 天 · 每天约 4 小时</p></div>
+                <div class="num-col"><p class="num-label">已存入</p><p class="num-main">14h</p><p class="num-sub">5 个瞬间</p></div>
+              </div>
+            </section>
+            <section class="account-card">
+              <div class="account-head"><span class="dim-icon">✧</span><span class="account-name">创造</span><span class="chev">›</span></div>
+              <div class="numbers">
+                <div class="num-col"><p class="num-label">未来</p><p class="num-main compact">39,000h</p><p class="num-sub">≈ 1,625 天 · 每周约 40 小时</p></div>
+                <div class="num-col"><p class="num-label">已存入</p><p class="num-main">15h</p><p class="num-sub">4 个瞬间</p></div>
+              </div>
+            </section>
+            <section class="account-card">
+              <div class="account-head"><span class="dim-icon">·</span><span class="account-name">自由</span><span class="chev">›</span></div>
+              <div class="numbers">
+                <div class="num-col"><p class="num-label">清醒时间</p><p class="num-main">56%</p><p class="num-sub">自由可支配</p></div>
+                <div class="num-col"><p class="num-label">已存入</p><p class="num-main">2h</p><p class="num-sub">2 个瞬间</p></div>
+              </div>
+            </section>
+          </div>
+          <nav class="bottom-tabs"><div class="tab current"><span class="tab-icon">⌂</span>主页</div><div class="fab">+</div><div class="tab"><span class="tab-icon">☉</span>账户</div><div class="tab"><span class="tab-icon">◦</span>我</div></nav>
+        </div>
+      </article>
+
+      <article>
+        <div class="shot-label"><span>S1 主页</span><small>变体 C · 极致俳句</small></div>
+        <div class="phone">
+          <div class="status"><span>10:30</span><span class="status-icons"><span class="signal"></span><span class="battery"></span></span></div>
+          <div class="screen scroll-screen">
+            <div class="home-greeting">
+              <p class="time-label">上午好</p>
+              <h2>你好，林晚</h2>
+            </div>
+            <p class="variant-note">变体 C · 极致俳句</p>
+            <section class="life-card life-card-c">
+              <div class="haiku-top"><span class="haiku-label">时间余额</span><p class="haiku-number">2,288</p></div>
+              <div class="haiku-meta"><span>周 · 44 年 · 386 Kh</span><span>lifespan</span></div>
+              <div class="haiku-bottom"><p class="haiku-number small">128</p><span class="haiku-label">小时已存入</span></div>
+            </section>
+            <div class="section-title">时间账户 · 6 个<small>双数字</small></div>
+            <section class="account-card">
+              <div class="account-head"><span class="dim-icon">♡</span><span class="account-name">陪父母</span><span class="chev">›</span></div>
+              <div class="numbers">
+                <div class="num-col"><p class="num-label">还能共度</p><p class="num-main">552h</p><p class="num-sub">≈ 23 天 · 约 92 次见面</p></div>
+                <div class="num-col"><p class="num-label">已存入</p><p class="num-main">56h</p><p class="num-sub">≈ 2.3 天 · 12 个瞬间</p></div>
+              </div>
+            </section>
+            <section class="account-card">
+              <div class="account-head"><span class="dim-icon">○</span><span class="account-name">陪孩子</span><span class="chev">›</span></div>
+              <div class="numbers">
+                <div class="num-col"><p class="num-label">还能共度</p><p class="num-main">6,840h</p><p class="num-sub">≈ 285 天 · 每周约 14 小时</p></div>
+                <div class="num-col"><p class="num-label">已存入</p><p class="num-main">23h</p><p class="num-sub">8 个瞬间</p></div>
+              </div>
+            </section>
+            <section class="account-card">
+              <div class="account-head"><span class="dim-icon">∞</span><span class="account-name">陪伴侣</span><span class="chev">›</span></div>
+              <div class="numbers">
+                <div class="num-col"><p class="num-label">还能共度</p><p class="num-main compact">43,800h</p><p class="num-sub">≈ 1,825 天 · 每天约 4 小时</p></div>
+                <div class="num-col"><p class="num-label">已存入</p><p class="num-main">14h</p><p class="num-sub">5 个瞬间</p></div>
+              </div>
+            </section>
+            <section class="account-card">
+              <div class="account-head"><span class="dim-icon">△</span><span class="account-name">运动</span><span class="chev">›</span></div>
+              <div class="numbers">
+                <div class="num-col"><p class="num-label">未来</p><p class="num-main">9,560h</p><p class="num-sub">≈ 398 天 · 每周约 5 小时</p></div>
+                <div class="num-col"><p class="num-label">已存入</p><p class="num-main">18h</p><p class="num-sub">6 个瞬间</p></div>
+              </div>
+            </section>
+            <section class="account-card">
+              <div class="account-head"><span class="dim-icon">✧</span><span class="account-name">创造</span><span class="chev">›</span></div>
+              <div class="numbers">
+                <div class="num-col"><p class="num-label">未来</p><p class="num-main compact">39,000h</p><p class="num-sub">≈ 1,625 天 · 每周约 40 小时</p></div>
+                <div class="num-col"><p class="num-label">已存入</p><p class="num-main">15h</p><p class="num-sub">4 个瞬间</p></div>
+              </div>
+            </section>
+            <section class="account-card">
+              <div class="account-head"><span class="dim-icon">·</span><span class="account-name">自由</span><span class="chev">›</span></div>
+              <div class="numbers">
+                <div class="num-col"><p class="num-label">清醒时间</p><p class="num-main">56%</p><p class="num-sub">自由可支配</p></div>
+                <div class="num-col"><p class="num-label">已存入</p><p class="num-main">2h</p><p class="num-sub">2 个瞬间</p></div>
+              </div>
+            </section>
+          </div>
+          <nav class="bottom-tabs"><div class="tab current"><span class="tab-icon">⌂</span>主页</div><div class="fab">+</div><div class="tab"><span class="tab-icon">☉</span>账户</div><div class="tab"><span class="tab-icon">◦</span>我</div></nav>
+        </div>
+      </article>
+
+      <article>
+        <div class="shot-label"><span>S2 详情页</span><small>陪父母 · 满数据</small></div>
+        <div class="phone">
+          <div class="status"><span>10:30</span><span class="status-icons"><span class="signal"></span><span class="battery"></span></span></div>
+          <div class="screen scroll-screen">
+            <nav class="nav"><span class="nav-action">‹</span><span class="nav-title">陪父母</span><span class="nav-action">+</span></nav>
+            <header class="detail-hero">
+              <div class="hero-icon">♡</div>
+              <h2>陪父母</h2>
+              <p class="hero-big">552h</p>
+              <p class="hero-sub">约还能一起度过 · 合 92 次见面<br>每次 6h</p>
+            </header>
+            <p class="insight">他们正在经历一生中最自由的一段时间。</p>
+            <section class="plain-card calc-card">
+              <div>
+                <p class="card-title">计算方式</p>
+                <p class="card-copy">父母 71/68 · 每年 4 次 · 每次 6h
+预期寿命 82</p>
+              </div>
+              <span class="chev">›</span>
+            </section>
+            <div class="section-title">已存入瞬间 · 12 个 · 56h</div>
+            <section class="timeline-row">
+              <div class="thumb"></div>
+              <div class="timeline-copy">
+                <h3>妈做的腌菜</h3>
+                <p class="timeline-meta">发生在 38 天前 · 1 个媒体 · 30m</p>
+                <p class="timeline-note">她说还是我小时候那个味道。</p>
+              </div>
+            </section>
+            <section class="timeline-row">
+              <div class="thumb"></div>
+              <div class="timeline-copy">
+                <h3>爸第一次坐高铁</h3>
+                <p class="timeline-meta">发生在 73 天前 · 4 个媒体 · 6h</p>
+                <p class="timeline-note">他全程靠窗看风景，没说话。</p>
+              </div>
+            </section>
+            <section class="timeline-row">
+              <div class="thumb"></div>
+              <div class="timeline-copy">
+                <h3>一起买菜</h3>
+                <p class="timeline-meta">发生在 90 天前 · 2 个媒体 · 1h</p>
+                <p class="timeline-note">妈知道每个摊主的名字。</p>
+              </div>
+            </section>
+            <p class="end-note">到这里就是最早的了</p>
+          </div>
+        </div>
+      </article>
+
+      <article>
+        <div class="shot-label"><span>S3 时刻详情</span><small>孩子第一次系鞋带</small></div>
+        <div class="phone">
+          <div class="status"><span>10:30</span><span class="status-icons"><span class="signal"></span><span class="battery"></span></span></div>
+          <div class="screen moment-screen">
+            <nav class="nav"><span class="nav-action">‹</span><span class="nav-title">孩子第一次系鞋带</span><span class="nav-action">⋯</span></nav>
+            <div class="media-main"></div>
+            <div class="dots"><span class="dot active"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+            <h2 class="moment-title">孩子第一次系鞋带</h2>
+            <p class="moment-meta">发生在 47 天前</p>
+            <div class="chips"><span class="chip primary">♡ 陪孩子</span><span class="chip">不计时长</span><span class="chip">4 个媒体</span></div>
+            <p class="note-copy">她做了 7 次才成功，第 8 次成功的时候笑得很大声。</p>
+            <div class="action-bar"><div class="action-btn">编辑 ✎</div><div class="action-btn">换时间账户 ⇆</div><div class="action-btn">删除</div></div>
+          </div>
+        </div>
+      </article>
+
+      <article>
+        <div class="shot-label"><span>S4 存时刻</span><small>新建 · 填写中</small></div>
+        <div class="phone">
+          <div class="status"><span>10:30</span><span class="status-icons"><span class="signal"></span><span class="battery"></span></span></div>
+          <div class="screen sheet-screen">
+            <nav class="sheet-nav"><span class="cancel">取消</span><span class="title">存入到 陪父母</span><span class="save">存入时间银行</span></nav>
+            <section class="plain-card">
+              <div class="field-row"><span class="field-label">存入</span><span class="field-value">陪父母 <span class="chev">⌄</span></span></div>
+            </section>
+            <section class="plain-card">
+              <div class="field-row"><span class="field-label">发生在</span><span class="field-value">今天 · 2026-03-22 <span class="chev">›</span></span></div>
+              <div class="field-row"><span class="field-label">持续</span><span class="field-value"><span class="input-inline"><span class="input-box">30</span><span>分钟</span></span></span></div>
+            </section>
+            <section class="plain-card">
+              <div class="field-row"><span class="field-label">叫什么</span><span class="field-value">妈做的腌菜</span></div>
+              <div class="field-row textarea-row"><span class="field-label">想说点什么</span><span class="textarea-value">她说还是我小时候那个味道。</span></div>
+            </section>
+            <section class="plain-card">
+              <div class="media-card-head"><span>照片和视频</span><span>最多 9 张</span></div>
+              <div class="media-grid">
+                <div class="chosen-thumb"><span class="remove">×</span></div>
+                <div class="add-tile">+</div>
+              </div>
+              <p class="privacy-note">图片和视频存在你的 iPhone 里，不会上传任何服务器。</p>
+            </section>
+          </div>
+        </div>
+      </article>
+
+      <article>
+        <div class="shot-label"><span>S5 账户 Tab</span><small>年度回顾</small></div>
+        <div class="phone">
+          <div class="status"><span>10:30</span><span class="status-icons"><span class="signal"></span><span class="battery"></span></span></div>
+          <div class="screen scroll-screen">
+            <nav class="nav"><span></span><span class="nav-title page-title">账户</span><span></span></nav>
+            <section class="plain-card summary-card">
+              <p class="summary-number">128h</p>
+              <p class="summary-sub">已存入 · 包含其他时间账户</p>
+              <div class="summary-line"></div>
+              <div class="summary-stats"><span>27 个瞬间</span><span>跨 5 个时间账户</span></div>
+            </section>
+            <div class="section-title">时间账户分布</div>
+            <section class="plain-card donut-card">
+              <div class="donut"></div>
+              <div class="legend">
+                <div class="legend-row"><span class="legend-dot" style="background:#E89A7A"></span>陪父母 · 44%</div>
+                <div class="legend-row"><span class="legend-dot" style="background:#AFC4CF"></span>陪孩子 · 18%</div>
+                <div class="legend-row"><span class="legend-dot" style="background:#A9B7A0"></span>运动 · 14%</div>
+                <div class="legend-row"><span class="legend-dot" style="background:#D7B981"></span>创造 · 12%</div>
+                <div class="legend-row"><span class="legend-dot" style="background:#BBB3CA"></span>陪伴侣 · 11%</div>
+                <div class="legend-row"><span class="legend-dot" style="background:#EDE5D6"></span>自由 · 2%</div>
+              </div>
+            </section>
+            <div class="section-title">年度回顾</div>
+            <section class="plain-card">
+              <h3 class="year-head">2026 年</h3>
+              <div class="month-row"><span>3 月</span><span>12h</span><span>4 个瞬间</span></div>
+              <div class="month-row"><span>2 月</span><span>8h</span><span>3 个瞬间</span></div>
+              <div class="month-row"><span>1 月</span><span>6h</span><span>2 个瞬间</span></div>
+            </section>
+            <section class="plain-card">
+              <h3 class="year-head">2025 年</h3>
+              <div class="month-row"><span>12 月</span><span>4h</span><span>2 个瞬间</span></div>
+            </section>
+          </div>
+          <nav class="bottom-tabs"><div class="tab"><span class="tab-icon">⌂</span>主页</div><div class="fab">+</div><div class="tab current"><span class="tab-icon">☉</span>账户</div><div class="tab"><span class="tab-icon">◦</span>我</div></nav>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

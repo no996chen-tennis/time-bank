@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>时间银行 · Art Book 原型网页展示</title>
+  <style>
+    :root {
+      --bg: #1f1712;
+      --panel: #2a211a;
+      --paper: #f7f0df;
+      --muted: rgba(247, 240, 223, 0.68);
+      --line: rgba(247, 240, 223, 0.18);
+      --red: #8a2020;
+      --gold: #b98531;
+      --ink: #17130f;
+      --serif: "Iowan Old Style", "Baskerville", "Songti SC", serif;
+      --sans: "Avenir Next", "Helvetica Neue", "PingFang SC", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--paper);
+      background:
+        radial-gradient(circle at 12% 0%, rgba(185, 133, 49, 0.22), transparent 26%),
+        radial-gradient(circle at 90% 8%, rgba(138, 32, 32, 0.22), transparent 24%),
+        linear-gradient(135deg, #19110c, var(--bg) 56%, #120d09);
+      font-family: var(--sans);
+      letter-spacing: 0;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.1;
+      background-image:
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    a { color: inherit; }
+
+    .shell {
+      width: min(100%, 1440px);
+      margin: 0 auto;
+      padding: 32px 28px 56px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 28px;
+      align-items: end;
+      padding-bottom: 26px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: clamp(36px, 5vw, 72px);
+      line-height: 0.98;
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+
+    .summary {
+      max-width: 760px;
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .button {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 16px;
+      border: 1px solid var(--line);
+      background: rgba(247, 240, 223, 0.06);
+      color: var(--paper);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .button.primary {
+      border-color: rgba(138, 32, 32, 0.78);
+      background: var(--red);
+    }
+
+    .spec-card {
+      padding: 22px;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(247, 240, 223, 0.06), rgba(247, 240, 223, 0.025)),
+        var(--panel);
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.24);
+    }
+
+    .spec-card h2 {
+      margin: 0 0 16px;
+      font-family: var(--serif);
+      font-size: 26px;
+      font-weight: 500;
+    }
+
+    .spec-list {
+      display: grid;
+      gap: 13px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .spec-list li {
+      display: grid;
+      grid-template-columns: 74px 1fr;
+      gap: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .spec-list strong {
+      color: var(--paper);
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .section {
+      margin-top: 30px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 500;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      text-align: right;
+    }
+
+    .preview-frame {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #0f0b08;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.34);
+    }
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: min(76vh, 860px);
+      border: 0;
+      background: var(--bg);
+    }
+
+    .screen-index {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .screen-index a {
+      min-height: 92px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      background: rgba(247, 240, 223, 0.055);
+      text-decoration: none;
+    }
+
+    .screen-index strong {
+      display: block;
+      margin-bottom: 8px;
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 500;
+    }
+
+    .screen-index span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .notes {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .note {
+      min-height: 148px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    .note h3 {
+      margin: 0 0 10px;
+      color: var(--red);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .note p {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 21px;
+      line-height: 1.42;
+    }
+
+    .footer {
+      margin-top: 34px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 980px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .screen-index,
+      .notes {
+        grid-template-columns: 1fr;
+      }
+
+      .section-head {
+        display: block;
+      }
+
+      .section-head p {
+        margin-top: 8px;
+        text-align: left;
+      }
+
+      iframe {
+        height: 78vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Time Bank · iOS Prototype Showcase</p>
+        <h1>Art Book / 装帧方向<br>网页可视化展示</h1>
+        <p class="summary">这是给「时间银行」V2 视觉探索准备的网页展示页。核心原型仍是 393 × 852 的 iOS 画布；本页用于在浏览器里集中查看设计方向、5 个关键屏幕，以及 lifespan 顶部账户的 3 个装帧变体。</p>
+        <div class="actions">
+          <a class="button primary" href="time-bank-artbook.html" target="_blank" rel="noreferrer">打开完整原型</a>
+          <a class="button" href="#preview">查看网页预览</a>
+          <a class="button" href="#notes">设计要点</a>
+        </div>
+      </div>
+
+      <aside class="spec-card" aria-label="prototype specs">
+        <h2>Prototype Spec</h2>
+        <ul class="spec-list">
+          <li><strong>Format</strong><span>静态 HTML / CSS，可直接双击打开，也可作为本地网页展示。</span></li>
+          <li><strong>Screens</strong><span>S1 主页、S2 陪父母详情、S3 时刻详情、S4 编辑器、S5 账户 Tab。</span></li>
+          <li><strong>Style</strong><span>19 世纪精装书、拍卖图录、博物馆图录、古典 typography。</span></li>
+          <li><strong>Data</strong><span>使用林晚 persona 真实数据；包含 lifespan 和存储层双数字。</span></li>
+        </ul>
+      </aside>
+    </section>
+
+    <section id="preview" class="section">
+      <div class="section-head">
+        <h2>网页预览</h2>
+        <p>下方直接嵌入完整原型页面。滚动预览区可查看全部 iOS 画布。</p>
+      </div>
+      <div class="preview-frame">
+        <iframe src="time-bank-artbook.html" title="时间银行 Art Book 原型"></iframe>
+      </div>
+      <nav class="screen-index" aria-label="screen index">
+        <a href="time-bank-artbook.html" target="_blank" rel="noreferrer"><strong>S1</strong><span>主页 / lifespan 三变体 / 六个时间账户</span></a>
+        <a href="time-bank-artbook.html" target="_blank" rel="noreferrer"><strong>S2</strong><span>陪父母详情 / 消耗层与存储层并列</span></a>
+        <a href="time-bank-artbook.html" target="_blank" rel="noreferrer"><strong>S3</strong><span>时刻详情 / 4 图轮播 / dropcap 叙事</span></a>
+        <a href="time-bank-artbook.html" target="_blank" rel="noreferrer"><strong>S4</strong><span>编辑器 / prefill / 图文存入</span></a>
+        <a href="time-bank-artbook.html" target="_blank" rel="noreferrer"><strong>S5</strong><span>账户 Tab / 年度 ledger / 账户索引</span></a>
+      </nav>
+    </section>
+
+    <section id="notes" class="section">
+      <div class="section-head">
+        <h2>设计要点</h2>
+        <p>用于评审时快速判断方向是否成立。</p>
+      </div>
+      <div class="notes">
+        <article class="note">
+          <h3>Typography</h3>
+          <p>使用 serif 数字和中文宋体气质，保留 running header、folio、chapter rule、dropcap。</p>
+        </article>
+        <article class="note">
+          <h3>Lifespan</h3>
+          <p>顶部账户不是普通卡片，而是精装扉页、拍卖 lot、题跋手稿三种叙事容器。</p>
+        </article>
+        <article class="note">
+          <h3>Material</h3>
+          <p>象牙纸、浓墨黑、绛红批注、少量金色，让界面接近艺术图录而不是常规移动 App。</p>
+        </article>
+      </div>
+    </section>
+
+    <footer class="footer">
+      文件位置：designs/time-bank-artbook-showcase.html。完整原型：designs/time-bank-artbook.html。
+    </footer>
+  </main>
+</body>
+</html>

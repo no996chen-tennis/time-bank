@@ -1,0 +1,1199 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Swiss · 瑞士平面 · 林晚 v1</title>
+  <style>
+    :root {
+      --paper: #ffffff;
+      --ink: #000000;
+      --accent: #f00000;
+      --line: #000000;
+      --muted: rgba(0, 0, 0, .58);
+      --quiet: rgba(0, 0, 0, .32);
+      --faint: rgba(0, 0, 0, .10);
+      --softer: rgba(0, 0, 0, .055);
+      --font: Inter, Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      --mono: "SF Mono", "Roboto Mono", "IBM Plex Mono", ui-monospace, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font);
+      letter-spacing: 0;
+    }
+
+    .page {
+      min-height: 100vh;
+      padding: 36px 28px 64px;
+    }
+
+    .masthead {
+      width: min(1280px, 100%);
+      margin: 0 auto 30px;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+      border-top: 8px solid var(--ink);
+      padding-top: 18px;
+    }
+
+    h1 {
+      grid-column: 1 / 8;
+      margin: 0;
+      font-size: 34px;
+      line-height: .96;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .brief {
+      grid-column: 8 / 13;
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    .gallery {
+      width: min(1280px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, 393px);
+      gap: 34px 22px;
+      align-items: start;
+    }
+
+    .shot-label {
+      height: 28px;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+      align-items: end;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+
+    .shot-label b { grid-column: 1 / 5; }
+    .shot-label span { grid-column: 5 / 13; color: var(--muted); font-weight: 600; }
+
+    .phone {
+      position: relative;
+      width: 393px;
+      height: 852px;
+      overflow: hidden;
+      background: var(--paper);
+      border: 1px solid var(--ink);
+      border-radius: 2px;
+      box-shadow: 0 22px 50px rgba(0, 0, 0, .12);
+    }
+
+    .phone::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to right, rgba(240, 0, 0, .10) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, .035) 1px, transparent 1px);
+      background-size: calc((100% - 40px) / 12) 100%, 100% 24px;
+      background-position: 20px 0, 0 0;
+      z-index: 1;
+    }
+
+    .screen {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      padding: 14px 20px 76px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .content {
+      min-height: 0;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      column-gap: 8px;
+      align-content: start;
+    }
+
+    .status {
+      height: 28px;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+      align-items: start;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .status .time { grid-column: 1 / 4; }
+    .status .sys { grid-column: 9 / 13; text-align: right; }
+
+    .nav {
+      grid-column: 1 / 13;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+      align-items: end;
+      margin: 0 0 18px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+    }
+
+    .nav .back {
+      grid-column: 1 / 3;
+      font-size: 21px;
+      line-height: 1;
+      color: var(--accent);
+      font-weight: 900;
+    }
+
+    .nav h2 {
+      grid-column: 3 / 10;
+      margin: 0;
+      font-size: 18px;
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .nav .action {
+      grid-column: 10 / 13;
+      justify-self: end;
+      color: var(--accent);
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .kicker {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 800;
+      line-height: 1.2;
+      text-transform: uppercase;
+      color: var(--quiet);
+    }
+
+    .hello {
+      grid-column: 1 / 8;
+      margin-top: 2px;
+    }
+
+    .hello h2 {
+      margin: 3px 0 0;
+      font-size: 26px;
+      line-height: .95;
+      font-weight: 900;
+    }
+
+    .dateblock {
+      grid-column: 9 / 13;
+      text-align: right;
+      align-self: start;
+      padding-top: 4px;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .section-title {
+      grid-column: 1 / 13;
+      margin: 13px 0 8px;
+      padding-top: 9px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+      align-items: baseline;
+    }
+
+    .section-title b {
+      grid-column: 1 / 7;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .section-title span {
+      grid-column: 7 / 13;
+      justify-self: end;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .life-variant {
+      grid-column: 1 / 13;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+      min-height: 92px;
+      border-top: 2px solid var(--ink);
+      padding: 8px 0 9px;
+    }
+
+    .life-variant .tag {
+      grid-column: 1 / 3;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1.05;
+      color: var(--accent);
+    }
+
+    .life-variant .main { grid-column: 3 / 9; }
+    .life-variant .deposit { grid-column: 9 / 13; border-left: 1px solid var(--line); padding-left: 8px; }
+
+    .big {
+      font-size: 43px;
+      line-height: .82;
+      font-weight: 900;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .big .red, .red { color: var(--accent); }
+
+    .sub {
+      margin-top: 6px;
+      font-size: 11px;
+      line-height: 1.35;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .label {
+      margin-bottom: 5px;
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--quiet);
+    }
+
+    .bar-set {
+      grid-column: 3 / 13;
+      display: grid;
+      gap: 6px;
+      align-self: center;
+    }
+
+    .bar {
+      position: relative;
+      height: 15px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+    }
+
+    .bar i {
+      position: absolute;
+      inset: 0 auto 0 0;
+      display: block;
+      background: var(--faint);
+    }
+
+    .bar b {
+      position: absolute;
+      inset: 0 0 0 auto;
+      display: block;
+      width: 52%;
+      background: var(--accent);
+    }
+
+    .bar.deposit-bar b { width: 18%; background: var(--ink); }
+
+    .bar-caption {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 8px;
+      align-items: baseline;
+    }
+
+    .bar-caption strong {
+      grid-column: 1 / 4;
+      font-size: 28px;
+      line-height: .85;
+      font-weight: 900;
+    }
+
+    .bar-caption span {
+      grid-column: 4 / 11;
+      font-size: 10px;
+      line-height: 1.25;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .geo {
+      grid-column: 3 / 13;
+      position: relative;
+      height: 82px;
+      border-top: 1px solid var(--line);
+    }
+
+    .geo .square {
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 58px;
+      height: 58px;
+      background: var(--accent);
+    }
+
+    .geo .square.small {
+      left: auto;
+      right: 0;
+      top: 29px;
+      width: 36px;
+      height: 36px;
+      background: var(--ink);
+    }
+
+    .geo strong {
+      position: absolute;
+      left: 48px;
+      top: 5px;
+      font-size: 42px;
+      line-height: .85;
+      font-weight: 900;
+    }
+
+    .geo span {
+      position: absolute;
+      left: 51px;
+      top: 49px;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .account-grid {
+      grid-column: 1 / 13;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 7px 8px;
+    }
+
+    .account {
+      min-height: 66px;
+      border-top: 2px solid var(--line);
+      padding-top: 6px;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 4px;
+    }
+
+    .account:nth-child(odd) { grid-column: 1 / 7; }
+    .account:nth-child(even) { grid-column: 7 / 13; }
+
+    .account .name {
+      grid-column: 1 / 4;
+      font-size: 12px;
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .account .mark {
+      grid-column: 5 / 7;
+      justify-self: end;
+      width: 17px;
+      height: 17px;
+      border: 2px solid var(--accent);
+    }
+
+    .account .remain {
+      grid-column: 1 / 7;
+      margin-top: 4px;
+      font-size: 19px;
+      line-height: .9;
+      font-weight: 900;
+    }
+
+    .account .detail {
+      grid-column: 1 / 7;
+      font-size: 9px;
+      line-height: 1.25;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .account .stored {
+      grid-column: 1 / 7;
+      font-size: 9px;
+      line-height: 1.2;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .home .hello h2 { font-size: 24px; }
+    .home .section-title {
+      margin: 8px 0 5px;
+      padding-top: 6px;
+    }
+    .home .life-variant {
+      min-height: 68px !important;
+      padding: 6px 0;
+      gap: 6px;
+    }
+    .home .life-variant .main { grid-column: 3 / 8; }
+    .home .life-variant .deposit { grid-column: 8 / 13; padding-left: 6px; }
+    .home .big { font-size: 36px; }
+    .home .sub {
+      margin-top: 3px;
+      font-size: 9px;
+      line-height: 1.2;
+    }
+    .home .label {
+      margin-bottom: 3px;
+      font-size: 8px;
+    }
+    .home .bar-set { gap: 3px; }
+    .home .bar { height: 11px; }
+    .home .bar-caption strong { font-size: 22px; }
+    .home .bar-caption span { font-size: 8px; line-height: 1.15; }
+    .home .geo { height: 56px; }
+    .home .geo .square {
+      width: 43px;
+      height: 43px;
+      top: 6px;
+    }
+    .home .geo .square.small {
+      width: 27px;
+      height: 27px;
+      top: 22px;
+    }
+    .home .geo strong {
+      left: 38px;
+      top: 5px;
+      font-size: 34px;
+    }
+    .home .geo span {
+      left: 40px;
+      top: 38px;
+      font-size: 8px;
+    }
+    .home .account-grid { gap: 5px 8px; }
+    .home .account {
+      min-height: 48px;
+      padding-top: 4px;
+      gap: 2px;
+    }
+    .home .account .name { font-size: 10px; }
+    .home .account .mark {
+      width: 13px;
+      height: 13px;
+    }
+    .home .account .remain {
+      margin-top: 2px;
+      font-size: 15px;
+    }
+    .home .account .detail,
+    .home .account .stored {
+      font-size: 8px;
+      line-height: 1.1;
+    }
+
+    .tabbar {
+      position: absolute;
+      z-index: 3;
+      left: 20px;
+      right: 20px;
+      bottom: 16px;
+      height: 48px;
+      background: var(--paper);
+      border-top: 2px solid var(--line);
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+      align-items: center;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .tabbar span:nth-child(1) { grid-column: 1 / 4; }
+    .tabbar span:nth-child(2) { grid-column: 4 / 6; text-align: center; }
+    .tabbar span:nth-child(3) { grid-column: 10 / 13; text-align: right; }
+
+    .fab {
+      position: absolute;
+      left: 50%;
+      bottom: 25px;
+      transform: translateX(-50%);
+      z-index: 4;
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      background: var(--accent);
+      color: var(--paper);
+      font-size: 27px;
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .hero-number {
+      grid-column: 1 / 13;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+      border-bottom: 8px solid var(--ink);
+      padding-bottom: 14px;
+      margin-bottom: 13px;
+    }
+
+    .hero-number .digits {
+      grid-column: 1 / 8;
+      font-size: 82px;
+      line-height: .78;
+      font-weight: 900;
+    }
+
+    .hero-number .unit {
+      grid-column: 8 / 13;
+      align-self: end;
+      font-size: 16px;
+      line-height: 1.25;
+      font-weight: 900;
+    }
+
+    .insight {
+      grid-column: 1 / 13;
+      border-left: 8px solid var(--accent);
+      padding: 5px 0 5px 10px;
+      font-size: 14px;
+      line-height: 1.35;
+      font-weight: 900;
+      margin-bottom: 14px;
+    }
+
+    .calc-card {
+      grid-column: 1 / 13;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 0;
+      margin-bottom: 13px;
+    }
+
+    .calc-card b {
+      grid-column: 1 / 5;
+      font-size: 13px;
+      line-height: 1.15;
+      font-weight: 900;
+    }
+
+    .calc-card span {
+      grid-column: 5 / 13;
+      font-size: 11px;
+      line-height: 1.45;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .store-head {
+      grid-column: 1 / 13;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+      align-items: end;
+      border-top: 4px solid var(--accent);
+      padding-top: 8px;
+      margin-bottom: 6px;
+    }
+
+    .store-head b {
+      grid-column: 1 / 7;
+      font-size: 14px;
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .store-head span {
+      grid-column: 7 / 13;
+      text-align: right;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .moment-row {
+      grid-column: 1 / 13;
+      min-height: 70px;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+      border-top: 1px solid var(--line);
+      padding: 8px 0;
+    }
+
+    .thumb {
+      grid-column: 1 / 3;
+      background:
+        linear-gradient(135deg, var(--ink) 0 46%, var(--paper) 46% 54%, var(--accent) 54%);
+      min-height: 52px;
+      border: 1px solid var(--line);
+    }
+
+    .moment-copy { grid-column: 3 / 10; }
+    .moment-copy b {
+      display: block;
+      font-size: 14px;
+      line-height: 1;
+      font-weight: 900;
+    }
+    .moment-copy span {
+      display: block;
+      margin-top: 6px;
+      font-size: 10px;
+      line-height: 1.35;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .moment-meta {
+      grid-column: 10 / 13;
+      text-align: right;
+      font-family: var(--mono);
+      font-size: 10px;
+      line-height: 1.25;
+      color: var(--quiet);
+      font-weight: 800;
+    }
+
+    .end-note {
+      grid-column: 1 / 13;
+      text-align: center;
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+      margin-top: 2px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--quiet);
+    }
+
+    .carousel {
+      grid-column: 1 / 13;
+      height: 272px;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .photo-main {
+      grid-column: 1 / 10;
+      grid-row: 1 / 9;
+      background:
+        linear-gradient(90deg, var(--ink) 0 22%, var(--paper) 22% 38%, var(--accent) 38% 54%, var(--paper) 54% 69%, var(--ink) 69%);
+      border: 1px solid var(--line);
+    }
+
+    .photo-side {
+      grid-column: 10 / 13;
+      border: 1px solid var(--line);
+      background: var(--softer);
+    }
+
+    .photo-side:nth-child(2) { grid-row: 1 / 3; background: linear-gradient(135deg, var(--accent) 0 45%, var(--paper) 45%); }
+    .photo-side:nth-child(3) { grid-row: 3 / 6; background: linear-gradient(45deg, var(--ink) 0 36%, var(--paper) 36%); }
+    .photo-side:nth-child(4) { grid-row: 6 / 9; background: linear-gradient(90deg, var(--paper) 0 45%, var(--accent) 45%); }
+
+    .moment-title {
+      grid-column: 1 / 13;
+      margin: 0 0 8px;
+      font-size: 29px;
+      line-height: .98;
+      font-weight: 900;
+    }
+
+    .meta-line {
+      grid-column: 1 / 13;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 9px 0;
+      margin-bottom: 9px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .meta-line span:nth-child(1) { grid-column: 1 / 5; }
+    .meta-line span:nth-child(2) { grid-column: 5 / 9; }
+    .meta-line span:nth-child(3) { grid-column: 9 / 13; text-align: right; }
+
+    .chips {
+      grid-column: 1 / 13;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      height: 26px;
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+    .chip:nth-child(1) { grid-column: 1 / 5; background: var(--accent); color: var(--paper); border-color: var(--accent); }
+    .chip:nth-child(2) { grid-column: 5 / 9; }
+    .chip:nth-child(3) { grid-column: 9 / 13; }
+
+    .note {
+      grid-column: 1 / 13;
+      border-top: 8px solid var(--ink);
+      padding-top: 12px;
+      font-size: 18px;
+      line-height: 1.42;
+      font-weight: 800;
+    }
+
+    .bottom-actions {
+      position: absolute;
+      z-index: 3;
+      left: 20px;
+      right: 20px;
+      bottom: 16px;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+      border-top: 2px solid var(--line);
+      padding-top: 8px;
+      background: var(--paper);
+    }
+
+    .bottom-actions button {
+      height: 40px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      color: var(--ink);
+      font: 900 11px var(--font);
+      letter-spacing: 0;
+    }
+
+    .bottom-actions button:nth-child(1) { grid-column: 1 / 5; }
+    .bottom-actions button:nth-child(2) { grid-column: 5 / 9; }
+    .bottom-actions button:nth-child(3) { grid-column: 9 / 13; background: var(--accent); color: var(--paper); border-color: var(--accent); }
+
+    .field {
+      grid-column: 1 / 13;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+      border-top: 1px solid var(--line);
+      padding: 12px 0;
+    }
+
+    .field label {
+      grid-column: 1 / 4;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 900;
+      color: var(--quiet);
+      text-transform: uppercase;
+    }
+
+    .field .value {
+      grid-column: 4 / 13;
+      font-size: 16px;
+      line-height: 1.25;
+      font-weight: 900;
+    }
+
+    .media-grid {
+      grid-column: 4 / 13;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .media-tile {
+      aspect-ratio: 1;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(135deg, var(--ink) 0 33%, var(--paper) 33% 66%, var(--accent) 66%);
+    }
+
+    .media-tile.add {
+      background: var(--paper);
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      font-size: 26px;
+      font-weight: 900;
+    }
+
+    .textarea {
+      grid-column: 4 / 13;
+      min-height: 128px;
+      border: 1px solid var(--line);
+      padding: 12px;
+      font-size: 16px;
+      line-height: 1.45;
+      font-weight: 800;
+    }
+
+    .save-strip {
+      position: absolute;
+      left: 20px;
+      right: 20px;
+      bottom: 16px;
+      z-index: 3;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+      align-items: center;
+      border-top: 2px solid var(--line);
+      padding-top: 10px;
+      background: var(--paper);
+    }
+
+    .save-strip .ghost {
+      grid-column: 1 / 5;
+      height: 40px;
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .save-strip .primary {
+      grid-column: 5 / 13;
+      height: 40px;
+      background: var(--accent);
+      color: var(--paper);
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .summary {
+      grid-column: 1 / 13;
+      border-top: 8px solid var(--ink);
+      padding: 12px 0 16px;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+    }
+
+    .summary .total {
+      grid-column: 1 / 8;
+      font-size: 64px;
+      line-height: .78;
+      font-weight: 900;
+    }
+
+    .summary .copy {
+      grid-column: 8 / 13;
+      align-self: end;
+      font-size: 12px;
+      line-height: 1.35;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .donut-zone {
+      grid-column: 1 / 13;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+      border-top: 1px solid var(--line);
+      padding-top: 15px;
+      margin-bottom: 10px;
+    }
+
+    .donut {
+      grid-column: 1 / 7;
+      width: 156px;
+      height: 156px;
+      border-radius: 50%;
+      background: conic-gradient(var(--accent) 0 43%, var(--ink) 43% 61%, rgba(0,0,0,.72) 61% 75%, rgba(0,0,0,.42) 75% 89%, rgba(0,0,0,.18) 89% 100%);
+      position: relative;
+    }
+
+    .donut::after {
+      content: "";
+      position: absolute;
+      inset: 48px;
+      background: var(--paper);
+      border-radius: 50%;
+      border: 1px solid var(--line);
+    }
+
+    .legend {
+      grid-column: 7 / 13;
+      align-self: center;
+      display: grid;
+      gap: 9px;
+    }
+
+    .legend-row {
+      display: grid;
+      grid-template-columns: 14px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .swatch { width: 14px; height: 14px; background: var(--ink); }
+    .legend-row:nth-child(1) .swatch { background: var(--accent); }
+    .legend-row:nth-child(2) .swatch { background: var(--ink); }
+    .legend-row:nth-child(3) .swatch { background: rgba(0,0,0,.72); }
+    .legend-row:nth-child(4) .swatch { background: rgba(0,0,0,.42); }
+    .legend-row:nth-child(5) .swatch { background: rgba(0,0,0,.18); border: 1px solid var(--line); }
+
+    .year-row {
+      grid-column: 1 / 13;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 8px;
+      border-top: 1px solid var(--line);
+      padding: 12px 0;
+      align-items: center;
+    }
+
+    .year-row .ym {
+      grid-column: 1 / 4;
+      font-size: 20px;
+      line-height: .9;
+      font-weight: 900;
+    }
+
+    .year-row .track {
+      grid-column: 4 / 10;
+      height: 12px;
+      border: 1px solid var(--line);
+      position: relative;
+    }
+
+    .year-row .track i {
+      display: block;
+      height: 100%;
+      background: var(--accent);
+    }
+
+    .year-row .numbers {
+      grid-column: 10 / 13;
+      text-align: right;
+      font-family: var(--mono);
+      font-size: 10px;
+      line-height: 1.35;
+      font-weight: 800;
+    }
+
+    @media (max-width: 860px) {
+      .page { padding: 22px 14px 42px; }
+      .masthead { display: block; }
+      h1 { font-size: 27px; margin-bottom: 10px; }
+      .brief { max-width: 393px; }
+      .gallery { grid-template-columns: 393px; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="masthead">
+      <h1>Swiss · 瑞士平面 · 林晚 v1</h1>
+      <p class="brief">5 屏 iOS 原型。12-column grid / Helvetica spirit / black + white + one red accent. Lifespan 双层卡包含 A/B/C 三个方向。</p>
+    </header>
+
+    <section class="gallery">
+      <article>
+        <div class="shot-label"><b>S1</b><span>主页 · lifespan 变体 A/B/C</span></div>
+        <div class="phone">
+          <div class="screen">
+            <div class="status"><span class="time">10:30</span><span class="sys">5G 100</span></div>
+            <div class="content home">
+              <div class="hello">
+                <div class="kicker">Good morning</div>
+                <h2>你好，林晚</h2>
+              </div>
+              <div class="dateblock">2026<br>04 / 26<br>Sunday</div>
+
+              <div class="section-title"><b>时间余额</b><span>LIFESPAN</span></div>
+
+              <div class="life-variant">
+                <div class="tag">变体 A<br>MODULAR</div>
+                <div class="main">
+                  <div class="label">约还剩</div>
+                  <div class="big">2,288<span class="red">周</span></div>
+                  <div class="sub">44 年 · 386 Kh</div>
+                </div>
+                <div class="deposit">
+                  <div class="label">已存入</div>
+                  <div class="big" style="font-size:29px;">128<span class="red">小时</span></div>
+                  <div class="sub">27 个瞬间 · 跨 5 个时间账户</div>
+                </div>
+              </div>
+
+              <div class="life-variant">
+                <div class="tag">变体 B<br>INFO</div>
+                <div class="bar-set">
+                  <div class="bar-caption"><strong>2,288</strong><span>约还剩 2,288 周<br>44 年 · 386 Kh</span></div>
+                  <div class="bar"><i style="width:48%;"></i><b></b></div>
+                  <div class="bar-caption"><strong>128</strong><span>小时已存入<br>27 个瞬间 · 跨 5 个时间账户</span></div>
+                  <div class="bar deposit-bar"><b></b></div>
+                </div>
+              </div>
+
+              <div class="life-variant" style="min-height:88px;">
+                <div class="tag">变体 C<br>GEOMETRY</div>
+                <div class="geo">
+                  <div class="square"></div>
+                  <strong>2,288</strong>
+                  <span>周 / 44 年 · 386 Kh / 已存入 128 小时</span>
+                  <div class="square small"></div>
+                </div>
+              </div>
+
+              <div class="section-title"><b>6 个时间账户</b><span>DUAL NUMBERS</span></div>
+              <div class="account-grid">
+                <div class="account"><div class="name">陪父母</div><div class="mark"></div><div class="remain">552h</div><div class="detail">约 92 次见面</div><div class="stored">56h · 12 个瞬间</div></div>
+                <div class="account"><div class="name">陪孩子</div><div class="mark"></div><div class="remain">6,840h</div><div class="detail">每周约 14 小时</div><div class="stored">23h · 8 个瞬间</div></div>
+                <div class="account"><div class="name">陪伴侣</div><div class="mark"></div><div class="remain">43,800h</div><div class="detail">每天约 4h</div><div class="stored">14h · 5 个瞬间</div></div>
+                <div class="account"><div class="name">运动</div><div class="mark"></div><div class="remain">9,560h</div><div class="detail">每周约 5h</div><div class="stored">18h · 6 个瞬间</div></div>
+                <div class="account"><div class="name">创造</div><div class="mark"></div><div class="remain">39,000h</div><div class="detail">每周约 40h</div><div class="stored">15h · 4 个瞬间</div></div>
+                <div class="account"><div class="name">自由</div><div class="mark"></div><div class="remain">56%</div><div class="detail">占清醒约 56%</div><div class="stored">2h · 2 个瞬间</div></div>
+              </div>
+            </div>
+            <div class="tabbar"><span>主页</span><span>账户</span><span>我</span></div>
+            <div class="fab">+</div>
+          </div>
+        </div>
+      </article>
+
+      <article>
+        <div class="shot-label"><b>S2</b><span>陪父母详情 · 时间线</span></div>
+        <div class="phone">
+          <div class="screen">
+            <div class="status"><span class="time">10:30</span><span class="sys">5G 100</span></div>
+            <div class="content">
+              <div class="nav"><div class="back">‹</div><h2>陪父母</h2><div class="action">+</div></div>
+              <div class="hero-number"><div class="digits">552h</div><div class="unit">约 92 次见面<br><span style="color:var(--muted);font-size:11px;">还能共度</span></div></div>
+              <div class="insight">把下一次见面，变成真正被记得的一次。</div>
+              <div class="calc-card">
+                <b>计算方式</b>
+                <span>按父母年龄、预期寿命、平均每次见面 6h、年见面频率综合估算。你可以随时调整默认值。</span>
+              </div>
+              <div class="store-head"><b>已存入瞬间</b><span>12 个 · 56h</span></div>
+
+              <div class="moment-row"><div class="thumb"></div><div class="moment-copy"><b>妈做的腌菜</b><span>她说还是我小时候那个味道。</span></div><div class="moment-meta">30m<br>2026-03-15<br>1 张</div></div>
+              <div class="moment-row"><div class="thumb" style="background:linear-gradient(90deg,var(--accent) 0 42%,var(--paper) 42% 60%,var(--ink) 60%);"></div><div class="moment-copy"><b>爸第一次坐高铁</b><span>他全程靠窗看风景，没说话。</span></div><div class="moment-meta">6h<br>2026-02-08<br>4 张</div></div>
+              <div class="moment-row"><div class="thumb" style="background:linear-gradient(135deg,var(--paper) 0 36%,var(--ink) 36% 66%,var(--accent) 66%);"></div><div class="moment-copy"><b>一起买菜</b><span>妈知道每个摊主的名字。</span></div><div class="moment-meta">1h<br>2026-01-22<br>2 张</div></div>
+              <div class="moment-row"><div class="thumb" style="background:linear-gradient(45deg,var(--ink) 0 30%,var(--accent) 30% 56%,var(--paper) 56%);"></div><div class="moment-copy"><b>教爸爸用 iPad</b><span>他终于会自己看视频了。</span></div><div class="moment-meta">45m<br>2025-12-30<br>1 张</div></div>
+              <div class="end-note">到这里就是最早的了</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article>
+        <div class="shot-label"><b>S3</b><span>时刻详情 · 孩子第一次系鞋带</span></div>
+        <div class="phone">
+          <div class="screen">
+            <div class="status"><span class="time">10:30</span><span class="sys">5G 100</span></div>
+            <div class="content">
+              <div class="nav"><div class="back">‹</div><h2>时刻</h2><div class="action">···</div></div>
+              <div class="carousel">
+                <div class="photo-main"></div>
+                <div class="photo-side"></div>
+                <div class="photo-side"></div>
+                <div class="photo-side"></div>
+              </div>
+              <h2 class="moment-title">孩子第一次系鞋带</h2>
+              <div class="meta-line"><span>陪孩子</span><span>不计</span><span>2026-03-10</span></div>
+              <div class="chips"><div class="chip">2 张图</div><div class="chip">第 N 次</div><div class="chip">已存入</div></div>
+              <div class="note">她做了 7 次才成功，第 8 次成功的时候笑得很大声。</div>
+            </div>
+            <div class="bottom-actions"><button>编辑</button><button>移动</button><button>存入</button></div>
+          </div>
+        </div>
+      </article>
+
+      <article>
+        <div class="shot-label"><b>S4</b><span>存时刻编辑器 · prefill</span></div>
+        <div class="phone">
+          <div class="screen">
+            <div class="status"><span class="time">10:30</span><span class="sys">5G 100</span></div>
+            <div class="content">
+              <div class="nav"><div class="back">×</div><h2>存入时刻</h2><div class="action"></div></div>
+              <div class="field"><label>标题</label><div class="value">妈做的腌菜</div></div>
+              <div class="field"><label>账户</label><div class="value">陪父母</div></div>
+              <div class="field"><label>时长</label><div class="value">30m</div></div>
+              <div class="field"><label>发生</label><div class="value">2026-03-15</div></div>
+              <div class="field">
+                <label>媒体</label>
+                <div class="media-grid">
+                  <div class="media-tile"></div>
+                  <div class="media-tile add">+</div>
+                  <div class="media-tile add">+</div>
+                </div>
+              </div>
+              <div class="field">
+                <label>笔记</label>
+                <div class="textarea">她说还是我小时候那个味道。</div>
+              </div>
+            </div>
+            <div class="save-strip"><div class="ghost">删除</div><div class="primary">保存这个时刻</div></div>
+          </div>
+        </div>
+      </article>
+
+      <article>
+        <div class="shot-label"><b>S5</b><span>账户 Tab · summary + annual review</span></div>
+        <div class="phone">
+          <div class="screen">
+            <div class="status"><span class="time">10:30</span><span class="sys">5G 100</span></div>
+            <div class="content">
+              <div class="nav"><div class="back"></div><h2>账户</h2><div class="action">↗</div></div>
+              <div class="summary"><div class="total">128h</div><div class="copy">27 个瞬间<br>跨 5 个时间账户<br>2025–2026</div></div>
+              <div class="section-title"><b>存入分布</b><span>5 SEGMENTS</span></div>
+              <div class="donut-zone">
+                <div class="donut"></div>
+                <div class="legend">
+                  <div class="legend-row"><div class="swatch"></div><span>陪父母</span><b>56h</b></div>
+                  <div class="legend-row"><div class="swatch"></div><span>陪孩子</span><b>23h</b></div>
+                  <div class="legend-row"><div class="swatch"></div><span>运动</span><b>18h</b></div>
+                  <div class="legend-row"><div class="swatch"></div><span>创造</span><b>15h</b></div>
+                  <div class="legend-row"><div class="swatch"></div><span>伴侣 / 自由</span><b>16h</b></div>
+                </div>
+              </div>
+              <div class="section-title"><b>年度回顾</b><span>2026 / 2025</span></div>
+              <div class="year-row"><div class="ym">2026<br>03</div><div class="track"><i style="width:100%"></i></div><div class="numbers">12h<br>4 瞬间</div></div>
+              <div class="year-row"><div class="ym">2026<br>02</div><div class="track"><i style="width:66%"></i></div><div class="numbers">8h<br>3 瞬间</div></div>
+              <div class="year-row"><div class="ym">2026<br>01</div><div class="track"><i style="width:50%"></i></div><div class="numbers">6h<br>2 瞬间</div></div>
+              <div class="year-row"><div class="ym">2025<br>12</div><div class="track"><i style="width:33%"></i></div><div class="numbers">4h<br>2 瞬间</div></div>
+            </div>
+            <div class="tabbar"><span>主页</span><span>账户</span><span>我</span></div>
+            <div class="fab">+</div>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

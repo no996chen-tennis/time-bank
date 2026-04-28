@@ -1,0 +1,2243 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>时间银行 · UI 主题 1-5 · 林晚 v1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Fraunces:opsz,wght,SOFT@9..144,600..900,20&family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@500;700&family=TASA+Orbiter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --canvas: #d7c7b6;
+      --paper: #f4eee3;
+      --paper-deep: #ede3d5;
+      --paper-warm: #faf6ed;
+      --ink: #25231f;
+      --muted: #716a60;
+      --soft: #9b9184;
+      --line: rgba(37, 35, 31, 0.15);
+      --hairline: rgba(37, 35, 31, 0.09);
+      --rust: #9d3f2f;
+      --green: #243d32;
+      --navy: #172b48;
+      --ochre: #b78242;
+      --clay: #c8917e;
+      --cream: #fffaf1;
+      --shadow: rgba(54, 40, 27, 0.20);
+      --serif: "Fraunces", "DM Serif Display", "Songti SC", "Noto Serif SC", Georgia, serif;
+      --display: "DM Serif Display", "Fraunces", "Songti SC", "Noto Serif SC", Georgia, serif;
+      --sans: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", sans-serif;
+      --lr-sans: "TASA Orbiter", "Inter", "PingFang SC", sans-serif;
+      --lr-serif: "Noto Serif SC", "Songti SC", serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px),
+        linear-gradient(rgba(255,255,255,0.13) 1px, transparent 1px),
+        var(--canvas);
+      background-size: 34px 34px;
+      font-family: var(--sans);
+      letter-spacing: 0;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.23;
+      background-image:
+        radial-gradient(circle at 14% 18%, rgba(255,255,255,0.45) 0 0.7px, transparent 0.9px),
+        radial-gradient(circle at 81% 44%, rgba(55,38,24,0.28) 0 0.55px, transparent 0.8px),
+        radial-gradient(circle at 42% 76%, rgba(255,255,255,0.35) 0 0.45px, transparent 0.7px);
+      background-size: 19px 19px, 23px 23px, 31px 31px;
+      mix-blend-mode: multiply;
+    }
+
+    .page {
+      width: min(100%, 1430px);
+      margin: 0 auto;
+      padding: 34px 28px 70px;
+      position: relative;
+    }
+
+    .masthead {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 22px;
+      align-items: end;
+      margin-bottom: 30px;
+      border-bottom: 1px solid rgba(37,35,31,0.22);
+      padding-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: 46px;
+      line-height: 0.98;
+      font-weight: 400;
+      color: var(--green);
+    }
+
+    .masthead p {
+      margin: 9px 0 0;
+      max-width: 660px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .folio {
+      text-align: right;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--rust);
+      text-transform: uppercase;
+      line-height: 1.7;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(393px, 1fr));
+      gap: 34px 30px;
+      align-items: start;
+    }
+
+    .theme-nav {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin: 0 0 30px;
+    }
+
+    .theme-link {
+      min-height: 94px;
+      display: grid;
+      align-content: space-between;
+      gap: 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      background: rgba(250, 246, 237, 0.48);
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .theme-link strong {
+      display: block;
+      font-family: var(--display);
+      font-size: 20px;
+      line-height: 1.05;
+      font-weight: 400;
+      color: var(--green);
+    }
+
+    .theme-link span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .theme-link.current {
+      border-color: rgba(36, 61, 50, 0.5);
+      background: var(--paper-warm);
+    }
+
+    .theme-link.theme-4 {
+      border-color: rgba(157, 63, 47, 0.42);
+      background:
+        linear-gradient(135deg, rgba(168, 187, 177, 0.26), transparent 42%),
+        rgba(250, 246, 237, 0.62);
+    }
+
+    .theme-link.theme-5 {
+      border-color: rgba(20, 20, 20, 0.48);
+      background:
+        linear-gradient(90deg, rgba(20,20,20,0.06) 1px, transparent 1px),
+        linear-gradient(rgba(20,20,20,0.04) 1px, transparent 1px),
+        rgba(251, 250, 246, 0.74);
+      background-size: 24px 24px;
+    }
+
+    .shot {
+      width: 393px;
+      justify-self: center;
+    }
+
+    .shot-title {
+      margin: 0 0 10px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .shot-title strong {
+      font-family: var(--display);
+      font-size: 20px;
+      font-weight: 400;
+      color: var(--ink);
+    }
+
+    .phone {
+      width: 393px;
+      height: 852px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 34px;
+      border: 1px solid rgba(37,35,31,0.24);
+      background: var(--paper);
+      box-shadow: 0 26px 80px var(--shadow);
+    }
+
+    .phone::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.18;
+      z-index: 20;
+      background-image:
+        radial-gradient(circle at 16% 12%, rgba(64,42,27,0.42) 0 0.45px, transparent 0.72px),
+        radial-gradient(circle at 76% 68%, rgba(255,255,255,0.9) 0 0.5px, transparent 0.75px);
+      background-size: 15px 15px, 21px 21px;
+      mix-blend-mode: multiply;
+    }
+
+    .statusbar {
+      height: 48px;
+      padding: 16px 23px 0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+      position: relative;
+      z-index: 5;
+    }
+
+    .phone-icons {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .signal {
+      width: 18px;
+      height: 12px;
+      border-left: 3px solid var(--ink);
+      border-bottom: 3px solid var(--ink);
+      transform: skew(-12deg);
+      opacity: .74;
+    }
+
+    .battery {
+      width: 24px;
+      height: 12px;
+      border: 1.5px solid var(--ink);
+      border-radius: 3px;
+      position: relative;
+    }
+
+    .battery::before {
+      content: "";
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      width: 15px;
+      height: 6px;
+      background: var(--ink);
+      opacity: .72;
+    }
+
+    .battery::after {
+      content: "";
+      position: absolute;
+      right: -4px;
+      top: 3px;
+      width: 2px;
+      height: 5px;
+      border-radius: 2px;
+      background: var(--ink);
+    }
+
+    .screen {
+      position: relative;
+      height: calc(100% - 48px);
+      overflow-y: auto;
+      padding: 0 20px 92px;
+      scrollbar-width: none;
+    }
+
+    .screen::-webkit-scrollbar { display: none; }
+
+    .bottom-tabs {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 12;
+      height: 82px;
+      padding: 9px 28px 18px;
+      display: grid;
+      grid-template-columns: 1fr 72px 1fr 1fr;
+      align-items: center;
+      border-top: 1px solid rgba(37,35,31,0.12);
+      background: rgba(244,238,227,0.92);
+      backdrop-filter: blur(16px);
+    }
+
+    .tab {
+      text-align: center;
+      color: var(--soft);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+
+    .tab.current { color: var(--rust); }
+
+    .tab-mark {
+      display: block;
+      margin: 0 auto 5px;
+      width: 20px;
+      height: 20px;
+      border: 1.5px solid currentColor;
+    }
+
+    .tab.current .tab-mark { background: currentColor; }
+
+    .tab:nth-child(3) .tab-mark {
+      border-radius: 50%;
+    }
+
+    .tab:nth-child(4) .tab-mark {
+      width: 18px;
+      height: 22px;
+      border-radius: 10px 10px 3px 3px;
+    }
+
+    .fab {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--green);
+      color: var(--paper-warm);
+      font-family: var(--display);
+      font-size: 34px;
+      line-height: 1;
+      box-shadow: 0 12px 24px rgba(36,61,50,0.24);
+    }
+
+    .nav {
+      min-height: 44px;
+      display: grid;
+      grid-template-columns: 44px 1fr 44px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .nav-title {
+      text-align: center;
+      color: var(--green);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .nav-btn {
+      height: 38px;
+      display: grid;
+      place-items: center;
+      color: var(--green);
+      font-family: var(--display);
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .nav-action {
+      justify-self: end;
+      width: 36px;
+      border: 1px solid var(--line);
+      color: var(--rust);
+      font-size: 24px;
+      background: var(--paper-warm);
+    }
+
+    .kicker {
+      margin: 0 0 8px;
+      color: var(--rust);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .serif {
+      font-family: var(--display);
+      font-weight: 400;
+    }
+
+    .italic {
+      font-family: var(--display);
+      font-style: italic;
+    }
+
+    .home-head {
+      padding-top: 4px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--hairline);
+      padding-bottom: 12px;
+    }
+
+    .home-head h2 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: 38px;
+      line-height: 0.96;
+      font-weight: 400;
+      color: var(--green);
+    }
+
+    .home-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      text-align: right;
+    }
+
+    .variant-tag {
+      margin: 12px 0 7px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .variant-tag::after {
+      content: "";
+      height: 1px;
+      width: 178px;
+      background: var(--hairline);
+    }
+
+    .page-card {
+      position: relative;
+      border: 1px solid rgba(37,35,31,0.16);
+      background: var(--paper-warm);
+      overflow: hidden;
+    }
+
+    .page-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.12;
+      background-image:
+        linear-gradient(90deg, rgba(37,35,31,0.14) 1px, transparent 1px),
+        linear-gradient(rgba(37,35,31,0.08) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mix-blend-mode: multiply;
+    }
+
+    .lifespan-a {
+      min-height: 132px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .life-pane {
+      padding: 16px 14px 15px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .life-pane + .life-pane {
+      border-left: 1px solid rgba(37,35,31,0.18);
+      box-shadow: inset 8px 0 16px rgba(37,35,31,0.035);
+    }
+
+    .life-pane .label {
+      margin: 0 0 12px;
+      color: var(--rust);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .life-pane .number {
+      margin: 0;
+      font-family: var(--display);
+      font-size: 48px;
+      line-height: .9;
+      color: var(--green);
+      white-space: nowrap;
+    }
+
+    .life-pane.deposit .number {
+      font-size: 39px;
+      color: var(--rust);
+    }
+
+    .life-pane .caption {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .lifespan-b {
+      min-height: 248px;
+      display: grid;
+      grid-template-rows: 1.12fr 1fr;
+    }
+
+    .chapter {
+      position: relative;
+      z-index: 1;
+      padding: 17px 18px 14px;
+      border-bottom: 1px solid rgba(37,35,31,0.15);
+    }
+
+    .chapter:last-child { border-bottom: 0; }
+
+    .chapter .caps {
+      margin: 0 0 4px;
+      color: var(--rust);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .chapter .hero {
+      margin: 0;
+      font-family: var(--display);
+      font-size: 74px;
+      line-height: .84;
+      color: var(--green);
+    }
+
+    .chapter.deposit .hero {
+      font-size: 58px;
+      color: var(--rust);
+    }
+
+    .chapter .quote {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-family: var(--display);
+      font-style: italic;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .lifespan-c {
+      padding: 20px 18px 19px;
+      color: var(--ink);
+    }
+
+    .lifespan-c p {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      font-family: var(--display);
+      font-size: 36px;
+      line-height: 1.07;
+    }
+
+    .lifespan-c .accent {
+      color: var(--rust);
+      font-style: italic;
+      font-size: 44px;
+      white-space: nowrap;
+    }
+
+    .lifespan-c .small {
+      margin-top: 16px;
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .artbook-screen {
+      background:
+        linear-gradient(90deg, rgba(77, 39, 22, 0.11) 0 7px, transparent 7px 100%),
+        var(--paper-warm);
+    }
+
+    .artbook-running {
+      min-height: 40px;
+      display: grid;
+      grid-template-columns: 42px 1fr 42px;
+      align-items: center;
+      border-bottom: 1px solid rgba(37,35,31,0.20);
+      color: var(--muted);
+      font-family: var(--serif);
+      font-size: 11px;
+      font-variant-caps: small-caps;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .artbook-running .page-no {
+      color: var(--rust);
+      font-size: 15px;
+      text-align: right;
+      letter-spacing: 0;
+    }
+
+    .artbook-chapter {
+      padding: 20px 0 14px;
+    }
+
+    .artbook-kicker {
+      margin: 0 0 8px;
+      color: var(--rust);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .artbook-chapter h2 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 31px;
+      line-height: 1.04;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .artbook-chapter p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-family: var(--serif);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .artbook-tag {
+      margin: 10px 0 7px;
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .artbook-title-page {
+      position: relative;
+      min-height: 154px;
+      display: grid;
+      grid-template-columns: 1fr 104px;
+      column-gap: 12px;
+      padding: 15px 16px 14px 20px;
+      border: 1px solid rgba(37,35,31,0.18);
+      background:
+        linear-gradient(90deg, rgba(157,63,47,0.10), transparent 14px),
+        linear-gradient(180deg, rgba(255,255,255,0.52), rgba(237,227,213,0.22)),
+        var(--paper-warm);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.38);
+    }
+
+    .artbook-title-page::after {
+      content: "";
+      position: absolute;
+      inset: 9px;
+      pointer-events: none;
+      border: 1px solid rgba(157,63,47,0.12);
+    }
+
+    .artbook-smallcaps {
+      position: relative;
+      z-index: 1;
+      color: var(--rust);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .artbook-big {
+      position: relative;
+      z-index: 1;
+      margin: 7px 0 3px;
+      font-family: var(--display);
+      font-size: 44px;
+      line-height: 0.94;
+      color: var(--green);
+      white-space: nowrap;
+    }
+
+    .artbook-big span {
+      color: var(--muted);
+      font-family: var(--serif);
+      font-size: 20px;
+    }
+
+    .artbook-meta {
+      position: relative;
+      z-index: 1;
+      color: var(--muted);
+      font-family: var(--serif);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .artbook-rule {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 10px;
+      margin: 13px 0 0;
+      color: var(--ochre);
+      font-family: var(--serif);
+      font-size: 15px;
+    }
+
+    .artbook-rule::before,
+    .artbook-rule::after {
+      content: "";
+      height: 1px;
+      background: rgba(37,35,31,0.18);
+    }
+
+    .artbook-deposit {
+      position: relative;
+      z-index: 1;
+      align-self: end;
+      padding-left: 12px;
+      border-left: 1px solid rgba(37,35,31,0.18);
+    }
+
+    .artbook-deposit .number {
+      margin: 7px 0 3px;
+      color: var(--navy);
+      font-family: var(--display);
+      font-size: 28px;
+      line-height: 0.96;
+    }
+
+    .artbook-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .artbook-row {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
+      min-height: 58px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(37,35,31,0.09);
+      font-family: var(--serif);
+    }
+
+    .artbook-row .mark {
+      color: var(--ochre);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .artbook-row-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+    }
+
+    .artbook-row-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .artbook-row-value {
+      font-size: 17px;
+      white-space: nowrap;
+    }
+
+    .artbook-row-sub {
+      margin-top: 4px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.25;
+    }
+
+    .localremote-screen {
+      padding-left: 17px;
+      padding-right: 17px;
+      background:
+        linear-gradient(90deg, rgba(20,20,20,0.055) 1px, transparent 1px),
+        linear-gradient(rgba(20,20,20,0.035) 1px, transparent 1px),
+        #fbfaf6;
+      background-size: 32px 32px;
+      font-family: var(--lr-sans);
+      color: #141414;
+    }
+
+    .localremote-screen .status-line {
+      min-height: 42px;
+      display: grid;
+      grid-template-columns: 48px 1fr 48px;
+      align-items: center;
+      border-top: 1px solid #141414;
+      border-bottom: 1px solid #141414;
+      margin-bottom: 18px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .localremote-screen .status-line span:nth-child(2) {
+      text-align: center;
+    }
+
+    .localremote-screen .status-line span:last-child {
+      text-align: right;
+    }
+
+    .lr-hello {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: end;
+      margin: 0 0 18px;
+    }
+
+    .lr-hello h2 {
+      margin: 0;
+      font-family: var(--lr-sans);
+      font-size: 33px;
+      line-height: 0.98;
+      font-weight: 800;
+      color: #141414;
+    }
+
+    .lr-hello p {
+      margin: 0;
+      color: #6e6a62;
+      font-size: 11px;
+      line-height: 1.45;
+      text-align: right;
+    }
+
+    .lr-kicker {
+      margin: 0 0 7px;
+      color: #6e6a62;
+      font-family: var(--lr-sans);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .lr-variant-tag {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 10px;
+      border: 1px solid #141414;
+      border-bottom: 0;
+      color: #141414;
+      background: #f8f4eb;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .lr-variant-tag span:last-child {
+      color: #6e6a62;
+      font-weight: 600;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .lr-editorial-card {
+      border: 1px solid #141414;
+      background: #f8f4eb;
+      margin-bottom: 18px;
+    }
+
+    .lr-spread {
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      min-height: 196px;
+    }
+
+    .lr-side-rule {
+      border-right: 1px solid #141414;
+      padding: 12px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-family: var(--lr-serif);
+    }
+
+    .lr-side-rule b {
+      color: #141414;
+      font-size: 38px;
+      line-height: .9;
+    }
+
+    .lr-side-rule span {
+      color: #6e6a62;
+      font-size: 10px;
+      line-height: 1.35;
+    }
+
+    .lr-editorial-copy {
+      padding: 13px 12px;
+    }
+
+    .lr-editorial-copy h3 {
+      margin: 0;
+      font-family: var(--lr-serif);
+      font-size: 26px;
+      line-height: 1.05;
+      font-weight: 700;
+    }
+
+    .lr-editorial-copy .en {
+      margin: 9px 0 13px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #141414;
+      color: #6e6a62;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .lr-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      color: #6e6a62;
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    .lr-two-col b {
+      display: block;
+      color: #141414;
+      font-size: 16px;
+      line-height: 1;
+      margin-bottom: 5px;
+    }
+
+    .lr-section-line {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 10px;
+      margin: 19px 0 10px;
+      color: #6e6a62;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .lr-section-line:after {
+      content: "";
+      height: 1px;
+      background: #141414;
+    }
+
+    .lr-account-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .lr-account-card {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 10px;
+      min-height: 88px;
+      border: 1px solid #141414;
+      background: #fbfaf6;
+    }
+
+    .lr-account-code {
+      display: grid;
+      place-items: center;
+      border-right: 1px solid #141414;
+      color: #6e6a62;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      writing-mode: vertical-rl;
+    }
+
+    .lr-account-body {
+      padding: 9px 9px 9px 0;
+      display: grid;
+      gap: 6px;
+    }
+
+    .lr-account-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+    }
+
+    .lr-account-name {
+      color: #141414;
+      font-size: 17px;
+      line-height: 1.1;
+      font-weight: 800;
+    }
+
+    .lr-account-en {
+      color: #aaa49a;
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .lr-account-value {
+      color: #141414;
+      font-size: 13px;
+      line-height: 1.25;
+      font-weight: 800;
+    }
+
+    .lr-account-deposit {
+      display: grid;
+      grid-template-columns: 54px 1fr;
+      gap: 7px;
+      align-items: center;
+      border-top: 1px solid #d8d2c7;
+      padding-top: 6px;
+      color: #6e6a62;
+      font-size: 10px;
+      line-height: 1.3;
+    }
+
+    .lr-deposit-tag {
+      border: 1px solid #141414;
+      color: #141414;
+      font-size: 8px;
+      font-weight: 800;
+      text-align: center;
+      padding: 3px 0;
+      text-transform: uppercase;
+    }
+
+    .section-head {
+      margin: 18px 0 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      border-top: 1px solid var(--hairline);
+      padding-top: 12px;
+    }
+
+    .section-head strong {
+      font-family: var(--display);
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--ink);
+      text-transform: none;
+    }
+
+    .account-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    .account-card {
+      min-height: 118px;
+      padding: 11px;
+      border: 1px solid rgba(37,35,31,0.13);
+      background: rgba(255,250,241,0.68);
+    }
+
+    .account-card .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .account-card h3 {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.2;
+      color: var(--green);
+    }
+
+    .stamp {
+      width: 22px;
+      height: 22px;
+      border: 1px solid currentColor;
+      color: var(--rust);
+    }
+
+    .parents .stamp { border-radius: 50% 50% 4px 4px; }
+    .kids .stamp { border-radius: 50%; box-shadow: inset -8px 0 0 rgba(157,63,47,.18); }
+    .partner .stamp { border-radius: 50%; transform: rotate(45deg); }
+    .sport .stamp { border-radius: 50%; border-style: dashed; color: var(--navy); }
+    .create .stamp { color: var(--ochre); transform: rotate(12deg); }
+    .free .stamp { border-radius: 3px; color: var(--green); }
+
+    .account-card .main {
+      margin: 0 0 8px;
+      font-family: var(--display);
+      font-size: 23px;
+      line-height: 1;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .account-card .sub,
+    .account-card .saved {
+      margin: 0;
+      font-size: 10.5px;
+      line-height: 1.42;
+      color: var(--muted);
+    }
+
+    .account-card .saved {
+      margin-top: 8px;
+      color: var(--rust);
+      border-top: 1px solid var(--hairline);
+      padding-top: 7px;
+      font-weight: 700;
+    }
+
+    .detail-hero {
+      padding: 4px 0 15px;
+      border-bottom: 1px solid var(--hairline);
+    }
+
+    .detail-hero .issue {
+      margin: 0 0 12px;
+      color: var(--rust);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .detail-hero h2 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: 44px;
+      line-height: .94;
+      font-weight: 400;
+      color: var(--green);
+    }
+
+    .detail-number {
+      margin: 18px 0 0;
+      font-family: var(--display);
+      font-size: 84px;
+      line-height: .78;
+      color: var(--rust);
+    }
+
+    .detail-copy {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .insight {
+      margin: 14px 0 0;
+      font-family: var(--display);
+      font-style: italic;
+      font-size: 21px;
+      line-height: 1.18;
+      color: var(--green);
+    }
+
+    .calc-card {
+      margin: 14px 0 16px;
+      padding: 15px 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,250,241,0.58);
+    }
+
+    .calc-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--hairline);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .calc-row:first-child { padding-top: 0; }
+    .calc-row:last-child { border-bottom: 0; padding-bottom: 0; }
+    .calc-row strong { color: var(--ink); font-weight: 700; }
+
+    .timeline-title {
+      margin: 0 0 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+    }
+
+    .timeline-title strong {
+      font-family: var(--display);
+      font-size: 26px;
+      font-weight: 400;
+    }
+
+    .timeline-title span {
+      color: var(--rust);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .moment-row {
+      display: grid;
+      grid-template-columns: 58px 1fr;
+      gap: 12px;
+      padding: 12px 0;
+      border-top: 1px solid var(--hairline);
+    }
+
+    .thumb {
+      width: 58px;
+      height: 72px;
+      background: var(--paper-deep);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .photo-a {
+      background:
+        linear-gradient(22deg, rgba(36,61,50,.8), rgba(36,61,50,0) 48%),
+        radial-gradient(circle at 64% 34%, #e1c2a2 0 20%, transparent 21%),
+        linear-gradient(135deg, #b77355, #ead7bd 48%, #62694d);
+    }
+
+    .photo-b {
+      background:
+        linear-gradient(120deg, rgba(23,43,72,.35), transparent 48%),
+        linear-gradient(160deg, #d9c2a6, #f1dfc4 43%, #6f735f 44%, #39483d);
+    }
+
+    .photo-c {
+      background:
+        radial-gradient(circle at 38% 45%, #c9906f 0 16%, transparent 18%),
+        linear-gradient(135deg, #325141, #ead9bf 54%, #b7874d);
+    }
+
+    .photo-d {
+      background:
+        linear-gradient(90deg, rgba(37,35,31,.22), transparent),
+        radial-gradient(circle at 58% 31%, #efe2ca 0 20%, transparent 21%),
+        linear-gradient(145deg, #93634c, #e8cdb0 46%, #263b31);
+    }
+
+    .moment-info h3 {
+      margin: 0 0 4px;
+      font-size: 14px;
+      line-height: 1.3;
+      color: var(--ink);
+    }
+
+    .moment-meta {
+      margin: 0 0 7px;
+      color: var(--rust);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .moment-note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .end-line {
+      margin: 16px 0 0;
+      text-align: center;
+      color: var(--soft);
+      font-family: var(--display);
+      font-style: italic;
+      font-size: 17px;
+    }
+
+    .detail-screen {
+      padding-left: 0;
+      padding-right: 0;
+      background: var(--paper);
+    }
+
+    .moment-gallery {
+      height: 365px;
+      position: relative;
+      overflow: hidden;
+      margin-top: -48px;
+      padding-top: 48px;
+      background:
+        linear-gradient(180deg, rgba(37,35,31,0.18), transparent 34%),
+        linear-gradient(140deg, #d8be9f 0%, #efe0c9 38%, #66765e 39%, #2b4636 70%, #172b48 100%);
+    }
+
+    .moment-gallery::before {
+      content: "";
+      position: absolute;
+      inset: 96px 28px 42px;
+      border: 1px solid rgba(255,250,241,0.74);
+      background:
+        radial-gradient(circle at 28% 38%, #efe2cb 0 23%, transparent 24%),
+        radial-gradient(circle at 66% 30%, #b66d55 0 12%, transparent 13%),
+        linear-gradient(155deg, #efe0c9, #cfa27e 52%, #324938);
+      box-shadow: 0 16px 36px rgba(37,35,31,0.22);
+    }
+
+    .film-strip {
+      position: absolute;
+      left: 26px;
+      right: 26px;
+      bottom: 18px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      z-index: 2;
+    }
+
+    .film-strip span {
+      height: 42px;
+      border: 1px solid rgba(255,250,241,.72);
+      background: rgba(255,250,241,.22);
+    }
+
+    .moment-body {
+      padding: 24px 22px 98px;
+    }
+
+    .moment-body h2 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: 42px;
+      line-height: .98;
+      font-weight: 400;
+      color: var(--green);
+    }
+
+    .moment-sub {
+      margin: 12px 0 15px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .chip-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .chip {
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      background: rgba(255,250,241,0.62);
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .note-block {
+      border-top: 1px solid var(--hairline);
+      padding-top: 17px;
+    }
+
+    .note-block p {
+      margin: 0;
+      color: var(--ink);
+      font-family: var(--display);
+      font-size: 24px;
+      line-height: 1.22;
+    }
+
+    .dropcap::first-letter {
+      float: left;
+      font-family: var(--display);
+      color: var(--rust);
+      font-size: 54px;
+      line-height: .82;
+      padding: 6px 7px 0 0;
+    }
+
+    .bottom-actions {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 10;
+      height: 78px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      align-items: center;
+      padding: 10px 22px 18px;
+      gap: 9px;
+      background: rgba(244,238,227,0.94);
+      border-top: 1px solid var(--hairline);
+    }
+
+    .action {
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      background: var(--paper-warm);
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .action.primary {
+      background: var(--green);
+      color: var(--paper-warm);
+      border-color: var(--green);
+    }
+
+    .sheet-screen {
+      background:
+        linear-gradient(180deg, rgba(37,35,31,0.10), rgba(37,35,31,0.18)),
+        var(--paper);
+      overflow: hidden;
+    }
+
+    .sheet-spacer {
+      height: 116px;
+      padding: 18px 20px;
+      color: rgba(37,35,31,0.48);
+      font-family: var(--display);
+      font-style: italic;
+      font-size: 24px;
+      line-height: 1.15;
+    }
+
+    .editor-sheet {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 708px;
+      border-radius: 24px 24px 0 0;
+      background: var(--paper-warm);
+      border-top: 1px solid var(--line);
+      padding: 12px 20px 34px;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+
+    .editor-sheet::-webkit-scrollbar { display: none; }
+
+    .grabber {
+      width: 42px;
+      height: 4px;
+      border-radius: 99px;
+      background: rgba(37,35,31,0.22);
+      margin: 0 auto 15px;
+    }
+
+    .sheet-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 18px;
+    }
+
+    .sheet-head h2 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: 32px;
+      line-height: 1;
+      color: var(--green);
+      font-weight: 400;
+    }
+
+    .save-text {
+      color: var(--rust);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .field {
+      margin-bottom: 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--hairline);
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .input-like {
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .input-like.large {
+      display: block;
+      min-height: 96px;
+      font-family: var(--display);
+      font-size: 24px;
+      font-weight: 400;
+      line-height: 1.22;
+    }
+
+    .input-like span {
+      color: var(--rust);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .media-tile {
+      aspect-ratio: 1;
+      border: 1px solid var(--line);
+      background: var(--paper-deep);
+    }
+
+    .media-add {
+      display: grid;
+      place-items: center;
+      color: var(--rust);
+      font-family: var(--display);
+      font-size: 34px;
+      background: transparent;
+    }
+
+    .account-summary {
+      margin-top: 4px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--hairline);
+    }
+
+    .account-summary .intro {
+      margin: 0 0 6px;
+      color: var(--rust);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .account-summary h2 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: 78px;
+      line-height: .86;
+      color: var(--green);
+      font-weight: 400;
+    }
+
+    .account-summary .summary-copy {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .donut-block {
+      margin: 18px 0 18px;
+      display: grid;
+      grid-template-columns: 142px 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .donut {
+      width: 142px;
+      height: 142px;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--rust) 0 44%,
+        var(--green) 44% 62%,
+        var(--navy) 62% 74%,
+        var(--ochre) 74% 88%,
+        var(--clay) 88% 100%
+      );
+      position: relative;
+    }
+
+    .donut::after {
+      content: "";
+      position: absolute;
+      inset: 28px;
+      border-radius: 50%;
+      background: var(--paper);
+      border: 1px solid rgba(37,35,31,0.11);
+    }
+
+    .legend {
+      display: grid;
+      gap: 8px;
+    }
+
+    .legend-row {
+      display: grid;
+      grid-template-columns: 12px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      background: currentColor;
+    }
+
+    .legend-row.parents { color: var(--rust); }
+    .legend-row.kids { color: var(--green); }
+    .legend-row.partner { color: var(--navy); }
+    .legend-row.sport { color: var(--ochre); }
+    .legend-row.create { color: var(--clay); }
+
+    .year-card {
+      margin-top: 12px;
+      border-top: 1px solid var(--hairline);
+    }
+
+    .year-row {
+      display: grid;
+      grid-template-columns: 50px 1fr 44px 42px;
+      gap: 10px;
+      align-items: baseline;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--hairline);
+    }
+
+    .year {
+      color: var(--rust);
+      font-family: var(--display);
+      font-size: 21px;
+      line-height: 1;
+    }
+
+    .month {
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .hours,
+    .count {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+      font-weight: 700;
+    }
+
+    .archive-note {
+      margin: 17px 0 0;
+      padding: 16px 15px;
+      background: rgba(255,250,241,0.58);
+      border: 1px solid var(--line);
+      color: var(--green);
+      font-family: var(--display);
+      font-style: italic;
+      font-size: 21px;
+      line-height: 1.18;
+    }
+
+    .theme-section {
+      margin-top: 42px;
+      padding-top: 30px;
+      border-top: 1px solid rgba(37,35,31,0.22);
+    }
+
+    .theme-section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    .theme-section-head h2 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: 42px;
+      line-height: .98;
+      font-weight: 400;
+      color: var(--green);
+    }
+
+    .theme-section-head p {
+      max-width: 680px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .open-theme {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 15px;
+      border: 1px solid var(--green);
+      background: var(--green);
+      color: var(--paper-warm);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .theme-frame {
+      width: 100%;
+      height: 3060px;
+      border: 1px solid rgba(37,35,31,0.22);
+      background: #eee9df;
+      box-shadow: 0 22px 70px rgba(54, 40, 27, 0.16);
+    }
+
+    @media (max-width: 680px) {
+      .page { padding: 24px 12px 50px; }
+      .masthead { grid-template-columns: 1fr; }
+      .folio { text-align: left; }
+      h1 { font-size: 36px; }
+      .theme-nav { grid-template-columns: 1fr; }
+      .theme-section-head { grid-template-columns: 1fr; }
+      .theme-frame { height: 3600px; }
+      .gallery { grid-template-columns: 1fr; gap: 28px; }
+      .shot { transform: scale(.92); transform-origin: top center; margin-bottom: -62px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="masthead">
+      <div>
+        <h1>时间银行 · UI 主题 1-5 · 林晚 v1</h1>
+        <p>时间银行 iOS 原型主题评审页。当前文件保留 UI 主题 1「杂志 Apartamento 风」完整 5 屏，并新增 UI 主题 5「Local Remote Editorial」变体 B，和其他主题页面一起在同一地址下确认。</p>
+      </div>
+      <div class="folio">Time Bank<br>Theme Review<br>Local Preview</div>
+    </header>
+
+    <nav class="theme-nav" aria-label="UI theme navigation">
+      <a class="theme-link current" href="#theme-1">
+        <strong>UI 主题 1</strong>
+        <span>杂志 Apartamento 风<br>当前文件内完整画板</span>
+      </a>
+      <a class="theme-link" href="./time-bank-artbook-showcase.html" target="_blank" rel="noreferrer">
+        <strong>UI 主题 2</strong>
+        <span>Art Book / 装帧方向<br>独立展示页</span>
+      </a>
+      <a class="theme-link" href="./ui-theme-3-gallery.html" target="_blank" rel="noreferrer">
+        <strong>UI 主题 3</strong>
+        <span>当代艺术 Gallery<br>独立展示页</span>
+      </a>
+      <a class="theme-link theme-4" href="#theme-4">
+        <strong>UI 主题 4</strong>
+        <span>禅意宋瓷茶道<br>本页下方嵌入预览</span>
+      </a>
+      <a class="theme-link theme-5" href="#theme-5">
+        <strong>UI 主题 5</strong>
+        <span>Local Remote Editorial<br>变体 B · 本页保留</span>
+      </a>
+    </nav>
+
+    <section class="gallery" id="theme-1" aria-label="UI theme 1 iOS prototype screens">
+      <article class="shot">
+        <p class="shot-title"><strong>S0 ArtBook 变体 A</strong><span>lifespan · 精装扉页</span></p>
+        <div class="phone">
+          <div class="statusbar"><span>10:00</span><span class="phone-icons"><i class="signal"></i><i class="battery"></i></span></div>
+          <div class="screen artbook-screen">
+            <div class="artbook-running"><span>§ i</span><span>Time Bank / Lin Wan</span><span class="page-no">01</span></div>
+            <section class="artbook-chapter">
+              <p class="artbook-kicker">Chapter opening</p>
+              <h2>你好，林晚</h2>
+              <p>把真正感受过的时间，安静地存起来。</p>
+            </section>
+
+            <div class="artbook-tag"><span>Variant A · 精装扉页</span><span>Title Page</span></div>
+            <section class="artbook-title-page">
+              <div>
+                <div class="artbook-smallcaps">§ I · 时间余额</div>
+                <div class="artbook-big">2,288 <span>周</span></div>
+                <div class="artbook-meta">44 年 · 386 Kh</div>
+                <div class="artbook-rule">✦</div>
+              </div>
+              <div class="artbook-deposit">
+                <div class="artbook-smallcaps">Chapter Two</div>
+                <div class="number">128 小时</div>
+                <div class="artbook-meta">27 个瞬间<br>跨 5 个时间账户</div>
+              </div>
+            </section>
+
+            <div class="section-head"><strong>时间账户</strong><span>Six ledgers</span></div>
+            <section class="artbook-list">
+              <article class="artbook-row">
+                <div class="mark">¶</div>
+                <div>
+                  <div class="artbook-row-top"><span class="artbook-row-title">陪父母</span><span class="artbook-row-value">552h</span></div>
+                  <div class="artbook-row-sub"><span>约 92 次见面</span><span>56h · 12 个瞬间</span></div>
+                </div>
+              </article>
+              <article class="artbook-row">
+                <div class="mark">§</div>
+                <div>
+                  <div class="artbook-row-top"><span class="artbook-row-title">陪孩子</span><span class="artbook-row-value">6,840h</span></div>
+                  <div class="artbook-row-sub"><span>每周约 14h</span><span>23h · 8 个瞬间</span></div>
+                </div>
+              </article>
+              <article class="artbook-row">
+                <div class="mark">†</div>
+                <div>
+                  <div class="artbook-row-top"><span class="artbook-row-title">陪伴侣</span><span class="artbook-row-value">43,800h</span></div>
+                  <div class="artbook-row-sub"><span>每天约 4h</span><span>14h · 5 个瞬间</span></div>
+                </div>
+              </article>
+              <article class="artbook-row">
+                <div class="mark">✦</div>
+                <div>
+                  <div class="artbook-row-top"><span class="artbook-row-title">运动</span><span class="artbook-row-value">9,560h</span></div>
+                  <div class="artbook-row-sub"><span>每周约 5h</span><span>18h · 6 个瞬间</span></div>
+                </div>
+              </article>
+              <article class="artbook-row">
+                <div class="mark">※</div>
+                <div>
+                  <div class="artbook-row-top"><span class="artbook-row-title">创造</span><span class="artbook-row-value">39,000h</span></div>
+                  <div class="artbook-row-sub"><span>每周约 40h</span><span>15h · 4 个瞬间</span></div>
+                </div>
+              </article>
+              <article class="artbook-row">
+                <div class="mark">◇</div>
+                <div>
+                  <div class="artbook-row-top"><span class="artbook-row-title">自由</span><span class="artbook-row-value">56%</span></div>
+                  <div class="artbook-row-sub"><span>占清醒约 56%</span><span>2h · 2 个瞬间</span></div>
+                </div>
+              </article>
+            </section>
+          </div>
+          <nav class="bottom-tabs">
+            <div class="tab current"><span class="tab-mark"></span>主页</div>
+            <div class="fab">+</div>
+            <div class="tab"><span class="tab-mark"></span>账户</div>
+            <div class="tab"><span class="tab-mark"></span>我</div>
+          </nav>
+        </div>
+      </article>
+
+      <article class="shot">
+        <p class="shot-title"><strong>S1 主页</strong><span>UI 主题 1 · 杂志双页</span></p>
+        <div class="phone">
+          <div class="statusbar"><span>10:00</span><span class="phone-icons"><i class="signal"></i><i class="battery"></i></span></div>
+          <div class="screen">
+            <header class="home-head">
+              <h2>你好，<br>林晚</h2>
+              <p>周日上午<br>可以慢慢来</p>
+            </header>
+
+            <div class="variant-tag"><span>UI 主题 1 · 杂志双页</span></div>
+            <section class="page-card lifespan-a">
+              <div class="life-pane">
+                <p class="label">时间余额</p>
+                <p class="number">2,288</p>
+                <p class="caption">约还剩 2,288 周<br>44 年 · 386 Kh</p>
+              </div>
+              <div class="life-pane deposit">
+                <p class="label">已存入</p>
+                <p class="number">128 小时</p>
+                <p class="caption">27 个瞬间<br>跨 5 个时间账户</p>
+              </div>
+            </section>
+
+            <div class="section-head"><strong>时间账户</strong><span>双数字</span></div>
+            <section class="account-grid">
+              <article class="account-card parents">
+                <div class="top"><h3>陪父母</h3><i class="stamp"></i></div>
+                <p class="main">552h</p>
+                <p class="sub">还能共度 552h<br>约 92 次见面</p>
+                <p class="saved">已存入 56h · 12 个瞬间</p>
+              </article>
+              <article class="account-card kids">
+                <div class="top"><h3>陪孩子</h3><i class="stamp"></i></div>
+                <p class="main">6,840h</p>
+                <p class="sub">还能共度 6,840h<br>每周约 14 小时</p>
+                <p class="saved">已存入 23h · 8 个瞬间</p>
+              </article>
+              <article class="account-card partner">
+                <div class="top"><h3>陪伴侣</h3><i class="stamp"></i></div>
+                <p class="main">43,800h</p>
+                <p class="sub">还能共度 43,800h<br>每天约 4h 共处</p>
+                <p class="saved">已存入 14h · 5 个瞬间</p>
+              </article>
+              <article class="account-card sport">
+                <div class="top"><h3>运动</h3><i class="stamp"></i></div>
+                <p class="main">9,560h</p>
+                <p class="sub">未来 9,560h<br>每周约 5 小时</p>
+                <p class="saved">已存入 18h · 6 个瞬间</p>
+              </article>
+              <article class="account-card create">
+                <div class="top"><h3>创造</h3><i class="stamp"></i></div>
+                <p class="main">39,000h</p>
+                <p class="sub">未来 39,000h<br>每周约 40 小时</p>
+                <p class="saved">已存入 15h · 4 个瞬间</p>
+              </article>
+              <article class="account-card free">
+                <div class="top"><h3>自由</h3><i class="stamp"></i></div>
+                <p class="main">56%</p>
+                <p class="sub">占清醒时间约 56%</p>
+                <p class="saved">已存入 2h · 2 个瞬间</p>
+              </article>
+            </section>
+          </div>
+          <nav class="bottom-tabs">
+            <div class="tab current"><span class="tab-mark"></span>主页</div>
+            <div class="fab">+</div>
+            <div class="tab"><span class="tab-mark"></span>账户</div>
+            <div class="tab"><span class="tab-mark"></span>我</div>
+          </nav>
+        </div>
+      </article>
+
+      <article class="shot">
+        <p class="shot-title"><strong>S2 陪父母详情页</strong><span>full data</span></p>
+        <div class="phone">
+          <div class="statusbar"><span>10:00</span><span class="phone-icons"><i class="signal"></i><i class="battery"></i></span></div>
+          <div class="screen">
+            <nav class="nav">
+              <div class="nav-btn">‹</div>
+              <div class="nav-title">陪父母</div>
+              <div class="nav-btn nav-action">+</div>
+            </nav>
+            <section class="detail-hero">
+              <p class="issue">Relationship account · No. 01</p>
+              <h2>陪父母<br>时间</h2>
+              <div class="detail-number">552h</div>
+              <p class="detail-copy">还能共度 552h<br>约 92 次见面</p>
+              <p class="insight">见面的次数不多，但每一次都可以被认真放进来。</p>
+            </section>
+            <section class="calc-card">
+              <div class="calc-row"><span>父亲年龄</span><strong>71 岁</strong></div>
+              <div class="calc-row"><span>母亲年龄</span><strong>68 岁</strong></div>
+              <div class="calc-row"><span>见面频率</span><strong>每月约 2 次</strong></div>
+              <div class="calc-row"><span>单次共处</span><strong>约 6 小时</strong></div>
+            </section>
+            <div class="timeline-title">
+              <strong>已存入瞬间</strong>
+              <span>12 个 · 56h</span>
+            </div>
+            <article class="moment-row">
+              <div class="thumb photo-a"></div>
+              <div class="moment-info">
+                <h3>妈做的腌菜</h3>
+                <p class="moment-meta">30m · 2026-03-15 · 1 张图</p>
+                <p class="moment-note">她说还是我小时候那个味道。</p>
+              </div>
+            </article>
+            <article class="moment-row">
+              <div class="thumb photo-b"></div>
+              <div class="moment-info">
+                <h3>爸第一次坐高铁</h3>
+                <p class="moment-meta">6h · 2026-02-08 · 4 张图</p>
+                <p class="moment-note">他全程靠窗看风景，没说话。</p>
+              </div>
+            </article>
+            <article class="moment-row">
+              <div class="thumb photo-c"></div>
+              <div class="moment-info">
+                <h3>一起买菜</h3>
+                <p class="moment-meta">1h · 2026-01-22 · 2 张图</p>
+                <p class="moment-note">妈知道每个摊主的名字。</p>
+              </div>
+            </article>
+            <article class="moment-row">
+              <div class="thumb photo-d"></div>
+              <div class="moment-info">
+                <h3>教爸爸用 iPad</h3>
+                <p class="moment-meta">45m · 2025-12-30 · 1 张图</p>
+                <p class="moment-note">他终于会自己看视频了。</p>
+              </div>
+            </article>
+            <p class="end-line">到这里就是最早的了</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="shot">
+        <p class="shot-title"><strong>S3 时刻详情页</strong><span>kid moment</span></p>
+        <div class="phone">
+          <div class="screen detail-screen">
+            <section class="moment-gallery">
+              <div class="statusbar"><span>10:00</span><span class="phone-icons"><i class="signal"></i><i class="battery"></i></span></div>
+              <div class="film-strip"><span></span><span></span><span></span><span></span></div>
+            </section>
+            <section class="moment-body">
+              <p class="kicker">Moment · Kids account</p>
+              <h2>孩子第一次<br>系鞋带</h2>
+              <p class="moment-sub">陪孩子 · 2026-03-10 · 2 张图 · 不计时长</p>
+              <div class="chip-row">
+                <span class="chip">陪孩子</span>
+                <span class="chip">不计</span>
+                <span class="chip">第 1 次</span>
+              </div>
+              <div class="note-block">
+                <p class="dropcap">她做了 7 次才成功，第 8 次成功的时候笑得很大声。鞋带其实没有系得很漂亮，但那一刻很完整。</p>
+              </div>
+            </section>
+          </div>
+          <div class="bottom-actions">
+            <div class="action">编辑</div>
+            <div class="action primary">存入</div>
+            <div class="action">更多</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="shot">
+        <p class="shot-title"><strong>S4 存时刻编辑器</strong><span>prefilled sheet</span></p>
+        <div class="phone">
+          <div class="statusbar"><span>10:00</span><span class="phone-icons"><i class="signal"></i><i class="battery"></i></span></div>
+          <div class="screen sheet-screen">
+            <div class="sheet-spacer">把今天真正感受到的时间，放进一个账户。</div>
+            <section class="editor-sheet">
+              <div class="grabber"></div>
+              <header class="sheet-head">
+                <h2>存入时刻</h2>
+                <div class="save-text">保存</div>
+              </header>
+              <div class="field">
+                <label>标题</label>
+                <div class="input-like">妈做的腌菜</div>
+              </div>
+              <div class="field">
+                <label>时间账户</label>
+                <div class="input-like">陪父母 <span>更换</span></div>
+              </div>
+              <div class="field">
+                <label>发生在</label>
+                <div class="input-like">2026-03-15 <span>今天</span></div>
+              </div>
+              <div class="field">
+                <label>时长</label>
+                <div class="input-like">30m <span>可不计</span></div>
+              </div>
+              <div class="field">
+                <label>文字</label>
+                <div class="input-like large">她说还是我小时候那个味道。</div>
+              </div>
+              <div class="field">
+                <label>图片</label>
+                <div class="media-grid">
+                  <div class="media-tile photo-a"></div>
+                  <div class="media-tile media-add">+</div>
+                  <div class="media-tile"></div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </article>
+
+      <article class="shot">
+        <p class="shot-title"><strong>S5 账户 Tab</strong><span>annual review</span></p>
+        <div class="phone">
+          <div class="statusbar"><span>10:00</span><span class="phone-icons"><i class="signal"></i><i class="battery"></i></span></div>
+          <div class="screen">
+            <header class="account-summary">
+              <p class="intro">Deposited account</p>
+              <h2>128h</h2>
+              <p class="summary-copy">27 个瞬间 · 跨 5 个时间账户</p>
+            </header>
+            <div class="section-head"><strong>分布</strong><span>5 accounts</span></div>
+            <section class="donut-block">
+              <div class="donut"></div>
+              <div class="legend">
+                <div class="legend-row parents"><span class="dot"></span><span>陪父母</span><strong>56h</strong></div>
+                <div class="legend-row kids"><span class="dot"></span><span>陪孩子</span><strong>23h</strong></div>
+                <div class="legend-row partner"><span class="dot"></span><span>陪伴侣</span><strong>14h</strong></div>
+                <div class="legend-row sport"><span class="dot"></span><span>运动</span><strong>18h</strong></div>
+                <div class="legend-row create"><span class="dot"></span><span>创造</span><strong>15h</strong></div>
+              </div>
+            </section>
+            <div class="section-head"><strong>年度回顾</strong><span>2026 / 2025</span></div>
+            <section class="year-card">
+              <div class="year-row"><div class="year">2026</div><div class="month">3 月</div><div class="hours">12h</div><div class="count">4</div></div>
+              <div class="year-row"><div class="year">2026</div><div class="month">2 月</div><div class="hours">8h</div><div class="count">3</div></div>
+              <div class="year-row"><div class="year">2026</div><div class="month">1 月</div><div class="hours">6h</div><div class="count">2</div></div>
+              <div class="year-row"><div class="year">2025</div><div class="month">12 月</div><div class="hours">4h</div><div class="count">2</div></div>
+            </section>
+            <p class="archive-note">存进去的时间不会被扣减，它只是安静地留在那里。</p>
+          </div>
+          <nav class="bottom-tabs">
+            <div class="tab"><span class="tab-mark"></span>主页</div>
+            <div class="fab">+</div>
+            <div class="tab current"><span class="tab-mark"></span>账户</div>
+            <div class="tab"><span class="tab-mark"></span>我</div>
+          </nav>
+        </div>
+      </article>
+    </section>
+
+    <section class="theme-section" id="theme-4" aria-label="UI theme 4 Zen Song porcelain preview">
+      <div class="theme-section-head">
+        <div>
+          <h2>UI 主题 4 · 禅意宋瓷茶道</h2>
+          <p>宣纸白、墨色、汝窑天青与一抹朱砂。包含 S1 首页 lifespan A/B/C 三个变体，以及 S2-S5 主线页面。下方嵌入完整网页，可直接在当前本地地址中评审。</p>
+        </div>
+        <a class="open-theme" href="./time-bank-zen-cn.html" target="_blank" rel="noreferrer">单独打开主题 4</a>
+      </div>
+      <iframe class="theme-frame" src="./time-bank-zen-cn.html" title="UI 主题 4 · 禅意宋瓷茶道 · 林晚 v1"></iframe>
+    </section>
+
+    <section class="theme-section" id="theme-5" aria-label="UI theme 5 Local Remote Editorial preview">
+      <div class="theme-section-head">
+        <div>
+          <h2>UI 主题 5 · Local Remote Editorial</h2>
+          <p>保留 Local Remote 探索中的「变体 B · Editorial」：column rule、左右栏目、TASA Orbiter 系统标签和中英混排。此处作为第五个独立主题入口，和本文件其他页面一起用于本地评审。</p>
+        </div>
+        <a class="open-theme" href="#theme-5" aria-label="当前页主题 5">当前页保留</a>
+      </div>
+
+      <section class="gallery" aria-label="UI theme 5 Local Remote Editorial screen">
+        <article class="shot">
+          <p class="shot-title"><strong>S1 主页 · 变体 B</strong><span>Local Remote Editorial</span></p>
+          <div class="phone">
+            <div class="statusbar"><span>10:30</span><span class="phone-icons"><i class="signal"></i><i class="battery"></i></span></div>
+            <div class="screen localremote-screen">
+              <div class="status-line"><span>TB-05</span><span>Local Remote</span><span>10:30</span></div>
+              <section class="lr-hello">
+                <div>
+                  <p class="lr-kicker">Time Bank / 时间银行</p>
+                  <h2>你好，林晚</h2>
+                </div>
+                <p>上午 10:30<br>Sunday · Apr 26</p>
+              </section>
+
+              <div class="lr-variant-tag"><span>变体 B · Editorial</span><span>publication spread</span></div>
+              <section class="lr-editorial-card">
+                <div class="lr-spread">
+                  <aside class="lr-side-rule"><b>44</b><span>年<br>386 Kh<br>时间余额</span></aside>
+                  <div class="lr-editorial-copy">
+                    <h3>约还剩<br>2,288 周</h3>
+                    <p class="en">About 2,288 Weeks Left. A quiet ledger for the time still open.</p>
+                    <div class="lr-two-col">
+                      <p><b>128 小时</b>已存入</p>
+                      <p><b>27</b>个瞬间 · 跨 5 个时间账户</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <div class="lr-section-line"><span>Time Accounts</span><span>6</span></div>
+              <section class="lr-account-list">
+                <article class="lr-account-card">
+                  <div class="lr-account-code">PARENTS</div>
+                  <div class="lr-account-body">
+                    <div class="lr-account-top"><span class="lr-account-name">陪父母</span><span class="lr-account-en">Family</span></div>
+                    <div class="lr-account-value">还能共度 552h · 约 92 次见面</div>
+                    <div class="lr-account-deposit"><span class="lr-deposit-tag">已存入</span><span>56h · 12 个瞬间</span></div>
+                  </div>
+                </article>
+                <article class="lr-account-card">
+                  <div class="lr-account-code">KIDS</div>
+                  <div class="lr-account-body">
+                    <div class="lr-account-top"><span class="lr-account-name">陪孩子</span><span class="lr-account-en">Child</span></div>
+                    <div class="lr-account-value">还能共度 6,840h · 每周约 14 小时</div>
+                    <div class="lr-account-deposit"><span class="lr-deposit-tag">已存入</span><span>23h · 8 个瞬间</span></div>
+                  </div>
+                </article>
+                <article class="lr-account-card">
+                  <div class="lr-account-code">PARTNER</div>
+                  <div class="lr-account-body">
+                    <div class="lr-account-top"><span class="lr-account-name">陪伴侣</span><span class="lr-account-en">Partner</span></div>
+                    <div class="lr-account-value">还能共度 43,800h · 每天约 4h 共处</div>
+                    <div class="lr-account-deposit"><span class="lr-deposit-tag">已存入</span><span>14h · 5 个瞬间</span></div>
+                  </div>
+                </article>
+                <article class="lr-account-card">
+                  <div class="lr-account-code">SPORT</div>
+                  <div class="lr-account-body">
+                    <div class="lr-account-top"><span class="lr-account-name">运动</span><span class="lr-account-en">Body</span></div>
+                    <div class="lr-account-value">未来 9,560h · 每周约 5 小时</div>
+                    <div class="lr-account-deposit"><span class="lr-deposit-tag">已存入</span><span>18h · 6 个瞬间</span></div>
+                  </div>
+                </article>
+                <article class="lr-account-card">
+                  <div class="lr-account-code">CREATE</div>
+                  <div class="lr-account-body">
+                    <div class="lr-account-top"><span class="lr-account-name">创造</span><span class="lr-account-en">Work</span></div>
+                    <div class="lr-account-value">未来 39,000h · 每周约 40 小时</div>
+                    <div class="lr-account-deposit"><span class="lr-deposit-tag">已存入</span><span>15h · 4 个瞬间</span></div>
+                  </div>
+                </article>
+                <article class="lr-account-card">
+                  <div class="lr-account-code">FREE</div>
+                  <div class="lr-account-body">
+                    <div class="lr-account-top"><span class="lr-account-name">自由</span><span class="lr-account-en">Open</span></div>
+                    <div class="lr-account-value">占清醒时间约 56%</div>
+                    <div class="lr-account-deposit"><span class="lr-deposit-tag">已存入</span><span>2h · 2 个瞬间</span></div>
+                  </div>
+                </article>
+              </section>
+            </div>
+            <nav class="bottom-tabs">
+              <div class="tab current"><span class="tab-mark"></span>主页</div>
+              <div class="fab">+</div>
+              <div class="tab"><span class="tab-mark"></span>账户</div>
+              <div class="tab"><span class="tab-mark"></span>我</div>
+            </nav>
+          </div>
+        </article>
+      </section>
+    </section>
+  </main>
+</body>
+</html>

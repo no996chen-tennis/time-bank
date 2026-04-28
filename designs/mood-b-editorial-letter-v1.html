@@ -1,0 +1,1315 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mood B · 编辑部信纸 · 林晚 v1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,600;1,700&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #1F2D26;
+      --card: #2A3933;
+      --card-soft: rgba(255,255,255,0.04);
+      --text: #F4EFE3;
+      --muted: #BFB8A6;
+      --tertiary: #877F6E;
+      --gold: #D4A35F;
+      --line: rgba(244,239,227,0.12);
+      --line-strong: rgba(244,239,227,0.18);
+      --shadow: rgba(4, 12, 9, 0.36);
+      --serif: "Playfair Display", "Noto Serif SC", "Songti SC", serif;
+      --italic: "Cormorant Garamond", "Times New Roman", serif;
+      --sans: "Inter", "Helvetica Neue", "PingFang SC", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 18% 0%, rgba(212,163,95,0.12), transparent 28%),
+        linear-gradient(180deg, #19261f 0%, var(--bg) 45%, #17231d 100%);
+      font-family: var(--sans);
+      letter-spacing: 0;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.065;
+      mix-blend-mode: screen;
+      background-image:
+        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 7px 7px;
+    }
+
+    .page {
+      width: min(100%, 980px);
+      margin: 0 auto;
+      padding: 28px 18px 64px;
+    }
+
+    h1 {
+      margin: 0 0 24px;
+      font-family: var(--serif);
+      font-size: 34px;
+      line-height: 1.1;
+      font-weight: 900;
+      color: var(--text);
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(393px, 393px));
+      align-items: start;
+      gap: 28px;
+    }
+
+    .screen-wrap {
+      width: 393px;
+    }
+
+    .screen-title {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .screen {
+      position: relative;
+      width: 393px;
+      height: 852px;
+      overflow: hidden;
+      border: 1px solid rgba(244,239,227,0.2);
+      border-radius: 30px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.025), transparent 18%),
+        var(--bg);
+      box-shadow: 0 30px 90px rgba(0,0,0,0.42);
+    }
+
+    .screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: 30px;
+      box-shadow: inset 0 0 0 8px rgba(0,0,0,0.16);
+    }
+
+    .scroll {
+      height: 100%;
+      overflow-y: auto;
+      padding: 18px 18px 98px;
+      scrollbar-width: none;
+    }
+
+    .scroll::-webkit-scrollbar { display: none; }
+
+    .statusbar {
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0 2px 16px;
+      color: rgba(244,239,227,0.72);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .nav {
+      display: grid;
+      grid-template-columns: 44px 1fr 44px;
+      align-items: center;
+      min-height: 44px;
+      margin-bottom: 14px;
+    }
+
+    .nav-title {
+      text-align: center;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .nav-btn {
+      height: 36px;
+      display: grid;
+      place-items: center;
+      color: var(--text);
+      font-size: 26px;
+    }
+
+    .nav-right {
+      justify-self: end;
+      width: 36px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      font-size: 21px;
+      color: var(--gold);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .greeting {
+      margin: 0 0 12px;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+    }
+
+    .greeting h2 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 28px;
+      line-height: 1.05;
+      font-weight: 900;
+    }
+
+    .time-note {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .variant-label {
+      margin: 10px 0 6px;
+      color: var(--tertiary);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+    }
+
+    .paper-card {
+      position: relative;
+      border: 1px solid var(--line-strong);
+      background:
+        linear-gradient(135deg, rgba(244,239,227,0.045), rgba(255,255,255,0.01)),
+        var(--card);
+      box-shadow: 0 16px 34px var(--shadow);
+    }
+
+    .paper-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0.09;
+      pointer-events: none;
+      background-image:
+        radial-gradient(circle at 20% 30%, rgba(244,239,227,0.8) 0 0.6px, transparent 0.8px),
+        radial-gradient(circle at 78% 62%, rgba(244,239,227,0.8) 0 0.5px, transparent 0.7px);
+      background-size: 18px 18px, 23px 23px;
+    }
+
+    .lifespan-a {
+      height: 98px;
+      padding: 10px 14px 10px;
+      border-radius: 7px;
+      display: grid;
+      grid-template-columns: 1fr 116px;
+      column-gap: 10px;
+      overflow: hidden;
+    }
+
+    .lifespan-a .eyebrow,
+    .lifespan-b .eyebrow,
+    .lifespan-c .eyebrow {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .lifespan-a .number {
+      margin-top: -3px;
+      font-family: var(--serif);
+      color: var(--gold);
+      font-size: 54px;
+      line-height: 0.84;
+      font-weight: 900;
+    }
+
+    .lifespan-a .unit {
+      margin-left: 4px;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .lifespan-a .underline {
+      width: 64px;
+      height: 1px;
+      margin-top: 7px;
+      background: var(--gold);
+    }
+
+    .lifespan-a .deposit {
+      border-left: 1px solid var(--line);
+      padding-left: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .small-main {
+      font-family: var(--serif);
+      color: var(--text);
+      font-size: 25px;
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .subcopy {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .lifespan-b {
+      height: 102px;
+      padding: 12px 14px;
+      border-radius: 5px;
+      display: grid;
+      grid-template-columns: 164px 1fr;
+      gap: 13px;
+      overflow: hidden;
+    }
+
+    .section-mark {
+      color: var(--gold);
+      font-family: var(--serif);
+      font-size: 21px;
+      line-height: 1;
+    }
+
+    .chapter-title {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 2px;
+    }
+
+    .lifespan-b .chapter-num {
+      font-family: var(--serif);
+      color: var(--text);
+      font-size: 46px;
+      line-height: 0.95;
+      font-weight: 900;
+    }
+
+    .lifespan-b .quote {
+      height: 100%;
+      border-left: 2px solid var(--gold);
+      padding-left: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .lifespan-b .quote strong {
+      color: var(--text);
+      font-family: var(--serif);
+      font-size: 21px;
+      font-weight: 900;
+    }
+
+    .lifespan-c {
+      min-height: 108px;
+      padding: 14px 16px 13px;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .lifespan-c .dear {
+      margin: 0 0 5px;
+      color: var(--text);
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .letter-line {
+      margin: 0;
+      color: var(--muted);
+      font-family: var(--italic);
+      font-size: 19px;
+      line-height: 1.26;
+      font-weight: 700;
+    }
+
+    .letter-line b {
+      color: var(--gold);
+      font-family: var(--serif);
+      font-size: 31px;
+      font-style: normal;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .section-header {
+      margin: 18px 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .section-header::before {
+      content: "§";
+      margin-right: 8px;
+      color: var(--gold);
+      font-family: var(--serif);
+      font-size: 18px;
+    }
+
+    .section-header span:first-child {
+      display: flex;
+      align-items: center;
+    }
+
+    .dimension-card {
+      min-height: 88px;
+      margin-bottom: 8px;
+      padding: 11px 12px;
+      border-radius: 7px;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 9px;
+    }
+
+    .name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .icon {
+      width: 23px;
+      height: 23px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--bg);
+      background: var(--gold);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .chev {
+      color: var(--tertiary);
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .two-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .metric {
+      border-top: 1px solid var(--line);
+      padding-top: 7px;
+    }
+
+    .metric-label {
+      color: var(--tertiary);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .metric-number {
+      margin-top: 2px;
+      color: var(--text);
+      font-family: var(--serif);
+      font-size: 25px;
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .metric-number.gold { color: var(--gold); }
+
+    .metric-sub {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 10.5px;
+      line-height: 1.3;
+    }
+
+    .tabbar {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 16px;
+      z-index: 4;
+      height: 66px;
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      background: rgba(42,57,51,0.94);
+      display: grid;
+      grid-template-columns: 1fr 72px 1fr 1fr;
+      align-items: center;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.34);
+      backdrop-filter: blur(18px);
+    }
+
+    .tab {
+      text-align: center;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .tab.active { color: var(--text); }
+
+    .fab {
+      width: 54px;
+      height: 54px;
+      margin: -26px auto 0;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--bg);
+      background: var(--gold);
+      font-size: 28px;
+      box-shadow: 0 12px 26px rgba(0,0,0,0.34);
+    }
+
+    .detail-hero {
+      padding: 18px 16px 16px;
+      border-radius: 7px;
+    }
+
+    .hero-icon {
+      width: 52px;
+      height: 52px;
+      margin-bottom: 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--gold);
+      font-size: 22px;
+      background: rgba(255,255,255,0.035);
+    }
+
+    .detail-hero h2 {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .hero-number {
+      margin: 2px 0 4px;
+      color: var(--gold);
+      font-family: var(--serif);
+      font-size: 83px;
+      line-height: 0.96;
+      font-weight: 900;
+    }
+
+    .hero-copy {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .insight {
+      margin: 14px 0;
+      padding: 0 0 0 13px;
+      border-left: 2px solid var(--gold);
+      color: var(--text);
+      font-family: var(--serif);
+      font-size: 20px;
+      line-height: 1.35;
+      font-weight: 800;
+    }
+
+    .calc-card {
+      padding: 13px 14px;
+      border-radius: 7px;
+      display: grid;
+      grid-template-columns: 1fr 28px;
+      align-items: center;
+    }
+
+    .calc-title {
+      margin-bottom: 5px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .calc-copy {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-line;
+    }
+
+    .timeline-row {
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .thumb {
+      width: 64px;
+      height: 64px;
+      border-radius: 6px;
+      border: 1px solid rgba(244,239,227,0.18);
+      background:
+        linear-gradient(135deg, rgba(244,239,227,0.12), rgba(212,163,95,0.12)),
+        #3d493f;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .thumb::before,
+    .media-photo::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 34% 24%, rgba(244,239,227,0.52) 0 10%, transparent 11%),
+        linear-gradient(140deg, transparent 0 43%, rgba(16,34,25,0.55) 44% 100%),
+        linear-gradient(35deg, rgba(212,163,95,0.35), rgba(244,239,227,0.06));
+    }
+
+    .thumb.market::before {
+      background:
+        radial-gradient(circle at 62% 30%, rgba(212,163,95,0.5) 0 9%, transparent 10%),
+        linear-gradient(145deg, rgba(70,89,71,0.9) 0 36%, rgba(148,124,83,0.55) 36% 60%, rgba(20,38,29,0.7) 60%);
+    }
+
+    .thumb.train::before {
+      background:
+        linear-gradient(90deg, rgba(244,239,227,0.46) 0 26%, transparent 27%),
+        linear-gradient(145deg, rgba(70,80,70,0.8), rgba(19,42,32,0.92));
+    }
+
+    .row-title {
+      margin-bottom: 3px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .row-meta {
+      margin-bottom: 5px;
+      color: var(--tertiary);
+      font-size: 11px;
+      line-height: 1.3;
+    }
+
+    .row-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .end-note {
+      margin: 18px 0 8px;
+      text-align: center;
+      color: var(--tertiary);
+      font-size: 12px;
+    }
+
+    .moment-screen {
+      padding: 18px 18px 22px;
+    }
+
+    .media-carousel {
+      height: 323px;
+      border-radius: 10px;
+      border: 1px solid var(--line-strong);
+      background: var(--card);
+      overflow: hidden;
+      box-shadow: 0 18px 40px var(--shadow);
+    }
+
+    .media-photo {
+      position: relative;
+      height: 100%;
+      background:
+        linear-gradient(150deg, rgba(212,163,95,0.18), rgba(244,239,227,0.05)),
+        #34423a;
+    }
+
+    .media-photo.shoes::before {
+      background:
+        radial-gradient(ellipse at 45% 72%, rgba(244,239,227,0.56) 0 9%, transparent 10%),
+        radial-gradient(ellipse at 58% 69%, rgba(244,239,227,0.5) 0 8%, transparent 9%),
+        linear-gradient(145deg, rgba(39,58,48,0.4) 0 54%, rgba(212,163,95,0.22) 55%),
+        repeating-linear-gradient(35deg, transparent 0 13px, rgba(244,239,227,0.07) 14px 15px);
+    }
+
+    .dots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin: 10px 0 22px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(244,239,227,0.28);
+    }
+
+    .dot.active {
+      width: 18px;
+      border-radius: 999px;
+      background: var(--gold);
+    }
+
+    .moment-title {
+      margin: 0 0 8px;
+      font-family: var(--serif);
+      font-size: 34px;
+      line-height: 1.14;
+      font-weight: 900;
+    }
+
+    .meta-line {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .chips {
+      display: flex;
+      gap: 8px;
+      margin: 16px 0 18px;
+      flex-wrap: nowrap;
+    }
+
+    .chip {
+      height: 31px;
+      padding: 0 11px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      color: var(--muted);
+      background: rgba(255,255,255,0.035);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .chip.accent {
+      color: var(--bg);
+      border-color: var(--gold);
+      background: var(--gold);
+      font-weight: 700;
+    }
+
+    .note-card {
+      padding: 16px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      color: var(--text);
+      font-size: 17px;
+      line-height: 1.58;
+    }
+
+    .action-row {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1.34fr 1fr;
+      gap: 8px;
+    }
+
+    .action {
+      height: 44px;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      color: var(--text);
+      background: var(--card);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .sheet-screen {
+      padding: 18px 18px 26px;
+      background:
+        linear-gradient(180deg, rgba(244,239,227,0.05), transparent 20%),
+        var(--bg);
+    }
+
+    .sheet-nav {
+      display: grid;
+      grid-template-columns: 58px 1fr 96px;
+      align-items: center;
+      margin-bottom: 12px;
+      min-height: 42px;
+    }
+
+    .nav-text {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .nav-text.gold {
+      color: var(--gold);
+      text-align: right;
+      line-height: 1.2;
+    }
+
+    .form-card {
+      margin-bottom: 12px;
+      padding: 12px 14px;
+      border-radius: 7px;
+    }
+
+    .form-row {
+      min-height: 44px;
+      display: grid;
+      grid-template-columns: 82px 1fr;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .form-row + .form-row {
+      border-top: 1px solid var(--line);
+    }
+
+    .form-label {
+      color: var(--tertiary);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .form-value {
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .form-value.placeholder {
+      color: var(--muted);
+    }
+
+    .duration-input {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .number-box {
+      min-width: 58px;
+      padding: 7px 10px;
+      border: 1px solid var(--line-strong);
+      border-radius: 5px;
+      text-align: center;
+      color: var(--text);
+      background: rgba(255,255,255,0.03);
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .textarea {
+      padding: 9px 0;
+      min-height: 70px;
+      align-items: start;
+    }
+
+    .media-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 76px);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .media-tile {
+      position: relative;
+      width: 76px;
+      height: 76px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.035);
+    }
+
+    .remove {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--text);
+      background: rgba(31,45,38,0.78);
+      font-size: 13px;
+    }
+
+    .plus-tile {
+      display: grid;
+      place-items: center;
+      color: var(--gold);
+      font-size: 30px;
+    }
+
+    .privacy-copy {
+      color: var(--tertiary);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .account-summary {
+      padding: 18px 16px;
+      border-radius: 7px;
+    }
+
+    .summary-number {
+      font-family: var(--serif);
+      color: var(--gold);
+      font-size: 76px;
+      line-height: 0.95;
+      font-weight: 900;
+    }
+
+    .summary-copy {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 5px;
+    }
+
+    .summary-line {
+      height: 1px;
+      margin: 16px 0 13px;
+      background: var(--line);
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .donut-card {
+      padding: 17px 16px 15px;
+      border-radius: 7px;
+    }
+
+    .donut-layout {
+      display: grid;
+      grid-template-columns: 132px 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .donut {
+      width: 132px;
+      height: 132px;
+      border-radius: 50%;
+      background:
+        conic-gradient(
+          #D4A35F 0 44%,
+          #C8B56B 44% 58%,
+          #8BAA87 58% 70%,
+          #D6C7A6 70% 81%,
+          #9DB6A6 81% 98%,
+          #877F6E 98% 100%
+        );
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(244,239,227,0.18);
+    }
+
+    .donut::after {
+      content: "";
+      position: absolute;
+      inset: 34px;
+      border-radius: 50%;
+      background: var(--card);
+      border: 1px solid var(--line);
+    }
+
+    .legend {
+      display: grid;
+      gap: 8px;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 11.5px;
+    }
+
+    .legend-name {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .swatch {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+      flex: 0 0 auto;
+    }
+
+    .year-card {
+      padding: 12px 14px;
+      border-radius: 7px;
+    }
+
+    .year-title {
+      margin-bottom: 8px;
+      color: var(--text);
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .month-row {
+      min-height: 42px;
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: 16px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .month-row strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <h1>Mood B · 编辑部信纸 · 林晚 v1</h1>
+    <section class="gallery">
+      <div class="screen-wrap">
+        <p class="screen-title">S1 · 主页 / Lifespan 变体探索</p>
+        <div class="screen">
+          <div class="scroll">
+            <div class="statusbar"><span>10:30</span><span>••• 5G 84%</span></div>
+            <div class="greeting">
+              <h2>你好，林晚</h2>
+              <div class="time-note">上午 10:30</div>
+            </div>
+
+            <div class="variant-label">变体 A / 保守 · 杂志封面</div>
+            <article class="paper-card lifespan-a">
+              <div>
+                <div class="eyebrow">时间余额 · 约还剩</div>
+                <div class="number">2,288<span class="unit">周</span></div>
+                <div class="underline"></div>
+                <div class="subcopy">44 年 · 386 Kh</div>
+              </div>
+              <div class="deposit">
+                <div class="eyebrow">已存入</div>
+                <div class="small-main">128 小时</div>
+                <div class="subcopy">27 个瞬间<br>跨 5 个时间账户</div>
+              </div>
+            </article>
+
+            <div class="variant-label">变体 B / 创新 · 编辑部章节</div>
+            <article class="paper-card lifespan-b">
+              <div>
+                <div class="chapter-title"><span class="section-mark">§</span><span class="eyebrow">时间余额 · 约还剩</span></div>
+                <div class="chapter-num">2,288</div>
+                <div class="subcopy">周 · 44 年 · 386 Kh</div>
+              </div>
+              <div class="quote">
+                <div>已存入 <strong>128 小时</strong></div>
+                <div>27 个瞬间</div>
+                <div>跨 5 个时间账户</div>
+              </div>
+            </article>
+
+            <div class="variant-label">变体 C / 大胆 · 手写信</div>
+            <article class="paper-card lifespan-c">
+              <p class="dear">亲爱的林晚，</p>
+              <p class="letter-line">约还剩 <b>2,288 周</b>。其中 <b>128 小时</b> 已经被你存进了银行。</p>
+              <div class="subcopy" style="margin-top: 6px;">44 年 · 386 Kh ／ 27 个瞬间 · 跨 5 个时间账户</div>
+            </article>
+
+            <div class="section-header"><span>时间账户 · 6 个</span></div>
+            <article class="paper-card dimension-card">
+              <div class="card-top"><div class="name"><span class="icon">♡</span>陪父母</div><div class="chev">›</div></div>
+              <div class="two-cols">
+                <div class="metric"><div class="metric-label">还能共度</div><div class="metric-number">552h</div><div class="metric-sub">≈ 23 天 · 约 92 次见面</div></div>
+                <div class="metric"><div class="metric-label">已存入</div><div class="metric-number gold">56h</div><div class="metric-sub">≈ 2.3 天 · 12 个瞬间</div></div>
+              </div>
+            </article>
+            <article class="paper-card dimension-card">
+              <div class="card-top"><div class="name"><span class="icon">系</span>陪孩子</div><div class="chev">›</div></div>
+              <div class="two-cols">
+                <div class="metric"><div class="metric-label">还能共度</div><div class="metric-number">6,840h</div><div class="metric-sub">≈ 285 天 · 每周约 14 小时</div></div>
+                <div class="metric"><div class="metric-label">已存入</div><div class="metric-number gold">23h</div><div class="metric-sub">8 个瞬间</div></div>
+              </div>
+            </article>
+            <article class="paper-card dimension-card">
+              <div class="card-top"><div class="name"><span class="icon">伴</span>陪伴侣</div><div class="chev">›</div></div>
+              <div class="two-cols">
+                <div class="metric"><div class="metric-label">还能共度</div><div class="metric-number">43,800h</div><div class="metric-sub">≈ 1,825 天 · 每天约 4 小时共处</div></div>
+                <div class="metric"><div class="metric-label">已存入</div><div class="metric-number gold">14h</div><div class="metric-sub">5 个瞬间</div></div>
+              </div>
+            </article>
+            <article class="paper-card dimension-card">
+              <div class="card-top"><div class="name"><span class="icon">跑</span>运动</div><div class="chev">›</div></div>
+              <div class="two-cols">
+                <div class="metric"><div class="metric-label">未来</div><div class="metric-number">9,560h</div><div class="metric-sub">≈ 398 天 · 每周约 5 小时</div></div>
+                <div class="metric"><div class="metric-label">已存入</div><div class="metric-number gold">18h</div><div class="metric-sub">6 个瞬间</div></div>
+              </div>
+            </article>
+            <article class="paper-card dimension-card">
+              <div class="card-top"><div class="name"><span class="icon">写</span>创造</div><div class="chev">›</div></div>
+              <div class="two-cols">
+                <div class="metric"><div class="metric-label">未来</div><div class="metric-number">39,000h</div><div class="metric-sub">≈ 1,625 天 · 每周约 40 小时</div></div>
+                <div class="metric"><div class="metric-label">已存入</div><div class="metric-number gold">15h</div><div class="metric-sub">4 个瞬间</div></div>
+              </div>
+            </article>
+            <article class="paper-card dimension-card">
+              <div class="card-top"><div class="name"><span class="icon">余</span>自由</div><div class="chev">›</div></div>
+              <div class="two-cols">
+                <div class="metric"><div class="metric-label">未来</div><div class="metric-number">56%</div><div class="metric-sub">占清醒时间约 56%</div></div>
+                <div class="metric"><div class="metric-label">已存入</div><div class="metric-number gold">2h</div><div class="metric-sub">2 个瞬间</div></div>
+              </div>
+            </article>
+          </div>
+          <nav class="tabbar">
+            <div class="tab active">主页</div>
+            <div class="fab">+</div>
+            <div class="tab">账户</div>
+            <div class="tab">我</div>
+          </nav>
+        </div>
+      </div>
+
+      <div class="screen-wrap">
+        <p class="screen-title">S2 · 时间账户详情页 / 陪父母</p>
+        <div class="screen">
+          <div class="scroll">
+            <div class="statusbar"><span>10:30</span><span>••• 5G 84%</span></div>
+            <div class="nav">
+              <div class="nav-btn">‹</div>
+              <div class="nav-title">陪父母</div>
+              <div class="nav-btn nav-right">+</div>
+            </div>
+            <section class="paper-card detail-hero">
+              <div class="hero-icon">♡</div>
+              <h2>陪父母</h2>
+              <div class="hero-number">552h</div>
+              <div class="hero-copy">约还能一起度过 · 合 92 次见面<br>每次 6h</div>
+            </section>
+            <div class="insight">他们正在经历一生中最自由的一段时间。</div>
+            <section class="paper-card calc-card">
+              <div>
+                <div class="calc-title">计算方式</div>
+                <div class="calc-copy">父母 71/68 · 每年 4 次 · 每次 6h
+预期寿命 82</div>
+              </div>
+              <div class="chev">›</div>
+            </section>
+            <div class="section-header"><span>已存入瞬间 · 12 个 · 56h</span></div>
+            <div class="timeline-row">
+              <div class="thumb"></div>
+              <div>
+                <div class="row-title">妈做的腌菜</div>
+                <div class="row-meta">发生在 42 天前 · 1 个媒体 · 30m</div>
+                <div class="row-note">她说还是我小时候那个味道。</div>
+              </div>
+            </div>
+            <div class="timeline-row">
+              <div class="thumb train"></div>
+              <div>
+                <div class="row-title">爸第一次坐高铁</div>
+                <div class="row-meta">发生在 77 天前 · 4 个媒体 · 6h</div>
+                <div class="row-note">他全程靠窗看风景，没说话。</div>
+              </div>
+            </div>
+            <div class="timeline-row">
+              <div class="thumb market"></div>
+              <div>
+                <div class="row-title">一起买菜</div>
+                <div class="row-meta">发生在 94 天前 · 2 个媒体 · 1h</div>
+                <div class="row-note">妈知道每个摊主的名字。</div>
+              </div>
+            </div>
+            <div class="end-note">到这里就是最早的了</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="screen-wrap">
+        <p class="screen-title">S3 · 时刻详情页 / 孩子第一次系鞋带</p>
+        <div class="screen moment-screen">
+          <div class="statusbar"><span>10:30</span><span>••• 5G 84%</span></div>
+          <div class="nav">
+            <div class="nav-btn">‹</div>
+            <div class="nav-title">孩子第一次系鞋带</div>
+            <div class="nav-btn nav-right">⋯</div>
+          </div>
+          <div class="media-carousel"><div class="media-photo shoes"></div></div>
+          <div class="dots"><span class="dot active"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          <h2 class="moment-title">孩子第一次系鞋带</h2>
+          <div class="meta-line">发生在 47 天前</div>
+          <div class="chips">
+            <span class="chip accent">♡ 陪孩子</span>
+            <span class="chip">不计时长</span>
+            <span class="chip">4 个媒体</span>
+          </div>
+          <div class="note-card">她做了 7 次才成功，第 8 次成功的时候笑得很大声。</div>
+          <div class="action-row">
+            <div class="action">编辑 ✎</div>
+            <div class="action">换时间账户 ⇆</div>
+            <div class="action">删除 🗑</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="screen-wrap">
+        <p class="screen-title">S4 · 存时刻编辑器 / 新建填写中</p>
+        <div class="screen sheet-screen">
+          <div class="statusbar"><span>10:30</span><span>••• 5G 84%</span></div>
+          <div class="sheet-nav">
+            <div class="nav-text">取消</div>
+            <div class="nav-title">存入到 陪父母</div>
+            <div class="nav-text gold">存入时间银行</div>
+          </div>
+          <section class="paper-card form-card">
+            <div class="form-row">
+              <div class="form-label">存入</div>
+              <div class="form-value">陪父母 ›</div>
+            </div>
+          </section>
+          <section class="paper-card form-card">
+            <div class="form-row">
+              <div class="form-label">发生在</div>
+              <div class="form-value">今天 · 2026-03-22</div>
+            </div>
+            <div class="form-row">
+              <div class="form-label">持续</div>
+              <div class="duration-input"><span class="number-box">30</span><span class="form-value">分钟</span></div>
+            </div>
+          </section>
+          <section class="paper-card form-card">
+            <div class="form-row">
+              <div class="form-label">叫什么</div>
+              <div class="form-value">妈做的腌菜</div>
+            </div>
+            <div class="form-row textarea">
+              <div class="form-label">想说点什么</div>
+              <div class="form-value">她说还是我小时候那个味道。</div>
+            </div>
+          </section>
+          <section class="paper-card form-card">
+            <div class="media-head">
+              <div class="calc-title">照片和视频</div>
+              <div class="subcopy">最多 9 张</div>
+            </div>
+            <div class="media-grid">
+              <div class="media-tile"><div class="media-photo"></div><div class="remove">×</div></div>
+              <div class="media-tile plus-tile">+</div>
+            </div>
+            <div class="privacy-copy">图片和视频存在你的 iPhone 里，不会上传任何服务器。</div>
+          </section>
+        </div>
+      </div>
+
+      <div class="screen-wrap">
+        <p class="screen-title">S5 · 账户 Tab / 满数据状态</p>
+        <div class="screen">
+          <div class="scroll">
+            <div class="statusbar"><span>10:30</span><span>••• 5G 84%</span></div>
+            <div class="nav" style="grid-template-columns: 44px 1fr 44px;">
+              <div></div>
+              <div class="nav-title" style="font-size: 22px; font-family: var(--serif); font-weight: 900;">账户</div>
+              <div></div>
+            </div>
+            <section class="paper-card account-summary">
+              <div class="summary-number">128h</div>
+              <div class="summary-copy">已存入 · 包含其他时间账户</div>
+              <div class="summary-line"></div>
+              <div class="summary-row"><span>27 个瞬间</span><span>跨 5 个时间账户</span></div>
+            </section>
+            <div class="section-header"><span>时间账户分布</span></div>
+            <section class="paper-card donut-card">
+              <div class="donut-layout">
+                <div class="donut"></div>
+                <div class="legend">
+                  <div class="legend-row"><span class="legend-name"><span class="swatch" style="background:#D4A35F"></span>陪父母</span><span>44%</span></div>
+                  <div class="legend-row"><span class="legend-name"><span class="swatch" style="background:#C8B56B"></span>运动</span><span>14%</span></div>
+                  <div class="legend-row"><span class="legend-name"><span class="swatch" style="background:#8BAA87"></span>创造</span><span>12%</span></div>
+                  <div class="legend-row"><span class="legend-name"><span class="swatch" style="background:#D6C7A6"></span>陪伴侣</span><span>11%</span></div>
+                  <div class="legend-row"><span class="legend-name"><span class="swatch" style="background:#9DB6A6"></span>陪孩子</span><span>18%</span></div>
+                  <div class="legend-row"><span class="legend-name"><span class="swatch" style="background:#877F6E"></span>自由</span><span>2%</span></div>
+                </div>
+              </div>
+            </section>
+            <div class="section-header"><span>年度回顾</span></div>
+            <section class="paper-card year-card">
+              <div class="year-title">2026 年</div>
+              <div class="month-row"><strong>3 月</strong><span>12h</span><span>4 个瞬间</span></div>
+              <div class="month-row"><strong>2 月</strong><span>8h</span><span>3 个瞬间</span></div>
+              <div class="month-row"><strong>1 月</strong><span>6h</span><span>2 个瞬间</span></div>
+              <div class="month-row"><strong>2025 · 12 月</strong><span>4h</span><span>2 个瞬间</span></div>
+            </section>
+          </div>
+          <nav class="tabbar">
+            <div class="tab">主页</div>
+            <div class="fab">+</div>
+            <div class="tab active">账户</div>
+            <div class="tab">我</div>
+          </nav>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

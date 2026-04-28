@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mood C · 现代手账 · 林晚 v1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #E8E5F2 0%, #F5EFE8 100%);
+      --card: rgba(255,255,255,0.72);
+      --card-soft: rgba(255,255,255,0.54);
+      --line: rgba(29,27,37,0.06);
+      --line-strong: rgba(29,27,37,0.08);
+      --ink: #1D1B25;
+      --muted: #6E6B78;
+      --tertiary: #B0AEB8;
+      --accent: #FF9F6B;
+      --purple-glass: rgba(232,229,242,0.6);
+      --cream-glass: rgba(245,239,232,0.7);
+      --shadow: 0 8px 24px rgba(29,27,37,0.06), 0 1px 0 rgba(255,255,255,0.5) inset;
+      --shadow-soft: 0 14px 36px rgba(29,27,37,0.08), 0 1px 0 rgba(255,255,255,0.55) inset;
+      --radius-xl: 24px;
+      --radius-lg: 20px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --font: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      --rounded: ui-rounded, "SF Pro Rounded", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { background: #F6F0EA; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: var(--font);
+      background:
+        radial-gradient(circle at 16% 8%, rgba(255,255,255,0.9), transparent 25%),
+        radial-gradient(circle at 86% 10%, rgba(255,159,107,0.14), transparent 22%),
+        linear-gradient(135deg, #E8E5F2 0%, #F5EFE8 100%);
+      padding: 42px 24px 64px;
+    }
+
+    .page-title {
+      width: min(1260px, 100%);
+      margin: 0 auto 28px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.16;
+      letter-spacing: 0;
+      font-weight: 850;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .gallery {
+      width: min(1260px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(393px, 393px));
+      gap: 34px;
+      align-items: start;
+    }
+
+    .screen-wrap {
+      width: 393px;
+    }
+
+    .screen-label {
+      margin: 0 0 10px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(29,27,37,0.58);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .screen {
+      position: relative;
+      width: 393px;
+      height: 852px;
+      overflow: hidden;
+      border-radius: 42px;
+      background: var(--bg);
+      box-shadow: 0 26px 70px rgba(29,27,37,0.16), 0 0 0 1px rgba(255,255,255,0.68) inset;
+      isolation: isolate;
+    }
+
+    .screen::before {
+      content: "";
+      position: absolute;
+      inset: -100px -60px auto -60px;
+      height: 360px;
+      background:
+        radial-gradient(circle at 22% 34%, rgba(255,255,255,0.82), transparent 33%),
+        radial-gradient(circle at 78% 16%, rgba(255,159,107,0.2), transparent 30%),
+        radial-gradient(circle at 48% 62%, rgba(232,229,242,0.72), transparent 40%);
+      filter: blur(6px);
+      z-index: -1;
+    }
+
+    .safe {
+      position: absolute;
+      inset: 0;
+      padding: 20px 18px 98px;
+    }
+
+    .status {
+      height: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 10px;
+      margin-bottom: 12px;
+      font-family: var(--rounded);
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(29,27,37,0.78);
+    }
+
+    .status .dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .status .pill-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(29,27,37,0.55);
+    }
+
+    .nav {
+      min-height: 38px;
+      display: grid;
+      grid-template-columns: 42px 1fr 42px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .nav-title {
+      text-align: center;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .nav-action,
+    .plain-action,
+    .icon-button {
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      font: inherit;
+      padding: 0;
+    }
+
+    .nav-action {
+      width: 34px;
+      height: 34px;
+      border-radius: 17px;
+      display: grid;
+      place-items: center;
+      justify-self: start;
+      font-size: 29px;
+      line-height: 1;
+    }
+
+    .nav-action.right {
+      justify-self: end;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .glass {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.5);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .tiny-label {
+      margin: 0 0 6px 3px;
+      color: rgba(29,27,37,0.48);
+      font-size: 10px;
+      line-height: 1;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .section-title {
+      margin: 14px 2px 9px;
+      color: rgba(29,27,37,0.52);
+      font-size: 10px;
+      line-height: 1;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+      font-weight: 850;
+    }
+
+    .greeting {
+      margin: 0 0 10px 2px;
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+    }
+
+    .greeting h2 {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.08;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .greeting span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      font-weight: 600;
+    }
+
+    .lifespan-a {
+      height: 128px;
+      border-radius: var(--radius-xl);
+      padding: 13px 16px;
+      display: grid;
+      grid-template-rows: 1fr 1px 1fr;
+    }
+
+    .life-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 0;
+      gap: 10px;
+    }
+
+    .life-copy p,
+    .life-copy h3,
+    .life-copy small {
+      margin: 0;
+    }
+
+    .life-kicker {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.2;
+      font-weight: 750;
+    }
+
+    .life-number {
+      margin-top: 2px;
+      font-family: var(--rounded);
+      font-size: 31px;
+      line-height: .96;
+      font-weight: 900;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .life-number .accent {
+      color: var(--accent);
+    }
+
+    .life-sub {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.25;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .sun-mini {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 50%, #FFB183 0 29%, transparent 31%),
+        conic-gradient(from 0deg, transparent 0 11%, rgba(255,159,107,0.52) 11% 14%, transparent 14% 25%, rgba(255,159,107,0.46) 25% 28%, transparent 28% 39%, rgba(255,159,107,0.52) 39% 42%, transparent 42% 53%, rgba(255,159,107,0.46) 53% 56%, transparent 56% 67%, rgba(255,159,107,0.52) 67% 70%, transparent 70% 81%, rgba(255,159,107,0.46) 81% 84%, transparent 84% 100%);
+      filter: drop-shadow(0 6px 12px rgba(255,159,107,0.2));
+      flex: 0 0 auto;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--line-strong);
+    }
+
+    .lifespan-b {
+      position: relative;
+      height: 130px;
+    }
+
+    .stack-card {
+      position: absolute;
+      left: 0;
+      right: 8px;
+      min-height: 70px;
+      border-radius: 22px;
+      padding: 13px 16px;
+      border: 1px solid rgba(255,255,255,0.56);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+    }
+
+    .stack-top {
+      top: 0;
+      z-index: 3;
+      background: var(--purple-glass);
+    }
+
+    .stack-bottom {
+      right: 0;
+      left: 8px;
+      top: 58px;
+      z-index: 2;
+      background: var(--cream-glass);
+    }
+
+    .morning-line {
+      position: absolute;
+      left: 36px;
+      right: 36px;
+      top: 63px;
+      height: 2px;
+      z-index: 4;
+      background: linear-gradient(90deg, transparent, #FF9F6B40, transparent);
+      border-radius: 999px;
+    }
+
+    .stack-card .life-number {
+      font-size: 29px;
+    }
+
+    .lifespan-c {
+      position: relative;
+      height: 166px;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      padding: 12px 14px;
+    }
+
+    .week-grid {
+      position: absolute;
+      left: 15px;
+      right: 15px;
+      top: 12px;
+      display: grid;
+      grid-template-columns: repeat(110, 2px);
+      grid-auto-rows: 2px;
+      gap: 1px;
+      opacity: .84;
+      transform: translateZ(0);
+    }
+
+    .week-grid span {
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      background: #B0AEB8;
+    }
+
+    .week-grid span.left {
+      background: linear-gradient(135deg, rgba(255,159,107,0.52), rgba(255,159,107,0.95));
+      box-shadow: 0 0 5px rgba(255,159,107,0.28);
+    }
+
+    .matrix-copy {
+      position: relative;
+      z-index: 2;
+      height: 104px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .matrix-number {
+      margin: 0;
+      font-family: var(--rounded);
+      font-size: 62px;
+      line-height: .9;
+      font-weight: 950;
+      letter-spacing: 0;
+      color: rgba(29,27,37,0.92);
+      mix-blend-mode: multiply;
+    }
+
+    .matrix-title {
+      margin: 0 0 2px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .matrix-sub {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.3;
+      font-weight: 650;
+    }
+
+    .deposit-strip {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      z-index: 3;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.68);
+      border: 1px solid rgba(255,255,255,0.55);
+      box-shadow: 0 8px 22px rgba(29,27,37,0.05);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 13px;
+    }
+
+    .deposit-strip b {
+      font-family: var(--rounded);
+      font-size: 23px;
+      letter-spacing: 0;
+    }
+
+    .deposit-strip span {
+      display: block;
+      color: var(--muted);
+      font-size: 10.5px;
+      line-height: 1.25;
+      font-weight: 650;
+    }
+
+    .account-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .account-card {
+      min-height: 89px;
+      border-radius: var(--radius-lg);
+      padding: 11px 13px 12px;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 9px;
+    }
+
+    .card-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .soft-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      color: rgba(29,27,37,0.72);
+      background: rgba(255,255,255,0.7);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset;
+      flex: 0 0 auto;
+    }
+
+    .card-name b {
+      font-size: 14px;
+      line-height: 1.15;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .chevron {
+      color: var(--tertiary);
+      font-size: 19px;
+      line-height: 1;
+      font-weight: 700;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .metric-divider {
+      width: 1px;
+      background: var(--line);
+    }
+
+    .metric-label {
+      margin: 0 0 2px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.1;
+      font-weight: 750;
+    }
+
+    .metric-value {
+      margin: 0;
+      font-family: var(--rounded);
+      font-size: 25px;
+      line-height: .95;
+      font-weight: 900;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .metric-sub {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 9.8px;
+      line-height: 1.22;
+      font-weight: 600;
+    }
+
+    .home-tab,
+    .tabbar {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+      height: 64px;
+      border-radius: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: center;
+      padding: 8px 16px;
+      z-index: 10;
+    }
+
+    .tab-item {
+      text-align: center;
+      color: var(--tertiary);
+      font-size: 10px;
+      line-height: 1.1;
+      font-weight: 700;
+    }
+
+    .tab-item .tab-ico {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 19px;
+      line-height: 1;
+    }
+
+    .tab-item.active {
+      color: var(--ink);
+    }
+
+    .fab {
+      position: absolute;
+      left: 50%;
+      top: -19px;
+      transform: translateX(-50%);
+      width: 54px;
+      height: 54px;
+      border-radius: 22px;
+      background: var(--accent);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 31px;
+      font-weight: 500;
+      box-shadow: 0 16px 34px rgba(255,159,107,0.38), 0 1px 0 rgba(255,255,255,0.38) inset;
+    }
+
+    .detail-head {
+      text-align: center;
+      border-radius: 28px;
+      padding: 22px 20px 20px;
+      margin-top: 6px;
+    }
+
+    .big-heart {
+      width: 54px;
+      height: 54px;
+      margin: 0 auto 10px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(255,159,107,0.16);
+      color: var(--accent);
+      font-size: 24px;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.65) inset;
+    }
+
+    .detail-head h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 850;
+      line-height: 1.2;
+    }
+
+    .huge-number {
+      margin: 9px 0 3px;
+      font-family: var(--rounded);
+      font-size: 58px;
+      line-height: .96;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .detail-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      font-weight: 600;
+    }
+
+    .insight {
+      margin: 12px 0;
+      border-radius: 18px;
+      padding: 13px 15px;
+      color: rgba(29,27,37,0.78);
+      font-size: 14px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .calc-card {
+      border-radius: 20px;
+      padding: 14px 15px;
+      display: grid;
+      grid-template-columns: 1fr 24px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .calc-card h3 {
+      margin: 0 0 5px;
+      font-size: 15px;
+      line-height: 1.2;
+      font-weight: 850;
+    }
+
+    .calc-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 600;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 10px;
+    }
+
+    .timeline-row {
+      border-radius: 20px;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      gap: 11px;
+      align-items: center;
+    }
+
+    .thumb {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #F2D7B6, #D8D4EA);
+      position: relative;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.62) inset;
+    }
+
+    .thumb::before,
+    .photo::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 70% 24%, rgba(255,255,255,0.72) 0 9%, transparent 10%),
+        linear-gradient(150deg, transparent 0 44%, rgba(29,27,37,0.12) 45% 46%, transparent 47%),
+        linear-gradient(22deg, rgba(255,255,255,0.18), transparent 45%);
+    }
+
+    .thumb.market { background: linear-gradient(135deg, #E7CFB4, #BFD1BF); }
+    .thumb.train { background: linear-gradient(135deg, #D3DFF1, #F3D8BD); }
+    .thumb.ipad { background: linear-gradient(135deg, #E8E5F2, #BFD5E7); }
+    .thumb.pickles { background: linear-gradient(135deg, #F0CDAE, #D8E0BF); }
+
+    .timeline-copy h3 {
+      margin: 0 0 4px;
+      font-size: 15px;
+      line-height: 1.25;
+      font-weight: 850;
+    }
+
+    .timeline-meta {
+      margin: 0 0 5px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.25;
+      font-weight: 650;
+    }
+
+    .timeline-note {
+      margin: 0;
+      color: rgba(29,27,37,0.7);
+      font-size: 12px;
+      line-height: 1.36;
+      font-weight: 500;
+    }
+
+    .end-note {
+      margin: 13px 0 0;
+      color: var(--tertiary);
+      text-align: center;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .media-card {
+      margin-top: 6px;
+      border-radius: 28px;
+      height: 330px;
+      overflow: hidden;
+      padding: 10px;
+    }
+
+    .photo {
+      position: relative;
+      width: 100%;
+      height: 286px;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 68% 19%, rgba(255,255,255,0.72), transparent 12%),
+        linear-gradient(135deg, #F3CBA6 0%, #E8E5F2 48%, #C0D2E8 100%);
+      overflow: hidden;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.58) inset;
+    }
+
+    .photo.shoes::after {
+      content: "";
+      position: absolute;
+      left: 54px;
+      right: 54px;
+      bottom: 48px;
+      height: 66px;
+      border-radius: 50px 50px 18px 18px;
+      background: rgba(255,255,255,0.58);
+      box-shadow:
+        54px -16px 0 -26px rgba(29,27,37,0.16),
+        -54px -16px 0 -26px rgba(29,27,37,0.16),
+        0 14px 32px rgba(29,27,37,0.12);
+    }
+
+    .dots-page {
+      height: 32px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dots-page span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(29,27,37,0.18);
+    }
+
+    .dots-page span.active {
+      width: 18px;
+      border-radius: 999px;
+      background: var(--ink);
+    }
+
+    .moment-body {
+      padding: 18px 4px 0;
+    }
+
+    .moment-body h2 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.18;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .moment-date {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      font-weight: 650;
+      margin: 0 0 14px;
+    }
+
+    .chips {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: nowrap;
+    }
+
+    .chip {
+      height: 34px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 12px;
+      background: rgba(255,255,255,0.58);
+      border: 1px solid rgba(255,255,255,0.54);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+      white-space: nowrap;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.58) inset;
+    }
+
+    .chip.kids {
+      color: #6F5C96;
+      background: rgba(232,229,242,0.76);
+    }
+
+    .note {
+      margin: 0;
+      color: rgba(29,27,37,0.82);
+      font-size: 17px;
+      line-height: 1.56;
+      font-weight: 550;
+    }
+
+    .bottom-actions {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 28px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .action-btn {
+      min-height: 48px;
+      border-radius: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0 8px;
+      background: rgba(255,255,255,0.68);
+      border: 1px solid rgba(255,255,255,0.55);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      white-space: nowrap;
+    }
+
+    .sheet-safe {
+      padding: 18px 18px 28px;
+    }
+
+    .sheet-nav {
+      display: grid;
+      grid-template-columns: 56px 1fr 108px;
+      align-items: center;
+      min-height: 44px;
+      margin-bottom: 12px;
+    }
+
+    .sheet-nav h2 {
+      margin: 0;
+      text-align: center;
+      font-size: 17px;
+      line-height: 1.2;
+      font-weight: 850;
+    }
+
+    .sheet-btn {
+      border: 0;
+      background: transparent;
+      padding: 0;
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 750;
+      text-align: left;
+    }
+
+    .sheet-btn.primary {
+      justify-self: end;
+      text-align: right;
+      color: var(--accent);
+      font-weight: 850;
+      font-size: 13px;
+    }
+
+    .form-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field-card {
+      border-radius: 22px;
+      padding: 0 16px;
+      overflow: hidden;
+    }
+
+    .form-row {
+      min-height: 54px;
+      display: grid;
+      grid-template-columns: 76px 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .form-row.tall {
+      min-height: 105px;
+      align-items: start;
+      padding-top: 15px;
+    }
+
+    .form-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .form-value {
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.35;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .form-input {
+      color: rgba(29,27,37,0.82);
+      font-size: 15px;
+      line-height: 1.45;
+      font-weight: 650;
+      text-align: right;
+    }
+
+    .form-input.multiline {
+      text-align: left;
+      padding: 2px 0 0;
+    }
+
+    .form-divider {
+      height: 1px;
+      background: var(--line);
+      margin-left: 76px;
+    }
+
+    .media-form {
+      border-radius: 22px;
+      padding: 15px 16px 14px;
+    }
+
+    .media-form-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .media-form-head b {
+      font-size: 15px;
+      line-height: 1.2;
+      font-weight: 850;
+    }
+
+    .media-form-head span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 72px);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .picked,
+    .add-tile {
+      width: 72px;
+      height: 72px;
+      border-radius: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .picked {
+      background: linear-gradient(135deg, #F1C9A4, #D6E0B8);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.55) inset;
+    }
+
+    .remove {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(29,27,37,0.42);
+      color: white;
+      font-size: 14px;
+      line-height: 1;
+      font-weight: 700;
+    }
+
+    .add-tile {
+      display: grid;
+      place-items: center;
+      color: var(--tertiary);
+      font-size: 30px;
+      border: 1px dashed rgba(29,27,37,0.14);
+      background: rgba(255,255,255,0.38);
+    }
+
+    .privacy-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 600;
+    }
+
+    .summary {
+      border-radius: 26px;
+      padding: 20px 18px 17px;
+      margin-top: 6px;
+    }
+
+    .summary-number {
+      margin: 0;
+      font-family: var(--rounded);
+      font-size: 58px;
+      line-height: .95;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .summary-sub {
+      margin: 3px 0 16px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+      align-items: center;
+      gap: 13px;
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+    }
+
+    .summary-row b {
+      display: block;
+      font-size: 15px;
+      line-height: 1.25;
+      font-weight: 850;
+    }
+
+    .summary-row span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .donut-card {
+      border-radius: 24px;
+      padding: 18px;
+    }
+
+    .donut-layout {
+      display: grid;
+      grid-template-columns: 132px 1fr;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .donut {
+      width: 132px;
+      height: 132px;
+      border-radius: 50%;
+      background: conic-gradient(
+        #FF9F6B 0deg 158deg,
+        #BBD8C4 158deg 223deg,
+        #A9C7E7 223deg 273deg,
+        #D5BDE8 273deg 316deg,
+        #F0C7B1 316deg 356deg,
+        #CFCBD8 356deg 360deg
+      );
+      position: relative;
+      box-shadow: 0 16px 34px rgba(29,27,37,0.08), 0 1px 0 rgba(255,255,255,0.58) inset;
+    }
+
+    .donut::after {
+      content: "";
+      position: absolute;
+      inset: 33px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(248,246,250,0.98), rgba(246,240,234,0.98));
+      box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset;
+    }
+
+    .legend {
+      display: grid;
+      gap: 8px;
+    }
+
+    .legend-row {
+      display: grid;
+      grid-template-columns: 10px 1fr auto;
+      gap: 7px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.25;
+      font-weight: 700;
+    }
+
+    .swatch {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .year-card {
+      border-radius: 24px;
+      padding: 15px 16px 9px;
+    }
+
+    .year-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 7px;
+    }
+
+    .year-head b {
+      font-size: 16px;
+      font-weight: 850;
+      line-height: 1.2;
+    }
+
+    .year-head span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .month-row {
+      min-height: 45px;
+      display: grid;
+      grid-template-columns: 58px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      border-top: 1px solid var(--line);
+    }
+
+    .month-row:first-of-type {
+      border-top: 0;
+    }
+
+    .month {
+      font-size: 14px;
+      font-weight: 850;
+    }
+
+    .month-data {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .month-note {
+      color: rgba(29,27,37,0.72);
+      font-size: 13px;
+      line-height: 1.25;
+      font-weight: 750;
+    }
+  </style>
+</head>
+<body>
+  <header class="page-title">
+    <h1>Mood C · 现代手账 · 林晚 v1</h1>
+    <p class="subtitle">5 屏高保真静态视觉稿。iPhone 16 Pro 竖屏 393×852pt，Light Mode，浅亮毛玻璃，S1 包含 lifespan 双层卡 A/B/C 三个变体。</p>
+  </header>
+
+  <main class="gallery">
+    <section class="screen-wrap">
+      <p class="screen-label">S1 · Home · Lifespan Variants</p>
+      <div class="screen">
+        <div class="safe">
+          <div class="status"><span>10:30</span><span class="dots"><span class="pill-dot"></span><span class="pill-dot"></span><span class="pill-dot"></span></span></div>
+
+          <div class="greeting">
+            <h2>你好，林晚</h2>
+            <span>上午 10:30</span>
+          </div>
+
+          <p class="tiny-label">变体 A · 单层玻璃</p>
+          <div class="lifespan-a glass">
+            <div class="life-row">
+              <div class="life-copy">
+                <p class="life-kicker">时间余额</p>
+                <h3 class="life-number">约还剩 2,288 <span class="accent">周</span></h3>
+                <p class="life-sub">44 年 · 386 Kh</p>
+              </div>
+              <div class="sun-mini" aria-hidden="true"></div>
+            </div>
+            <div class="divider"></div>
+            <div class="life-row">
+              <div class="life-copy">
+                <p class="life-kicker">已存入</p>
+                <h3 class="life-number">128 小时</h3>
+                <p class="life-sub">27 个瞬间 · 跨 5 个时间账户</p>
+              </div>
+            </div>
+          </div>
+
+          <p class="tiny-label" style="margin-top: 8px;">变体 B · 双层玻璃叠卡</p>
+          <div class="lifespan-b">
+            <div class="stack-card stack-top">
+              <p class="life-kicker">时间余额</p>
+              <h3 class="life-number">约还剩 2,288 <span class="accent">周</span></h3>
+              <p class="life-sub">44 年 · 386 Kh</p>
+            </div>
+            <div class="morning-line"></div>
+            <div class="stack-card stack-bottom">
+              <p class="life-kicker">已存入</p>
+              <h3 class="life-number">128 小时</h3>
+              <p class="life-sub">27 个瞬间 · 跨 5 个时间账户</p>
+            </div>
+          </div>
+
+          <p class="tiny-label" style="margin-top: 8px;">变体 C · 周数光点矩阵</p>
+          <div class="lifespan-c glass">
+            <div class="week-grid" data-total="4400" data-left="2288"></div>
+            <div class="matrix-copy">
+              <p class="matrix-title">时间余额</p>
+              <h3 class="matrix-number">2,288</h3>
+              <p class="matrix-sub">约还剩周数 · 44 年 · 386 Kh</p>
+            </div>
+            <div class="deposit-strip">
+              <div>
+                <span>已存入</span>
+                <b>128 小时</b>
+              </div>
+              <span>27 个瞬间<br>跨 5 个时间账户</span>
+            </div>
+          </div>
+
+          <p class="section-title">时间账户 · 6 个</p>
+          <div class="account-list">
+            <article class="account-card glass">
+              <div class="card-head"><div class="card-name"><span class="soft-icon">♡</span><b>陪父母</b></div><span class="chevron">›</span></div>
+              <div class="metrics">
+                <div><p class="metric-label">还能共度</p><p class="metric-value">552h</p><p class="metric-sub">≈ 23 天 · 约 92 次见面</p></div>
+                <div class="metric-divider"></div>
+                <div><p class="metric-label">已存入</p><p class="metric-value">56h</p><p class="metric-sub">≈ 2 天 · 12 个瞬间</p></div>
+              </div>
+            </article>
+            <article class="account-card glass">
+              <div class="card-head"><div class="card-name"><span class="soft-icon">⌁</span><b>陪孩子</b></div><span class="chevron">›</span></div>
+              <div class="metrics">
+                <div><p class="metric-label">还能共度</p><p class="metric-value">6,840h</p><p class="metric-sub">≈ 285 天 · 每周约 14 小时</p></div>
+                <div class="metric-divider"></div>
+                <div><p class="metric-label">已存入</p><p class="metric-value">23h</p><p class="metric-sub">8 个瞬间</p></div>
+              </div>
+            </article>
+            <article class="account-card glass">
+              <div class="card-head"><div class="card-name"><span class="soft-icon">∞</span><b>陪伴侣</b></div><span class="chevron">›</span></div>
+              <div class="metrics">
+                <div><p class="metric-label">还能共度</p><p class="metric-value">43,800h</p><p class="metric-sub">≈ 1,825 天 · 每天约 4 小时共处</p></div>
+                <div class="metric-divider"></div>
+                <div><p class="metric-label">已存入</p><p class="metric-value">14h</p><p class="metric-sub">5 个瞬间</p></div>
+              </div>
+            </article>
+            <article class="account-card glass">
+              <div class="card-head"><div class="card-name"><span class="soft-icon">↻</span><b>运动</b></div><span class="chevron">›</span></div>
+              <div class="metrics">
+                <div><p class="metric-label">未来</p><p class="metric-value">9,560h</p><p class="metric-sub">≈ 398 天 · 每周约 5 小时</p></div>
+                <div class="metric-divider"></div>
+                <div><p class="metric-label">已存入</p><p class="metric-value">18h</p><p class="metric-sub">6 个瞬间</p></div>
+              </div>
+            </article>
+            <article class="account-card glass">
+              <div class="card-head"><div class="card-name"><span class="soft-icon">✦</span><b>创造</b></div><span class="chevron">›</span></div>
+              <div class="metrics">
+                <div><p class="metric-label">未来</p><p class="metric-value">39,000h</p><p class="metric-sub">≈ 1,625 天 · 每周约 40 小时</p></div>
+                <div class="metric-divider"></div>
+                <div><p class="metric-label">已存入</p><p class="metric-value">15h</p><p class="metric-sub">4 个瞬间</p></div>
+              </div>
+            </article>
+            <article class="account-card glass">
+              <div class="card-head"><div class="card-name"><span class="soft-icon">◌</span><b>自由</b></div><span class="chevron">›</span></div>
+              <div class="metrics">
+                <div><p class="metric-label">自由可支配</p><p class="metric-value">56%</p><p class="metric-sub">占清醒时间约 56%</p></div>
+                <div class="metric-divider"></div>
+                <div><p class="metric-label">已存入</p><p class="metric-value">2h</p><p class="metric-sub">2 个瞬间</p></div>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="home-tab glass">
+          <div class="tab-item active"><span class="tab-ico">⌂</span>主页</div>
+          <div class="tab-item"><span class="tab-ico"></span>账户</div>
+          <div class="tab-item"><span class="tab-ico">○</span>我</div>
+          <div class="fab">+</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen-wrap">
+      <p class="screen-label">S2 · Time Account Detail</p>
+      <div class="screen">
+        <div class="safe">
+          <div class="status"><span>10:30</span><span class="dots"><span class="pill-dot"></span><span class="pill-dot"></span><span class="pill-dot"></span></span></div>
+          <div class="nav">
+            <button class="nav-action">‹</button>
+            <div class="nav-title">陪父母</div>
+            <button class="nav-action right">+</button>
+          </div>
+
+          <header class="detail-head glass">
+            <div class="big-heart">♡</div>
+            <h2>陪父母</h2>
+            <div class="huge-number">552h</div>
+            <p>约还能一起度过 · 合 92 次见面<br>每次 6h</p>
+          </header>
+
+          <div class="insight glass">他们正在经历一生中最自由的一段时间。</div>
+
+          <section class="calc-card glass">
+            <div>
+              <h3>计算方式</h3>
+              <p>父母 71/68 · 每年 4 次 · 每次 6h<br>预期寿命 82</p>
+            </div>
+            <span class="chevron">›</span>
+          </section>
+
+          <p class="section-title">已存入瞬间 · 12 个 · 56h</p>
+          <div class="timeline">
+            <article class="timeline-row glass">
+              <div class="thumb pickles"></div>
+              <div class="timeline-copy">
+                <h3>妈做的腌菜</h3>
+                <p class="timeline-meta">发生在 42 天前 · 1 个媒体 · 30m</p>
+                <p class="timeline-note">她说还是我小时候那个味道。</p>
+              </div>
+            </article>
+            <article class="timeline-row glass">
+              <div class="thumb train"></div>
+              <div class="timeline-copy">
+                <h3>爸第一次坐高铁</h3>
+                <p class="timeline-meta">发生在 77 天前 · 4 个媒体 · 6h</p>
+                <p class="timeline-note">他全程靠窗看风景，没说话。</p>
+              </div>
+            </article>
+            <article class="timeline-row glass">
+              <div class="thumb market"></div>
+              <div class="timeline-copy">
+                <h3>一起买菜</h3>
+                <p class="timeline-meta">发生在 94 天前 · 2 个媒体 · 1h</p>
+                <p class="timeline-note">妈知道每个摊主的名字。</p>
+              </div>
+            </article>
+          </div>
+          <p class="end-note">到这里就是最早的了</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen-wrap">
+      <p class="screen-label">S3 · Moment Detail</p>
+      <div class="screen">
+        <div class="safe">
+          <div class="status"><span>10:30</span><span class="dots"><span class="pill-dot"></span><span class="pill-dot"></span><span class="pill-dot"></span></span></div>
+          <div class="nav">
+            <button class="nav-action">‹</button>
+            <div class="nav-title">孩子第一次系鞋带</div>
+            <button class="nav-action right">⋯</button>
+          </div>
+
+          <div class="media-card glass">
+            <div class="photo shoes"></div>
+            <div class="dots-page"><span class="active"></span><span></span><span></span><span></span></div>
+          </div>
+
+          <div class="moment-body">
+            <h2>孩子第一次系鞋带</h2>
+            <p class="moment-date">发生在 47 天前</p>
+            <div class="chips">
+              <span class="chip kids">♡ 陪孩子</span>
+              <span class="chip">不计时长</span>
+              <span class="chip">4 个媒体</span>
+            </div>
+            <p class="note">她做了 7 次才成功，第 8 次成功的时候笑得很大声。</p>
+          </div>
+        </div>
+        <div class="bottom-actions">
+          <button class="action-btn">编辑 ✎</button>
+          <button class="action-btn">换时间账户 ⇆</button>
+          <button class="action-btn">删除 🗑</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen-wrap">
+      <p class="screen-label">S4 · Deposit Editor</p>
+      <div class="screen">
+        <div class="sheet-safe">
+          <div class="status"><span>10:30</span><span class="dots"><span class="pill-dot"></span><span class="pill-dot"></span><span class="pill-dot"></span></span></div>
+          <div class="sheet-nav">
+            <button class="sheet-btn">取消</button>
+            <h2>存入到 陪父母</h2>
+            <button class="sheet-btn primary">存入时间银行</button>
+          </div>
+
+          <div class="form-stack">
+            <section class="field-card glass">
+              <div class="form-row">
+                <div class="form-label">存入</div>
+                <div class="form-value">陪父母 ⌄</div>
+              </div>
+            </section>
+
+            <section class="field-card glass">
+              <div class="form-row">
+                <div class="form-label">发生在</div>
+                <div class="form-value">今天 · 2026-03-22</div>
+              </div>
+              <div class="form-divider"></div>
+              <div class="form-row">
+                <div class="form-label">持续</div>
+                <div class="form-value">30 分钟</div>
+              </div>
+            </section>
+
+            <section class="field-card glass">
+              <div class="form-row">
+                <div class="form-label">叫什么</div>
+                <div class="form-input">妈做的腌菜</div>
+              </div>
+              <div class="form-divider"></div>
+              <div class="form-row tall">
+                <div class="form-label">想说点什么</div>
+                <div class="form-input multiline">她说还是我小时候那个味道。</div>
+              </div>
+            </section>
+
+            <section class="media-form glass">
+              <div class="media-form-head">
+                <b>照片和视频</b>
+                <span>最多 9 张</span>
+              </div>
+              <div class="media-grid">
+                <div class="picked"><span class="remove">×</span></div>
+                <div class="add-tile">+</div>
+              </div>
+              <p class="privacy-copy">图片和视频存在你的 iPhone 里，不会上传任何服务器。</p>
+            </section>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen-wrap">
+      <p class="screen-label">S5 · Account Tab</p>
+      <div class="screen">
+        <div class="safe">
+          <div class="status"><span>10:30</span><span class="dots"><span class="pill-dot"></span><span class="pill-dot"></span><span class="pill-dot"></span></span></div>
+          <div class="nav">
+            <span></span>
+            <div class="nav-title">账户</div>
+            <span></span>
+          </div>
+
+          <section class="summary glass">
+            <h2 class="summary-number">128h</h2>
+            <p class="summary-sub">已存入 · 包含其他时间账户</p>
+            <div class="summary-row">
+              <div><b>27 个瞬间</b><span>被好好放下</span></div>
+              <div class="metric-divider"></div>
+              <div><b>跨 5 个时间账户</b><span>温柔分布</span></div>
+            </div>
+          </section>
+
+          <p class="section-title">时间账户分布</p>
+          <section class="donut-card glass">
+            <div class="donut-layout">
+              <div class="donut" aria-hidden="true"></div>
+              <div class="legend">
+                <div class="legend-row"><span class="swatch" style="background:#FF9F6B"></span><span>陪父母</span><b>44%</b></div>
+                <div class="legend-row"><span class="swatch" style="background:#BBD8C4"></span><span>陪孩子</span><b>18%</b></div>
+                <div class="legend-row"><span class="swatch" style="background:#A9C7E7"></span><span>运动</span><b>14%</b></div>
+                <div class="legend-row"><span class="swatch" style="background:#D5BDE8"></span><span>创造</span><b>12%</b></div>
+                <div class="legend-row"><span class="swatch" style="background:#F0C7B1"></span><span>陪伴侣</span><b>11%</b></div>
+                <div class="legend-row"><span class="swatch" style="background:#CFCBD8"></span><span>自由</span><b>2%</b></div>
+              </div>
+            </div>
+          </section>
+
+          <p class="section-title">年度回顾</p>
+          <section class="year-card glass">
+            <div class="year-head"><b>2026 年</b><span>跨年连续沉淀</span></div>
+            <div class="month-row">
+              <div class="month">3 月</div>
+              <div class="month-note">春天里存下的日常</div>
+              <div class="month-data">12h · 4 个瞬间</div>
+            </div>
+            <div class="month-row">
+              <div class="month">2 月</div>
+              <div class="month-note">回家路上的几次停留</div>
+              <div class="month-data">8h · 3 个瞬间</div>
+            </div>
+            <div class="month-row">
+              <div class="month">1 月</div>
+              <div class="month-note">新年开始得很慢</div>
+              <div class="month-data">6h · 2 个瞬间</div>
+            </div>
+            <div class="month-row">
+              <div class="month">12 月</div>
+              <div class="month-note">冬天也有被记住的光</div>
+              <div class="month-data">4h · 2 个瞬间</div>
+            </div>
+          </section>
+        </div>
+
+        <div class="tabbar glass">
+          <div class="tab-item"><span class="tab-ico">⌂</span>主页</div>
+          <div class="tab-item active"><span class="tab-ico"></span>账户</div>
+          <div class="tab-item"><span class="tab-ico">○</span>我</div>
+          <div class="fab">+</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    document.querySelectorAll(".week-grid").forEach((grid) => {
+      const total = Number(grid.dataset.total || 4400);
+      const left = Number(grid.dataset.left || 2288);
+      const spent = total - left;
+      const fragment = document.createDocumentFragment();
+      for (let i = 0; i < total; i += 1) {
+        const dot = document.createElement("span");
+        if (i >= spent) dot.className = "left";
+        fragment.appendChild(dot);
+      }
+      grid.appendChild(fragment);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1361 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>禅意 · 日式 · 林晚 v1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --desk: #e8e2d6;
+      --desk-deep: #d9d0c1;
+      --paper: #f7f2e8;
+      --paper-soft: #fbf8f0;
+      --paper-warm: #eee5d6;
+      --ink: #2d302b;
+      --ink-soft: #63695f;
+      --muted: #969284;
+      --quiet: #b8ae9d;
+      --line: rgba(45, 48, 43, .15);
+      --line-soft: rgba(45, 48, 43, .08);
+      --wood: #aa7d52;
+      --wood-soft: #d2b58f;
+      --tea: #89966d;
+      --moss: #68745b;
+      --wheat: #c5a76d;
+      --clay: #b98768;
+      --stone: #919790;
+      --sky: #8aa1a0;
+      --shadow: rgba(74, 58, 38, .15);
+      --serif: "Cormorant Garamond", "Noto Serif SC", "Songti SC", serif;
+      --sans: Inter, -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", sans-serif;
+      --mono: "SF Mono", "Roboto Mono", ui-monospace, Menlo, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      background: var(--desk);
+      color: var(--ink);
+      font-family: var(--sans);
+      letter-spacing: 0;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(90deg, rgba(45,48,43,.03) 1px, transparent 1px),
+        linear-gradient(rgba(45,48,43,.022) 1px, transparent 1px),
+        linear-gradient(145deg, #eee8dd 0%, var(--desk) 52%, #ded4c5 100%);
+      background-size: 21px 21px, 21px 21px, auto;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .36;
+      background-image:
+        radial-gradient(circle at 16% 28%, rgba(255,255,255,.58) 0 1px, transparent 1.1px),
+        radial-gradient(circle at 78% 64%, rgba(45,48,43,.08) 0 1px, transparent 1.2px);
+      background-size: 29px 31px, 37px 41px;
+      mix-blend-mode: multiply;
+    }
+
+    .page {
+      width: min(100%, 1380px);
+      margin: 0 auto;
+      padding: 34px 26px 74px;
+      position: relative;
+    }
+
+    .masthead {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 30px;
+      padding: 0 4px 20px;
+      margin-bottom: 28px;
+      border-bottom: 1px solid rgba(45,48,43,.2);
+    }
+
+    h1 {
+      margin: 0;
+      font: 300 38px/1.05 var(--serif);
+    }
+
+    .masthead p {
+      margin: 8px 0 0;
+      max-width: 620px;
+      color: var(--ink-soft);
+      font-size: 13px;
+      line-height: 1.75;
+    }
+
+    .seal {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border: 1px solid rgba(170,125,82,.54);
+      color: var(--wood);
+      background: rgba(251,248,240,.42);
+      font: 500 11px/1.25 var(--serif);
+      text-align: center;
+    }
+
+    .gallery {
+      display: flex;
+      flex-direction: column;
+      gap: 34px;
+      align-items: center;
+    }
+
+    .shot {
+      width: 393px;
+    }
+
+    .shot-label {
+      height: 30px;
+      padding: 0 3px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: rgba(45,48,43,.58);
+      font-size: 11px;
+    }
+
+    .shot-label strong {
+      color: var(--ink);
+      font: 400 16px/1 var(--serif);
+    }
+
+    .phone {
+      position: relative;
+      width: 393px;
+      height: 852px;
+      overflow: hidden;
+      border-radius: 30px;
+      border: 1px solid rgba(45,48,43,.18);
+      background:
+        linear-gradient(90deg, rgba(170,125,82,.12) 0 5px, transparent 5px),
+        var(--paper);
+      box-shadow: 0 24px 56px var(--shadow);
+    }
+
+    .phone::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      pointer-events: none;
+      border-radius: 30px;
+      box-shadow: inset 0 0 0 7px rgba(255,255,255,.15), inset 0 0 35px rgba(45,48,43,.045);
+    }
+
+    .phone::after,
+    .paper-grain::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      opacity: .32;
+      background-image:
+        radial-gradient(circle at 12% 15%, rgba(45,48,43,.1) 0 .55px, transparent .7px),
+        radial-gradient(circle at 82% 43%, rgba(255,255,255,.8) 0 .8px, transparent .95px),
+        linear-gradient(110deg, transparent 0 63px, rgba(45,48,43,.025) 63px 64px, transparent 64px 128px);
+      background-size: 19px 23px, 31px 37px, 100% 100%;
+      mix-blend-mode: multiply;
+    }
+
+    .screen {
+      position: relative;
+      z-index: 3;
+      height: 100%;
+      padding: 14px 22px 78px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .status {
+      height: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 2px 4px 0;
+      color: rgba(45,48,43,.72);
+      font: 600 11px/1 var(--sans);
+    }
+
+    .nav {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--ink);
+    }
+
+    .nav-title {
+      margin: 0;
+      font: 400 21px/1.1 var(--serif);
+    }
+
+    .nav-action,
+    .nav-back,
+    .icon-btn {
+      border: 0;
+      background: transparent;
+      color: var(--ink-soft);
+      font: 500 14px/1 var(--sans);
+      padding: 0;
+    }
+
+    .nav-back {
+      font-size: 25px;
+      color: var(--wood);
+      width: 28px;
+      text-align: left;
+    }
+
+    .content {
+      min-height: 0;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .home-content {
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+    }
+
+    .hello-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      margin-top: 3px;
+    }
+
+    .hello h2 {
+      margin: 0;
+      font: 300 31px/1.05 var(--serif);
+    }
+
+    .hello small,
+    .date-note,
+    .eyebrow {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .date-note {
+      text-align: right;
+      font-family: var(--mono);
+    }
+
+    .section-head {
+      margin-top: 4px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding-top: 11px;
+      border-top: 1px solid var(--line-soft);
+    }
+
+    .section-head h3 {
+      margin: 0;
+      font: 400 17px/1 var(--serif);
+    }
+
+    .section-head span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .lifespan-label {
+      margin: 0 0 7px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .lifespan-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 200px;
+      border: 1px solid rgba(45,48,43,.13);
+      background: var(--paper-soft);
+      box-shadow: 0 12px 26px rgba(74,58,38,.08);
+      isolation: isolate;
+    }
+
+    .life-a {
+      border-radius: 14px;
+      padding: 18px 18px 15px;
+    }
+
+    .life-a .life-top,
+    .life-a .life-bottom {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: end;
+    }
+
+    .life-a .life-bottom {
+      margin-top: 17px;
+      padding-top: 15px;
+      border-top: 1px solid rgba(170,125,82,.28);
+    }
+
+    .life-title {
+      margin: 0 0 8px;
+      color: var(--ink-soft);
+      font-size: 12px;
+    }
+
+    .life-number {
+      margin: 0;
+      color: var(--ink);
+      font: 300 52px/.86 var(--serif);
+      letter-spacing: 0;
+    }
+
+    .life-number small {
+      font-size: 24px;
+      color: var(--ink-soft);
+      margin-left: 3px;
+    }
+
+    .life-sub {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font: 500 11px/1.2 var(--mono);
+    }
+
+    .deposit-number {
+      margin: 0;
+      font: 300 30px/1 var(--serif);
+    }
+
+    .life-note {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+      text-align: right;
+    }
+
+    .life-b {
+      min-height: 228px;
+      border-radius: 10px 18px 18px 10px;
+      padding: 19px 17px;
+      background:
+        linear-gradient(90deg, rgba(170,125,82,.13) 0 9px, transparent 9px),
+        radial-gradient(circle at 94% 10%, rgba(255,255,255,.8), transparent 24%),
+        var(--paper-soft);
+    }
+
+    .life-b .sketch-line {
+      width: 54px;
+      height: 1px;
+      background: rgba(170,125,82,.55);
+      margin-bottom: 18px;
+    }
+
+    .life-b .large {
+      margin: 0;
+      font: 300 66px/.8 var(--serif);
+    }
+
+    .life-b .large span {
+      display: block;
+      margin-top: 6px;
+      color: var(--ink-soft);
+      font: 300 22px/1 var(--serif);
+    }
+
+    .margin-note {
+      position: absolute;
+      right: 17px;
+      top: 55px;
+      width: 82px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.55;
+      writing-mode: vertical-rl;
+    }
+
+    .life-b .deposit-strip {
+      position: absolute;
+      left: 22px;
+      right: 17px;
+      bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line-soft);
+    }
+
+    .life-c {
+      min-height: 238px;
+      border-radius: 13px;
+      padding: 18px;
+      background: var(--paper-soft);
+    }
+
+    .life-c .tiny-line {
+      width: 58px;
+      height: 1px;
+      background: rgba(45,48,43,.52);
+      margin-bottom: 8px;
+    }
+
+    .life-c .haiku-label {
+      color: var(--ink-soft);
+      font-size: 12px;
+    }
+
+    .life-c .haiku-number {
+      position: absolute;
+      right: 19px;
+      bottom: 54px;
+      margin: 0;
+      text-align: right;
+      font: 300 39px/.92 var(--serif);
+    }
+
+    .life-c .haiku-number small {
+      display: block;
+      margin-top: 4px;
+      color: var(--ink-soft);
+      font-size: 16px;
+    }
+
+    .life-c .haiku-deposit {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 17px;
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 11px;
+      padding-top: 11px;
+      border-top: 1px solid var(--line-soft);
+    }
+
+    .dimension-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    .dimension-card {
+      min-height: 115px;
+      padding: 11px;
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+      background: rgba(251,248,240,.66);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .dimension-top {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .dim-mark {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--paper-soft);
+      font-size: 13px;
+      font-family: var(--serif);
+    }
+
+    .parents { background: var(--wood); }
+    .kids { background: var(--tea); }
+    .partner { background: var(--clay); }
+    .sport { background: var(--sky); }
+    .create { background: var(--moss); }
+    .free { background: var(--stone); }
+
+    .dim-name {
+      font: 500 13px/1 var(--sans);
+    }
+
+    .dim-main {
+      margin-top: 8px;
+      color: var(--ink);
+      font: 500 13px/1.38 var(--sans);
+    }
+
+    .dim-sub {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 10.5px;
+      line-height: 1.32;
+    }
+
+    .dim-deposit {
+      margin-top: 7px;
+      color: var(--moss);
+      font-size: 11px;
+      line-height: 1.28;
+    }
+
+    .tabbar {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: 18px;
+      z-index: 10;
+      height: 56px;
+      border: 1px solid rgba(45,48,43,.12);
+      border-radius: 22px;
+      background: rgba(251,248,240,.9);
+      display: grid;
+      grid-template-columns: 1fr 1fr 76px 1fr 1fr;
+      align-items: center;
+      box-shadow: 0 12px 30px rgba(74,58,38,.12);
+    }
+
+    .tab {
+      color: var(--muted);
+      text-align: center;
+      font-size: 11px;
+      line-height: 1.2;
+    }
+
+    .tab.active {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .fab {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      margin: -20px auto 0;
+      border: 1px solid rgba(45,48,43,.14);
+      background: var(--ink);
+      color: var(--paper-soft);
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+      box-shadow: 0 14px 24px rgba(45,48,43,.18);
+    }
+
+    .detail-head {
+      padding: 15px 0 12px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .detail-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--paper-soft);
+      font: 500 19px/1 var(--serif);
+      background: var(--wood);
+      margin-bottom: 12px;
+    }
+
+    .big-number {
+      margin: 4px 0 3px;
+      font: 300 72px/.86 var(--serif);
+    }
+
+    .big-number small {
+      font-size: 26px;
+      color: var(--ink-soft);
+    }
+
+    .detail-copy {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .insight {
+      margin: 13px 0;
+      padding-left: 11px;
+      color: var(--moss);
+      border-left: 2px solid rgba(137,150,109,.45);
+      font: 300 17px/1.5 var(--serif);
+    }
+
+    .soft-card {
+      border: 1px solid var(--line-soft);
+      border-radius: 13px;
+      background: rgba(251,248,240,.62);
+      padding: 13px;
+    }
+
+    .calc-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      margin: 0 0 6px;
+      font: 500 13px/1 var(--sans);
+    }
+
+    .card-text {
+      margin: 0;
+      white-space: pre-line;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .rows {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .moment-row {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .moment-row h4 {
+      margin: 0 0 5px;
+      font: 500 14px/1.2 var(--sans);
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .note {
+      margin: 6px 0 0;
+      color: var(--ink-soft);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .end-note {
+      color: var(--quiet);
+      text-align: center;
+      font-size: 11px;
+      margin-top: 12px;
+    }
+
+    .photo-hero {
+      height: 408px;
+      margin: -14px -22px 0;
+      position: relative;
+      overflow: hidden;
+      background: #d8d2c5;
+    }
+
+    .photo-hero img,
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: saturate(.82) contrast(.96) brightness(1.03);
+    }
+
+    .photo-hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,.06), transparent 45%, rgba(45,48,43,.26));
+    }
+
+    .dots {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 16px;
+      z-index: 3;
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(251,248,240,.55);
+    }
+
+    .dot.active { background: var(--paper-soft); }
+
+    .detail-body {
+      padding-top: 20px;
+    }
+
+    .moment-title {
+      margin: 0;
+      font: 300 31px/1.15 var(--serif);
+    }
+
+    .ago {
+      margin: 7px 0 14px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .chips {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+
+    .chip {
+      min-height: 28px;
+      padding: 7px 10px;
+      border-radius: 99px;
+      border: 1px solid var(--line-soft);
+      background: rgba(251,248,240,.7);
+      color: var(--ink-soft);
+      font-size: 11px;
+    }
+
+    .full-note {
+      color: var(--ink);
+      font: 300 18px/1.75 var(--serif);
+    }
+
+    .bottom-actions {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: 22px;
+      z-index: 12;
+      display: grid;
+      grid-template-columns: 1fr 1.25fr 1fr;
+      gap: 8px;
+    }
+
+    .action-btn {
+      height: 42px;
+      border-radius: 14px;
+      border: 1px solid var(--line-soft);
+      background: rgba(251,248,240,.86);
+      color: var(--ink);
+      font: 500 12px/1 var(--sans);
+    }
+
+    .action-btn.danger { color: #9a5544; }
+
+    .sheet {
+      margin: 4px -4px 0;
+      padding: 13px 14px 16px;
+      border-radius: 23px 23px 0 0;
+      background: rgba(251,248,240,.72);
+      border: 1px solid var(--line-soft);
+      min-height: 704px;
+    }
+
+    .field-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .field {
+      min-height: 54px;
+      display: grid;
+      grid-template-columns: 92px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .field strong,
+    .field span {
+      color: var(--ink);
+      font: 500 13px/1.3 var(--sans);
+    }
+
+    .field .textarea {
+      line-height: 1.45;
+      font-weight: 400;
+    }
+
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .thumb {
+      aspect-ratio: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--line-soft);
+      background: var(--paper-warm);
+    }
+
+    .add-thumb {
+      display: grid;
+      place-items: center;
+      color: var(--quiet);
+      font-size: 26px;
+      background: rgba(238,229,214,.52);
+    }
+
+    .privacy-note {
+      margin: 13px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .account-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 10px 0 16px;
+    }
+
+    .summary-block {
+      min-height: 98px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line-soft);
+      background: rgba(251,248,240,.66);
+    }
+
+    .summary-block strong {
+      display: block;
+      font: 300 36px/.95 var(--serif);
+      margin-bottom: 8px;
+    }
+
+    .summary-block span {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .donut-wrap {
+      display: grid;
+      grid-template-columns: 126px 1fr;
+      gap: 16px;
+      align-items: center;
+      padding: 13px 0 17px;
+    }
+
+    .donut {
+      width: 126px;
+      height: 126px;
+      border-radius: 50%;
+      background:
+        conic-gradient(var(--wood) 0 44%, var(--tea) 44% 62%, var(--clay) 62% 73%, var(--sky) 73% 87%, var(--moss) 87% 99%, var(--stone) 99% 100%);
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(45,48,43,.09);
+    }
+
+    .donut::after {
+      content: "";
+      position: absolute;
+      inset: 25px;
+      border-radius: 50%;
+      background: var(--paper);
+      border: 1px solid rgba(45,48,43,.09);
+    }
+
+    .legend {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .legend-row {
+      display: grid;
+      grid-template-columns: 9px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      color: var(--ink-soft);
+      font-size: 11px;
+    }
+
+    .swatch {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    .review-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-top: 7px;
+    }
+
+    .review-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      align-items: baseline;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line-soft);
+      font-size: 13px;
+    }
+
+    .review-row strong {
+      font-weight: 500;
+    }
+
+    .review-row span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 520px) {
+      .page { padding: 24px 14px 54px; }
+      .masthead { align-items: start; }
+      .seal { display: none; }
+      h1 { font-size: 31px; }
+      .gallery { grid-template-columns: 393px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="masthead">
+      <div>
+        <h1>禅意 · 日式 · 林晚 v1</h1>
+        <p>米白纸张、浅木色、低饱和茶色；像一本放在原木桌上的手账。数字被认真写下，但不催促。</p>
+      </div>
+      <div class="seal">時間<br>銀行</div>
+    </header>
+
+    <section class="gallery">
+      <article class="shot">
+        <div class="shot-label"><strong>S1 主页</strong><span>Lifespan 变体 A · 保守版</span></div>
+        <div class="phone">
+          <div class="screen">
+            <div class="status"><span>10:30</span><span>􀙇 􀛨 􀛩</span></div>
+            <div class="content home-content">
+              <div class="hello-row">
+                <div class="hello">
+                  <small>四月二十六日 · 上午</small>
+                  <h2>你好，林晚</h2>
+                </div>
+                <div class="date-note">2026<br>SPRING</div>
+              </div>
+
+              <div>
+                <p class="lifespan-label">变体 A / 米白纸感 · 上下双层</p>
+                <div class="lifespan-card life-a paper-grain">
+                  <div class="life-top">
+                    <div>
+                      <p class="life-title">时间余额</p>
+                      <p class="life-number">2,288<small>周</small></p>
+                      <p class="life-sub">44 年 · 386 Kh</p>
+                    </div>
+                    <p class="life-note">约还剩<br>2,288 周</p>
+                  </div>
+                  <div class="life-bottom">
+                    <div>
+                      <p class="life-title">已存入</p>
+                      <p class="deposit-number">128 小时</p>
+                    </div>
+                    <p class="life-note">27 个瞬间<br>跨 5 个时间账户</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section-head">
+                <h3>时间账户</h3>
+                <span>6 个内置账户</span>
+              </div>
+
+              <div class="dimension-grid">
+                <div class="dimension-card">
+                  <div>
+                    <div class="dimension-top"><span class="dim-mark parents">父</span><span class="dim-name">陪父母</span></div>
+                    <div class="dim-main">还能共度 552h ·<br>约 92 次见面</div>
+                    <div class="dim-sub">≈ 23 天</div>
+                  </div>
+                  <div class="dim-deposit">已存入 56h · 12 个瞬间</div>
+                </div>
+                <div class="dimension-card">
+                  <div>
+                    <div class="dimension-top"><span class="dim-mark kids">子</span><span class="dim-name">陪孩子</span></div>
+                    <div class="dim-main">还能共度 6,840h ·<br>每周约 14 小时</div>
+                    <div class="dim-sub">≈ 285 天</div>
+                  </div>
+                  <div class="dim-deposit">已存入 23h · 8 个瞬间</div>
+                </div>
+                <div class="dimension-card">
+                  <div>
+                    <div class="dimension-top"><span class="dim-mark partner">伴</span><span class="dim-name">陪伴侣</span></div>
+                    <div class="dim-main">还能共度 43,800h ·<br>每天约 4h 共处</div>
+                    <div class="dim-sub">≈ 1,825 天</div>
+                  </div>
+                  <div class="dim-deposit">已存入 14h · 5 个瞬间</div>
+                </div>
+                <div class="dimension-card">
+                  <div>
+                    <div class="dimension-top"><span class="dim-mark sport">动</span><span class="dim-name">运动</span></div>
+                    <div class="dim-main">未来 9,560h ·<br>每周约 5 小时</div>
+                    <div class="dim-sub">≈ 398 天</div>
+                  </div>
+                  <div class="dim-deposit">已存入 18h · 6 个瞬间</div>
+                </div>
+                <div class="dimension-card">
+                  <div>
+                    <div class="dimension-top"><span class="dim-mark create">创</span><span class="dim-name">创造</span></div>
+                    <div class="dim-main">未来 39,000h ·<br>每周约 40 小时</div>
+                    <div class="dim-sub">≈ 1,625 天</div>
+                  </div>
+                  <div class="dim-deposit">已存入 15h · 4 个瞬间</div>
+                </div>
+                <div class="dimension-card">
+                  <div>
+                    <div class="dimension-top"><span class="dim-mark free">闲</span><span class="dim-name">自由</span></div>
+                    <div class="dim-main">占清醒时间约 56%</div>
+                    <div class="dim-sub">给自己留出的空白</div>
+                  </div>
+                  <div class="dim-deposit">已存入 2h · 2 个瞬间</div>
+                </div>
+              </div>
+            </div>
+            <nav class="tabbar">
+              <div class="tab active">⌂<br>主页</div>
+              <div class="tab">◌<br>账户</div>
+              <div class="fab">＋</div>
+              <div class="tab">◍<br>我</div>
+              <div class="tab"> </div>
+            </nav>
+          </div>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="shot-label"><strong>S1 主页</strong><span>Lifespan 变体 B · 素描本</span></div>
+        <div class="phone">
+          <div class="screen">
+            <div class="status"><span>10:30</span><span>􀙇 􀛨 􀛩</span></div>
+            <div class="content home-content">
+              <div class="hello-row">
+                <div class="hello">
+                  <small>四月二十六日 · 上午</small>
+                  <h2>你好，林晚</h2>
+                </div>
+                <div class="date-note">2026<br>SPRING</div>
+              </div>
+
+              <div>
+                <p class="lifespan-label">变体 B / 翻开的素描本一页</p>
+                <div class="lifespan-card life-b paper-grain">
+                  <div class="sketch-line"></div>
+                  <p class="life-title">时间余额</p>
+                  <p class="large">2,288<span>周</span></p>
+                  <p class="life-sub">约还剩 2,288 周 · 44 年 · 386 Kh</p>
+                  <p class="margin-note">约还剩 2,288 周</p>
+                  <div class="deposit-strip">
+                    <div>
+                      <p class="life-title">已存入</p>
+                      <p class="deposit-number">128 小时</p>
+                    </div>
+                    <p class="life-note">27 个瞬间<br>跨 5 个时间账户</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section-head">
+                <h3>时间账户</h3>
+                <span>6 个内置账户</span>
+              </div>
+
+              <div class="dimension-grid">
+                <div class="dimension-card"><div><div class="dimension-top"><span class="dim-mark parents">父</span><span class="dim-name">陪父母</span></div><div class="dim-main">还能共度 552h ·<br>约 92 次见面</div><div class="dim-sub">≈ 23 天</div></div><div class="dim-deposit">已存入 56h · 12 个瞬间</div></div>
+                <div class="dimension-card"><div><div class="dimension-top"><span class="dim-mark kids">子</span><span class="dim-name">陪孩子</span></div><div class="dim-main">还能共度 6,840h ·<br>每周约 14 小时</div><div class="dim-sub">≈ 285 天</div></div><div class="dim-deposit">已存入 23h · 8 个瞬间</div></div>
+                <div class="dimension-card"><div><div class="dimension-top"><span class="dim-mark partner">伴</span><span class="dim-name">陪伴侣</span></div><div class="dim-main">还能共度 43,800h ·<br>每天约 4h 共处</div><div class="dim-sub">≈ 1,825 天</div></div><div class="dim-deposit">已存入 14h · 5 个瞬间</div></div>
+                <div class="dimension-card"><div><div class="dimension-top"><span class="dim-mark sport">动</span><span class="dim-name">运动</span></div><div class="dim-main">未来 9,560h ·<br>每周约 5 小时</div><div class="dim-sub">≈ 398 天</div></div><div class="dim-deposit">已存入 18h · 6 个瞬间</div></div>
+                <div class="dimension-card"><div><div class="dimension-top"><span class="dim-mark create">创</span><span class="dim-name">创造</span></div><div class="dim-main">未来 39,000h ·<br>每周约 40 小时</div><div class="dim-sub">≈ 1,625 天</div></div><div class="dim-deposit">已存入 15h · 4 个瞬间</div></div>
+                <div class="dimension-card"><div><div class="dimension-top"><span class="dim-mark free">闲</span><span class="dim-name">自由</span></div><div class="dim-main">占清醒时间约 56%</div><div class="dim-sub">给自己留出的空白</div></div><div class="dim-deposit">已存入 2h · 2 个瞬间</div></div>
+              </div>
+            </div>
+            <nav class="tabbar">
+              <div class="tab active">⌂<br>主页</div>
+              <div class="tab">◌<br>账户</div>
+              <div class="fab">＋</div>
+              <div class="tab">◍<br>我</div>
+              <div class="tab"> </div>
+            </nav>
+          </div>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="shot-label"><strong>S1 主页</strong><span>Lifespan 变体 C · 俳句留白</span></div>
+        <div class="phone">
+          <div class="screen">
+            <div class="status"><span>10:30</span><span>􀙇 􀛨 􀛩</span></div>
+            <div class="content home-content">
+              <div class="hello-row">
+                <div class="hello">
+                  <small>四月二十六日 · 上午</small>
+                  <h2>你好，林晚</h2>
+                </div>
+                <div class="date-note">2026<br>SPRING</div>
+              </div>
+
+              <div>
+                <p class="lifespan-label">变体 C / 极致留白</p>
+                <div class="lifespan-card life-c paper-grain">
+                  <div class="tiny-line"></div>
+                  <div class="haiku-label">时间余额</div>
+                  <p class="life-sub">44 年 · 386 Kh</p>
+                  <p class="haiku-number">2,288<small>周</small></p>
+                  <div class="haiku-deposit">
+                    <span>已存入 128 小时</span>
+                    <span>27 个瞬间 · 跨 5 个时间账户</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section-head">
+                <h3>时间账户</h3>
+                <span>6 个内置账户</span>
+              </div>
+
+              <div class="dimension-grid">
+                <div class="dimension-card"><div><div class="dimension-top"><span class="dim-mark parents">父</span><span class="dim-name">陪父母</span></div><div class="dim-main">还能共度 552h ·<br>约 92 次见面</div><div class="dim-sub">≈ 23 天</div></div><div class="dim-deposit">已存入 56h · 12 个瞬间</div></div>
+                <div class="dimension-card"><div><div class="dimension-top"><span class="dim-mark kids">子</span><span class="dim-name">陪孩子</span></div><div class="dim-main">还能共度 6,840h ·<br>每周约 14 小时</div><div class="dim-sub">≈ 285 天</div></div><div class="dim-deposit">已存入 23h · 8 个瞬间</div></div>
+                <div class="dimension-card"><div><div class="dimension-top"><span class="dim-mark partner">伴</span><span class="dim-name">陪伴侣</span></div><div class="dim-main">还能共度 43,800h ·<br>每天约 4h 共处</div><div class="dim-sub">≈ 1,825 天</div></div><div class="dim-deposit">已存入 14h · 5 个瞬间</div></div>
+                <div class="dimension-card"><div><div class="dimension-top"><span class="dim-mark sport">动</span><span class="dim-name">运动</span></div><div class="dim-main">未来 9,560h ·<br>每周约 5 小时</div><div class="dim-sub">≈ 398 天</div></div><div class="dim-deposit">已存入 18h · 6 个瞬间</div></div>
+                <div class="dimension-card"><div><div class="dimension-top"><span class="dim-mark create">创</span><span class="dim-name">创造</span></div><div class="dim-main">未来 39,000h ·<br>每周约 40 小时</div><div class="dim-sub">≈ 1,625 天</div></div><div class="dim-deposit">已存入 15h · 4 个瞬间</div></div>
+                <div class="dimension-card"><div><div class="dimension-top"><span class="dim-mark free">闲</span><span class="dim-name">自由</span></div><div class="dim-main">占清醒时间约 56%</div><div class="dim-sub">给自己留出的空白</div></div><div class="dim-deposit">已存入 2h · 2 个瞬间</div></div>
+              </div>
+            </div>
+            <nav class="tabbar">
+              <div class="tab active">⌂<br>主页</div>
+              <div class="tab">◌<br>账户</div>
+              <div class="fab">＋</div>
+              <div class="tab">◍<br>我</div>
+              <div class="tab"> </div>
+            </nav>
+          </div>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="shot-label"><strong>S2</strong><span>陪父母详情页</span></div>
+        <div class="phone">
+          <div class="screen">
+            <div class="status"><span>10:30</span><span>􀙇 􀛨 􀛩</span></div>
+            <nav class="nav">
+              <button class="nav-back">‹</button>
+              <h2 class="nav-title">陪父母</h2>
+              <button class="nav-action">＋</button>
+            </nav>
+            <div class="content">
+              <header class="detail-head">
+                <div class="detail-icon">父</div>
+                <p class="eyebrow">时间账户</p>
+                <p class="big-number">552<small>h</small></p>
+                <p class="detail-copy">约还能一起度过 · 合 92 次见面<br>每次 6h</p>
+              </header>
+              <p class="insight">他们正在经历一生中最自由的一段时间。</p>
+              <section class="soft-card calc-card">
+                <div>
+                  <p class="card-title">计算方式</p>
+                  <p class="card-text">父母 71/68 · 每年 4 次 · 每次 6h
+预期寿命 82</p>
+                </div>
+                <span class="meta">›</span>
+              </section>
+              <div class="section-head">
+                <h3>已存入瞬间</h3>
+                <span>12 个 · 56h</span>
+              </div>
+              <div class="rows">
+                <div class="moment-row">
+                  <h4>妈做的腌菜</h4>
+                  <div class="meta">30m · 2026-03-15 · 1 张图</div>
+                  <p class="note">她说还是我小时候那个味道。</p>
+                </div>
+                <div class="moment-row">
+                  <h4>爸第一次坐高铁</h4>
+                  <div class="meta">6h · 2026-02-08 · 4 张图</div>
+                  <p class="note">他全程靠窗看风景，没说话。</p>
+                </div>
+                <div class="moment-row">
+                  <h4>一起买菜</h4>
+                  <div class="meta">1h · 2026-01-22 · 2 张图</div>
+                  <p class="note">妈知道每个摊主的名字。</p>
+                </div>
+                <div class="moment-row">
+                  <h4>教爸爸用 iPad</h4>
+                  <div class="meta">45m · 2025-12-30 · 1 张图</div>
+                  <p class="note">他终于会自己看视频了。</p>
+                </div>
+              </div>
+              <div class="end-note">到这里就是最早的了</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="shot-label"><strong>S3</strong><span>时刻详情页</span></div>
+        <div class="phone">
+          <div class="screen">
+            <div class="photo-hero">
+              <img src="https://picsum.photos/seed/shoestring/786/816" alt="">
+              <div class="status" style="position:absolute;left:22px;right:22px;top:14px;z-index:4;color:#fbf8f0;"><span>10:30</span><span>􀙇 􀛨 􀛩</span></div>
+              <div class="dots"><span class="dot active"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+            </div>
+            <div class="content detail-body">
+              <h2 class="moment-title">孩子第一次系鞋带</h2>
+              <p class="ago">发生在 47 天前 · 2026-03-10</p>
+              <div class="chips">
+                <span class="chip">♡ 陪孩子</span>
+                <span class="chip">不计时长</span>
+                <span class="chip">4 个媒体</span>
+              </div>
+              <p class="full-note">她做了 7 次才成功，第 8 次成功的时候笑得很大声。</p>
+            </div>
+            <div class="bottom-actions">
+              <button class="action-btn">编辑</button>
+              <button class="action-btn">换时间账户</button>
+              <button class="action-btn danger">删除</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="shot-label"><strong>S4</strong><span>存时刻编辑器</span></div>
+        <div class="phone">
+          <div class="screen">
+            <div class="status"><span>10:30</span><span>􀙇 􀛨 􀛩</span></div>
+            <nav class="nav">
+              <button class="nav-action">取消</button>
+              <h2 class="nav-title" style="font-size:18px;">存入到 陪父母</h2>
+              <button class="nav-action" style="color:var(--moss);">存入时间银行</button>
+            </nav>
+            <div class="content">
+              <div class="sheet">
+                <div class="field-list">
+                  <div class="field"><label>时间账户</label><strong>陪父母</strong><span>›</span></div>
+                  <div class="field"><label>发生在</label><strong>2026-03-15</strong><span>›</span></div>
+                  <div class="field"><label>持续</label><strong>30 分钟</strong><span>›</span></div>
+                  <div class="field"><label>叫什么</label><strong>妈做的腌菜</strong><span></span></div>
+                  <div class="field" style="min-height:84px;align-items:start;"><label>想说点什么</label><span class="textarea">她说还是我小时候那个味道。</span><span></span></div>
+                </div>
+                <div class="section-head" style="border-top:0;margin-top:10px;">
+                  <h3>媒体</h3>
+                  <span>1 / 9</span>
+                </div>
+                <div class="media-grid">
+                  <div class="thumb"><img src="https://picsum.photos/seed/pickles/300/300" alt=""></div>
+                  <div class="thumb add-thumb">＋</div>
+                  <div class="thumb add-thumb"> </div>
+                  <div class="thumb add-thumb"> </div>
+                  <div class="thumb add-thumb"> </div>
+                  <div class="thumb add-thumb"> </div>
+                </div>
+                <p class="privacy-note">图片和视频存在你的 iPhone 里，不会上传任何服务器。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="shot">
+        <div class="shot-label"><strong>S5</strong><span>账户 Tab</span></div>
+        <div class="phone">
+          <div class="screen">
+            <div class="status"><span>10:30</span><span>􀙇 􀛨 􀛩</span></div>
+            <nav class="nav">
+              <span></span>
+              <h2 class="nav-title">账户</h2>
+              <button class="nav-action">⋯</button>
+            </nav>
+            <div class="content">
+              <div class="account-summary">
+                <div class="summary-block">
+                  <strong>128h</strong>
+                  <span>已存入 · 包含其他时间账户</span>
+                </div>
+                <div class="summary-block">
+                  <strong>27</strong>
+                  <span>个瞬间 · 跨 5 个时间账户</span>
+                </div>
+              </div>
+              <div class="section-head">
+                <h3>时间账户分布</h3>
+                <span>已存入</span>
+              </div>
+              <div class="donut-wrap">
+                <div class="donut"></div>
+                <div class="legend">
+                  <div class="legend-row"><span class="swatch parents"></span><span>陪父母</span><strong>56h</strong></div>
+                  <div class="legend-row"><span class="swatch kids"></span><span>陪孩子</span><strong>23h</strong></div>
+                  <div class="legend-row"><span class="swatch sport"></span><span>运动</span><strong>18h</strong></div>
+                  <div class="legend-row"><span class="swatch create"></span><span>创造</span><strong>15h</strong></div>
+                  <div class="legend-row"><span class="swatch partner"></span><span>陪伴侣</span><strong>14h</strong></div>
+                  <div class="legend-row"><span class="swatch free"></span><span>自由</span><strong>2h</strong></div>
+                </div>
+              </div>
+              <div class="section-head">
+                <h3>年度回顾</h3>
+                <span>跨年</span>
+              </div>
+              <div class="review-list">
+                <div class="review-row"><strong>2026 年 3 月</strong><span>12h</span><span>4 个瞬间</span></div>
+                <div class="review-row"><strong>2026 年 2 月</strong><span>8h</span><span>3 个瞬间</span></div>
+                <div class="review-row"><strong>2026 年 1 月</strong><span>6h</span><span>2 个瞬间</span></div>
+                <div class="review-row"><strong>2025 年 12 月</strong><span>4h</span><span>2 个瞬间</span></div>
+              </div>
+            </div>
+            <nav class="tabbar">
+              <div class="tab">⌂<br>主页</div>
+              <div class="tab active">◌<br>账户</div>
+              <div class="fab">＋</div>
+              <div class="tab">◍<br>我</div>
+              <div class="tab"> </div>
+            </nav>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>时间银行 · Gallery 方向网页展示</title>
+  <style>
+    :root {
+      --bg: #f5f5f1;
+      --paper: #ffffff;
+      --ink: #050505;
+      --muted: #666661;
+      --line: #d6d6d0;
+      --soft: #ecece7;
+      --accent: #ff3d00;
+      --sans: Inter, "Helvetica Neue", Arial, "PingFang SC", "Noto Sans SC", sans-serif;
+      --mono: "SF Mono", "IBM Plex Mono", ui-monospace, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      letter-spacing: 0;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      width: min(100%, 1440px);
+      margin: 0 auto;
+      padding: 40px 28px 72px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 48px;
+      align-items: end;
+      min-height: 360px;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--ink);
+    }
+
+    .eyebrow,
+    .label {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.6;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 920px;
+      margin: 22px 0 0;
+      font-size: clamp(56px, 10vw, 150px);
+      line-height: .86;
+      font-weight: 300;
+    }
+
+    .accent {
+      color: var(--accent);
+    }
+
+    .brief {
+      display: grid;
+      gap: 18px;
+      padding: 20px 0 4px;
+      border-top: 1px solid var(--line);
+    }
+
+    .brief p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .button {
+      display: inline-grid;
+      place-items: center;
+      min-height: 40px;
+      padding: 0 16px;
+      border: 1px solid var(--ink);
+      background: var(--paper);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .button.primary {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 48px;
+      align-items: end;
+      margin: 46px 0 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 58px);
+      line-height: .95;
+      font-weight: 300;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border: 1px solid var(--ink);
+      background: var(--paper);
+    }
+
+    .meta-card {
+      min-height: 132px;
+      padding: 18px;
+      border-right: 1px solid var(--line);
+    }
+
+    .meta-card:last-child {
+      border-right: 0;
+    }
+
+    .meta-card strong {
+      display: block;
+      margin-top: 26px;
+      font-size: 24px;
+      line-height: 1;
+      font-weight: 300;
+    }
+
+    .meta-card span {
+      display: block;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .prototype-shell {
+      overflow: hidden;
+      border: 1px solid var(--ink);
+      background: var(--paper);
+    }
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: min(1120px, 84vh);
+      border: 0;
+      background: var(--paper);
+    }
+
+    .notes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      margin-top: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-top: 0;
+    }
+
+    .note {
+      min-height: 160px;
+      padding: 18px;
+      background: var(--paper);
+    }
+
+    .note h3 {
+      margin: 22px 0 10px;
+      font-size: 18px;
+      font-weight: 400;
+    }
+
+    .note p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 900px) {
+      .hero,
+      .section-head {
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
+
+      .meta-grid,
+      .notes {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .meta-card:nth-child(2) {
+        border-right: 0;
+      }
+
+      .meta-card:nth-child(-n + 2) {
+        border-bottom: 1px solid var(--line);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .page {
+        padding: 28px 14px 56px;
+      }
+
+      .hero {
+        min-height: 0;
+      }
+
+      .meta-grid,
+      .notes {
+        grid-template-columns: 1fr;
+      }
+
+      .meta-card {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .meta-card:last-child {
+        border-bottom: 0;
+      }
+
+      iframe {
+        height: 76vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Time Bank / V2 Visual Exploration / Gallery</div>
+        <h1>当代艺术<br><span class="accent">Gallery</span></h1>
+      </div>
+      <aside class="brief" aria-label="设计摘要">
+        <p>以白盒子画廊作为视觉母题，把时间账户的数据当作展品陈列。画面保持黑白、高留白、1px hairline，仅用一抹荧光橙强调关键数字。</p>
+        <p>页面内嵌完整 iOS 原型：5 个核心屏幕 + lifespan A/B/C 三个变体，数据使用 Persona「林晚」。</p>
+        <div class="actions">
+          <a class="button primary" href="./time-bank-gallery.html">打开完整原型</a>
+          <a class="button" href="./README.md">查看 designs 说明</a>
+        </div>
+      </aside>
+    </section>
+
+    <section aria-label="关键指标">
+      <div class="section-head">
+        <h2>Visual System</h2>
+        <p>这不是最终工程 UI，而是用于评审方向的网页化视觉展板。核心目标是判断 Gallery 风格是否能承载“时间余额 + 已存入”的双层模型。</p>
+      </div>
+      <div class="meta-grid">
+        <div class="meta-card">
+          <div class="label">Screens</div>
+          <strong>5</strong>
+          <span>主页、详情、时刻、编辑器、账户 Tab</span>
+        </div>
+        <div class="meta-card">
+          <div class="label">Lifespan</div>
+          <strong>3</strong>
+          <span>Wall label / Conceptual / Cy Twombly</span>
+        </div>
+        <div class="meta-card">
+          <div class="label">Color</div>
+          <strong>99% BW</strong>
+          <span>只保留荧光橙作为 signature accent</span>
+        </div>
+        <div class="meta-card">
+          <div class="label">Data</div>
+          <strong>林晚</strong>
+          <span>2,288 周 · 128 小时 · 27 个瞬间</span>
+        </div>
+      </div>
+    </section>
+
+    <section aria-label="原型预览">
+      <div class="section-head">
+        <h2>Prototype Preview</h2>
+        <p>下方是实际 HTML 原型的嵌入预览。横向宽屏可同时看多屏，窄屏会自动堆叠。</p>
+      </div>
+      <div class="prototype-shell">
+        <iframe title="时间银行 Gallery 原型" src="./time-bank-gallery.html"></iframe>
+      </div>
+      <div class="notes">
+        <article class="note">
+          <div class="label">Design Principle</div>
+          <h3>数据作为展品</h3>
+          <p>不使用传统卡片阴影和装饰层级，主要依赖字号反差、空间和分割线建立视觉秩序。</p>
+        </article>
+        <article class="note">
+          <div class="label">Product Model</div>
+          <h3>双层账户</h3>
+          <p>每个时间账户同时呈现“还能共度”和“已存入”，顶部 lifespan 独立作为哲学 anchor。</p>
+        </article>
+        <article class="note">
+          <div class="label">Review Focus</div>
+          <h3>先评估方向</h3>
+          <p>这版适合评估冷峻 Gallery 风是否成立。若通过，再抽取 token 和组件规则进入 SwiftUI 实现。</p>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

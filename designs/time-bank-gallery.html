@@ -1,0 +1,1412 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gallery · 当代艺术 · 林晚 v1</title>
+  <style>
+    :root {
+      --white: #f7f7f4;
+      --paper: #ffffff;
+      --ink: #050505;
+      --gray-900: #171717;
+      --gray-700: #454545;
+      --gray-500: #747474;
+      --gray-300: #b7b7b3;
+      --gray-200: #d8d8d2;
+      --gray-100: #ecece7;
+      --accent: #ff3d00;
+      --sans: Inter, "Helvetica Neue", Arial, "PingFang SC", "Noto Sans SC", sans-serif;
+      --serif: "Times New Roman", "Songti SC", serif;
+      --mono: "SF Mono", "IBM Plex Mono", ui-monospace, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: #efefeb;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background: var(--white);
+      font-family: var(--sans);
+      letter-spacing: 0;
+    }
+
+    .page {
+      width: min(100%, 1480px);
+      margin: 0 auto;
+      padding: 46px 32px 84px;
+    }
+
+    .page-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 40px;
+      margin-bottom: 36px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--ink);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(36px, 5vw, 78px);
+      line-height: .94;
+      font-weight: 400;
+    }
+
+    .header-meta {
+      margin: 0 0 8px;
+      color: var(--gray-700);
+      font-family: var(--mono);
+      font-size: 10px;
+      line-height: 1.7;
+      text-align: right;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(393px, 1fr));
+      gap: 38px 30px;
+      align-items: start;
+    }
+
+    .shot {
+      width: 393px;
+      max-width: 100%;
+    }
+
+    .shot-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 18px;
+      height: 34px;
+      margin: 0 0 10px;
+      color: var(--gray-700);
+      font-family: var(--mono);
+      font-size: 10px;
+      line-height: 1.4;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+    }
+
+    .shot-title strong {
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .phone {
+      width: 393px;
+      height: 852px;
+      position: relative;
+      overflow: hidden;
+      color: var(--ink);
+      background: var(--paper);
+      border: 1px solid var(--ink);
+      border-radius: 30px;
+    }
+
+    .statusbar {
+      height: 48px;
+      padding: 17px 22px 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .system-icons {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .bars {
+      display: grid;
+      grid-template-columns: repeat(4, 3px);
+      align-items: end;
+      gap: 2px;
+      height: 12px;
+    }
+
+    .bars i {
+      display: block;
+      width: 3px;
+      background: var(--ink);
+    }
+
+    .bars i:nth-child(1) { height: 4px; }
+    .bars i:nth-child(2) { height: 6px; }
+    .bars i:nth-child(3) { height: 9px; }
+    .bars i:nth-child(4) { height: 12px; }
+
+    .battery {
+      width: 25px;
+      height: 12px;
+      border: 1.5px solid var(--ink);
+      border-radius: 3px;
+      position: relative;
+    }
+
+    .battery::before {
+      content: "";
+      position: absolute;
+      inset: 2px 7px 2px 2px;
+      background: var(--ink);
+    }
+
+    .battery::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      right: -4px;
+      width: 2px;
+      height: 5px;
+      background: var(--ink);
+      border-radius: 1px;
+    }
+
+    .screen {
+      height: calc(100% - 48px);
+      position: relative;
+      overflow: hidden;
+      padding: 0 22px 86px;
+    }
+
+    .scroll {
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+
+    .scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav {
+      height: 42px;
+      display: grid;
+      grid-template-columns: 42px 1fr 42px;
+      align-items: center;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .nav-title {
+      justify-self: center;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .nav-button {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      font-size: 20px;
+      font-family: var(--sans);
+    }
+
+    .nav-button.right {
+      justify-self: end;
+      color: var(--accent);
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .kicker {
+      color: var(--gray-500);
+      font-family: var(--mono);
+      font-size: 9px;
+      line-height: 1.6;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .wall-label {
+      color: var(--gray-700);
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
+    .serif-note {
+      font-family: var(--serif);
+      font-style: italic;
+    }
+
+    .home-intro {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin: 18px 0 30px;
+    }
+
+    .home-intro h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 400;
+    }
+
+    .home-intro p {
+      margin: 0 0 1px;
+      color: var(--gray-500);
+      font-size: 10px;
+    }
+
+    .lifespan-card {
+      min-height: 270px;
+      position: relative;
+      margin-bottom: 30px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--ink);
+    }
+
+    .lifespan-card .hero-number {
+      margin: 30px 0 10px -4px;
+      font-size: 95px;
+      line-height: .84;
+      font-weight: 300;
+    }
+
+    .lifespan-card .hero-number .unit {
+      color: var(--accent);
+      font-size: 35px;
+      font-weight: 400;
+      vertical-align: 18px;
+    }
+
+    .lifespan-card .subline {
+      margin: 0;
+      color: var(--gray-700);
+      font-family: var(--serif);
+      font-size: 14px;
+      font-style: italic;
+      line-height: 1.5;
+    }
+
+    .deposit-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 28px;
+      padding-top: 16px;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .deposit-strip .value {
+      display: block;
+      margin-top: 8px;
+      font-size: 23px;
+      line-height: 1;
+      font-weight: 400;
+    }
+
+    .account-list {
+      display: grid;
+      gap: 18px;
+    }
+
+    .account-row {
+      display: grid;
+      grid-template-columns: 1fr 90px;
+      gap: 14px;
+      min-height: 74px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .account-row h3 {
+      margin: 0 0 12px;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .account-row .metric {
+      display: block;
+      font-size: 31px;
+      line-height: .95;
+      font-weight: 300;
+    }
+
+    .account-row .metric.small {
+      font-size: 24px;
+    }
+
+    .account-row p {
+      margin: 7px 0 0;
+      color: var(--gray-500);
+      font-size: 10px;
+      line-height: 1.35;
+    }
+
+    .account-row .stored {
+      align-self: end;
+      text-align: right;
+    }
+
+    .account-row .stored b {
+      display: block;
+      font-size: 19px;
+      font-weight: 400;
+      line-height: 1;
+    }
+
+    .tabbar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 76px;
+      display: grid;
+      grid-template-columns: 1fr 74px 1fr;
+      align-items: center;
+      padding: 0 28px 14px;
+      background: rgba(255, 255, 255, .96);
+      border-top: 1px solid var(--ink);
+    }
+
+    .tab {
+      color: var(--gray-500);
+      font-size: 10px;
+      text-align: center;
+    }
+
+    .tab.active {
+      color: var(--ink);
+    }
+
+    .fab {
+      justify-self: center;
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      color: var(--paper);
+      background: var(--accent);
+      border-radius: 50%;
+      font-size: 25px;
+      line-height: 1;
+    }
+
+    .detail-hero {
+      height: 235px;
+      position: relative;
+      padding-top: 28px;
+      border-bottom: 1px solid var(--ink);
+    }
+
+    .detail-hero h2 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .detail-hero .big {
+      position: absolute;
+      left: -6px;
+      bottom: 40px;
+      font-size: 78px;
+      line-height: .85;
+      font-weight: 300;
+    }
+
+    .detail-hero .caption {
+      position: absolute;
+      right: 0;
+      bottom: 46px;
+      width: 112px;
+      color: var(--gray-500);
+      font-size: 10px;
+      line-height: 1.5;
+      text-align: right;
+    }
+
+    .summary-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .summary-pair > div {
+      min-height: 90px;
+      padding: 16px 10px 14px 0;
+    }
+
+    .summary-pair > div + div {
+      padding-left: 16px;
+      border-left: 1px solid var(--gray-200);
+    }
+
+    .summary-pair strong {
+      display: block;
+      margin-top: 10px;
+      font-size: 27px;
+      line-height: 1;
+      font-weight: 300;
+    }
+
+    .timeline {
+      padding-top: 26px;
+    }
+
+    .timeline-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .timeline-head h3 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .moment-row {
+      display: grid;
+      grid-template-columns: 58px 1fr 44px;
+      gap: 13px;
+      min-height: 92px;
+      padding: 0 0 20px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .thumb {
+      width: 58px;
+      height: 58px;
+      position: relative;
+      background: var(--gray-100);
+      border: 1px solid var(--gray-300);
+    }
+
+    .thumb::before,
+    .thumb::after {
+      content: "";
+      position: absolute;
+      background: var(--gray-200);
+    }
+
+    .thumb::before {
+      left: 50%;
+      top: 0;
+      width: 1px;
+      height: 100%;
+    }
+
+    .thumb::after {
+      left: 0;
+      top: 50%;
+      width: 100%;
+      height: 1px;
+    }
+
+    .thumb.dark {
+      background: var(--gray-900);
+      border-color: var(--gray-900);
+    }
+
+    .thumb.light {
+      background: var(--paper);
+    }
+
+    .thumb .count {
+      position: absolute;
+      right: -1px;
+      bottom: -1px;
+      min-width: 18px;
+      height: 18px;
+      display: grid;
+      place-items: center;
+      color: var(--paper);
+      background: var(--ink);
+      font-family: var(--mono);
+      font-size: 9px;
+    }
+
+    .moment-row h4 {
+      margin: 0 0 7px;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .moment-row p {
+      margin: 0;
+      color: var(--gray-600, #5e5e5e);
+      font-size: 10px;
+      line-height: 1.55;
+    }
+
+    .moment-row .duration {
+      color: var(--gray-700);
+      font-family: var(--serif);
+      font-size: 14px;
+      font-style: italic;
+      text-align: right;
+    }
+
+    .carousel {
+      height: 352px;
+      position: relative;
+      margin: 6px 0 25px;
+      border-bottom: 1px solid var(--ink);
+      background: var(--gray-100);
+    }
+
+    .carousel .axis-x,
+    .carousel .axis-y {
+      position: absolute;
+      background: var(--gray-200);
+    }
+
+    .carousel .axis-x {
+      left: 0;
+      top: 50%;
+      width: 100%;
+      height: 1px;
+    }
+
+    .carousel .axis-y {
+      left: 50%;
+      top: 0;
+      width: 1px;
+      height: 100%;
+    }
+
+    .carousel::before {
+      content: "";
+      position: absolute;
+      inset: 42px 34px 78px 110px;
+      border: 1px solid var(--gray-900);
+      background: var(--paper);
+    }
+
+    .carousel::after {
+      content: "";
+      position: absolute;
+      right: 28px;
+      bottom: 30px;
+      width: 88px;
+      height: 88px;
+      border: 1px solid var(--accent);
+      border-radius: 50%;
+    }
+
+    .pager {
+      position: absolute;
+      left: 18px;
+      bottom: 27px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .pager i {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--gray-300);
+    }
+
+    .pager i:first-child {
+      background: var(--accent);
+    }
+
+    .moment-detail h2 {
+      margin: 0 0 13px;
+      font-size: 31px;
+      line-height: 1.08;
+      font-weight: 400;
+    }
+
+    .detail-meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 22px 0 24px;
+      padding: 14px 0;
+      border-top: 1px solid var(--gray-200);
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .detail-meta strong {
+      display: block;
+      margin-top: 7px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .note {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 20px;
+      font-style: italic;
+      line-height: 1.75;
+    }
+
+    .editor {
+      padding-top: 22px;
+    }
+
+    .field {
+      margin-bottom: 25px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 12px;
+      color: var(--gray-500);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .field .input {
+      min-height: 32px;
+      color: var(--ink);
+      font-size: 24px;
+      line-height: 1.25;
+      font-weight: 400;
+    }
+
+    .field .input.small {
+      font-size: 16px;
+    }
+
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      border: 1px solid var(--ink);
+      background: var(--ink);
+    }
+
+    .media-cell {
+      aspect-ratio: 1;
+      background: var(--gray-100);
+    }
+
+    .media-cell:nth-child(2) {
+      background: var(--gray-900);
+    }
+
+    .media-cell:nth-child(3) {
+      background: var(--paper);
+    }
+
+    .media-cell.add {
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      background: var(--paper);
+      font-size: 24px;
+    }
+
+    .save-button {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: 22px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      color: var(--paper);
+      background: var(--ink);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .accounts-hero {
+      height: 214px;
+      display: grid;
+      align-content: end;
+      border-bottom: 1px solid var(--ink);
+      padding-bottom: 24px;
+    }
+
+    .accounts-hero .total {
+      margin: 20px 0 10px -4px;
+      font-size: 78px;
+      line-height: .85;
+      font-weight: 300;
+    }
+
+    .year-list {
+      margin-top: 26px;
+    }
+
+    .year-block {
+      display: grid;
+      grid-template-columns: 66px 1fr;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .year {
+      color: var(--gray-500);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .1em;
+    }
+
+    .month-row {
+      display: grid;
+      grid-template-columns: 34px 1fr 52px;
+      align-items: center;
+      gap: 12px;
+      min-height: 48px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .month-row .bar {
+      height: 1px;
+      background: var(--ink);
+      transform-origin: left;
+    }
+
+    .month-row:nth-child(1) .bar { transform: scaleX(1); }
+    .month-row:nth-child(2) .bar { transform: scaleX(.66); }
+    .month-row:nth-child(3) .bar { transform: scaleX(.5); }
+    .month-row:nth-child(4) .bar { transform: scaleX(.33); }
+
+    .month-row b {
+      font-size: 16px;
+      font-weight: 400;
+      text-align: right;
+    }
+
+    .month-row small {
+      display: block;
+      color: var(--gray-500);
+      font-size: 9px;
+      line-height: 1.5;
+      text-align: right;
+    }
+
+    .archive-list {
+      margin-top: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .archive-row {
+      display: grid;
+      grid-template-columns: 1fr 72px;
+      gap: 14px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .archive-row h4 {
+      margin: 0 0 7px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .archive-row p {
+      margin: 0;
+      color: var(--gray-500);
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
+    .archive-row b {
+      font-size: 19px;
+      font-weight: 300;
+      text-align: right;
+    }
+
+    .variants {
+      margin-top: 54px;
+      padding-top: 28px;
+      border-top: 1px solid var(--ink);
+    }
+
+    .variants h2 {
+      margin: 0 0 20px;
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .variant-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .variant {
+      min-height: 360px;
+      position: relative;
+      padding: 22px;
+      background: var(--paper);
+      border: 1px solid var(--ink);
+    }
+
+    .variant-a .huge {
+      margin: 42px 0 12px -6px;
+      font-size: clamp(82px, 9vw, 132px);
+      line-height: .82;
+      font-weight: 300;
+    }
+
+    .variant-a .huge span {
+      color: var(--accent);
+      font-size: .32em;
+      vertical-align: .45em;
+    }
+
+    .variant-a .deposit {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: 22px;
+      display: flex;
+      justify-content: space-between;
+      padding-top: 14px;
+      border-top: 1px solid var(--gray-200);
+      color: var(--gray-700);
+      font-size: 11px;
+    }
+
+    .variant-b {
+      display: grid;
+      place-items: center;
+      min-height: 360px;
+    }
+
+    .concept-circle {
+      width: 136px;
+      height: 136px;
+      position: relative;
+      border: 1px solid var(--accent);
+      border-radius: 50%;
+    }
+
+    .concept-circle .around {
+      position: absolute;
+      left: 50%;
+      top: -34px;
+      width: 220px;
+      transform: translateX(-50%);
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    .concept-circle .center {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 32px;
+      font-weight: 300;
+    }
+
+    .concept-caption {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid var(--gray-200);
+      padding-top: 13px;
+      font-size: 11px;
+    }
+
+    .variant-c {
+      min-height: 360px;
+      overflow: hidden;
+    }
+
+    .variant-c .line {
+      position: absolute;
+      left: -20px;
+      right: -20px;
+      top: 52%;
+      height: 1px;
+      background: var(--ink);
+      transform: rotate(-16deg);
+      transform-origin: center;
+    }
+
+    .variant-c .n1 {
+      position: absolute;
+      left: 18px;
+      bottom: 28px;
+      font-size: 104px;
+      line-height: .82;
+      font-weight: 300;
+    }
+
+    .variant-c .n2 {
+      position: absolute;
+      top: 48px;
+      right: 30px;
+      color: var(--accent);
+      font-size: 62px;
+      line-height: .82;
+      font-weight: 300;
+    }
+
+    .variant-c .c-note {
+      position: absolute;
+      top: 24px;
+      left: 22px;
+      width: 110px;
+    }
+
+    @media (max-width: 520px) {
+      .page {
+        padding: 30px 14px 64px;
+      }
+
+      .page-header {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .header-meta {
+        text-align: left;
+      }
+
+      .gallery {
+        grid-template-columns: 1fr;
+      }
+
+      .shot,
+      .phone {
+        width: min(393px, calc(100vw - 28px));
+      }
+
+      .phone {
+        height: calc((min(393px, 100vw - 28px)) * 2.168);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <h1>Gallery · 当代艺术 · 林晚 v1</h1>
+      <p class="header-meta">Time Bank Prototype<br>White Cube / 5 Screens / 2026</p>
+    </header>
+
+    <section class="gallery" aria-label="iOS prototype screens">
+      <article class="shot">
+        <p class="shot-title"><strong>S1 主页</strong><span>lifespan A</span></p>
+        <div class="phone">
+          <div class="statusbar">
+            <span>9:41</span>
+            <span class="system-icons"><span class="bars"><i></i><i></i><i></i><i></i></span><span class="battery"></span></span>
+          </div>
+          <div class="screen scroll">
+            <section class="home-intro">
+              <div>
+                <p class="kicker">Lin Wan / local archive</p>
+                <h2>下午好，林晚</h2>
+              </div>
+              <p>2026.03.28</p>
+            </section>
+
+            <section class="lifespan-card" aria-label="时间余额">
+              <div class="kicker">TIME BALANCE / 时间余额</div>
+              <div class="hero-number">2,288 <span class="unit">周</span></div>
+              <p class="subline">44 年 · 386 Kh, 2026</p>
+              <div class="deposit-strip">
+                <div>
+                  <span class="kicker">DEPOSITED</span>
+                  <span class="value">128 小时</span>
+                </div>
+                <div>
+                  <span class="kicker">MOMENTS</span>
+                  <span class="value">27 个瞬间</span>
+                  <p class="wall-label">跨 5 个时间账户</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="account-list" aria-label="时间账户">
+              <div class="account-row">
+                <div>
+                  <h3>陪父母</h3>
+                  <span class="metric">552h</span>
+                  <p>还能共度 · 约 92 次见面</p>
+                </div>
+                <div class="stored">
+                  <b>56h</b>
+                  <p>已存入<br>12 个瞬间</p>
+                </div>
+              </div>
+
+              <div class="account-row">
+                <div>
+                  <h3>陪孩子</h3>
+                  <span class="metric">6,840h</span>
+                  <p>还能共度 · 每周约 14h</p>
+                </div>
+                <div class="stored">
+                  <b>23h</b>
+                  <p>已存入<br>8 个瞬间</p>
+                </div>
+              </div>
+
+              <div class="account-row">
+                <div>
+                  <h3>陪伴侣</h3>
+                  <span class="metric">43,800h</span>
+                  <p>还能共度 · 每天约 4h</p>
+                </div>
+                <div class="stored">
+                  <b>14h</b>
+                  <p>已存入<br>5 个瞬间</p>
+                </div>
+              </div>
+
+              <div class="account-row">
+                <div>
+                  <h3>运动</h3>
+                  <span class="metric">9,560h</span>
+                  <p>还能共度 · 每周约 5h</p>
+                </div>
+                <div class="stored">
+                  <b>18h</b>
+                  <p>已存入<br>6 个瞬间</p>
+                </div>
+              </div>
+
+              <div class="account-row">
+                <div>
+                  <h3>创造</h3>
+                  <span class="metric">39,000h</span>
+                  <p>还能共度 · 每周约 40h</p>
+                </div>
+                <div class="stored">
+                  <b>15h</b>
+                  <p>已存入<br>4 个瞬间</p>
+                </div>
+              </div>
+
+              <div class="account-row">
+                <div>
+                  <h3>自由</h3>
+                  <span class="metric small">占清醒约 56%</span>
+                  <p>还能共度</p>
+                </div>
+                <div class="stored">
+                  <b>2h</b>
+                  <p>已存入<br>2 个瞬间</p>
+                </div>
+              </div>
+            </section>
+          </div>
+          <nav class="tabbar" aria-label="底部导航">
+            <div class="tab active">主页</div>
+            <div class="fab">+</div>
+            <div class="tab">账户</div>
+          </nav>
+        </div>
+      </article>
+
+      <article class="shot">
+        <p class="shot-title"><strong>S2 陪父母详情</strong><span>timeline</span></p>
+        <div class="phone">
+          <div class="statusbar">
+            <span>9:41</span>
+            <span class="system-icons"><span class="bars"><i></i><i></i><i></i><i></i></span><span class="battery"></span></span>
+          </div>
+          <div class="screen scroll">
+            <nav class="nav">
+              <button class="nav-button">‹</button>
+              <div class="nav-title">陪父母</div>
+              <button class="nav-button right">+</button>
+            </nav>
+            <section class="detail-hero">
+              <p class="kicker">PARENTS / ACCOUNT</p>
+              <h2>陪父母</h2>
+              <div class="big">552h</div>
+              <p class="caption">还能共度<br>约 92 次见面</p>
+            </section>
+            <section class="summary-pair">
+              <div>
+                <span class="kicker">COUNTER</span>
+                <strong>552h</strong>
+                <p class="wall-label">约 92 次见面</p>
+              </div>
+              <div>
+                <span class="kicker">DEPOSIT</span>
+                <strong>56h</strong>
+                <p class="wall-label">12 个瞬间</p>
+              </div>
+            </section>
+            <section class="timeline">
+              <div class="timeline-head">
+                <h3>已存入</h3>
+                <span class="kicker">2026-2025</span>
+              </div>
+              <div class="moment-row">
+                <div class="thumb light"><span class="count">1</span></div>
+                <div>
+                  <h4>妈做的腌菜</h4>
+                  <p>2026-03-15 · 她说还是我小时候那个味道。</p>
+                </div>
+                <div class="duration">30m</div>
+              </div>
+              <div class="moment-row">
+                <div class="thumb dark"><span class="count">4</span></div>
+                <div>
+                  <h4>爸第一次坐高铁</h4>
+                  <p>2026-02-08 · 他全程靠窗看风景，没说话。</p>
+                </div>
+                <div class="duration">6h</div>
+              </div>
+              <div class="moment-row">
+                <div class="thumb"><span class="count">2</span></div>
+                <div>
+                  <h4>一起买菜</h4>
+                  <p>2026-01-22 · 妈知道每个摊主的名字。</p>
+                </div>
+                <div class="duration">1h</div>
+              </div>
+              <div class="moment-row">
+                <div class="thumb light"><span class="count">1</span></div>
+                <div>
+                  <h4>教爸爸用 iPad</h4>
+                  <p>2025-12-30 · 他终于会自己看视频了。</p>
+                </div>
+                <div class="duration">45m</div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </article>
+
+      <article class="shot">
+        <p class="shot-title"><strong>S3 时刻详情</strong><span>4 image carousel</span></p>
+        <div class="phone">
+          <div class="statusbar">
+            <span>9:41</span>
+            <span class="system-icons"><span class="bars"><i></i><i></i><i></i><i></i></span><span class="battery"></span></span>
+          </div>
+          <div class="screen moment-detail">
+            <nav class="nav">
+              <button class="nav-button">‹</button>
+              <div class="nav-title">时刻</div>
+              <button class="nav-button">⋯</button>
+            </nav>
+            <section class="carousel" aria-label="四图轮播">
+              <span class="axis-x"></span>
+              <span class="axis-y"></span>
+              <div class="pager"><i></i><i></i><i></i><i></i></div>
+            </section>
+            <p class="kicker">SPORT / 2026-03-22</p>
+            <h2>西湖晨跑</h2>
+            <section class="detail-meta">
+              <div>
+                <span class="kicker">ACCOUNT</span>
+                <strong>运动</strong>
+              </div>
+              <div>
+                <span class="kicker">DURATION</span>
+                <strong>1h</strong>
+              </div>
+              <div>
+                <span class="kicker">MEDIA</span>
+                <strong>4 张</strong>
+              </div>
+            </section>
+            <p class="note">湖边的风很冷。跑到第三公里时，天突然亮起来。那一分钟像是被单独存放过。</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="shot">
+        <p class="shot-title"><strong>S4 编辑器</strong><span>prefill</span></p>
+        <div class="phone">
+          <div class="statusbar">
+            <span>9:41</span>
+            <span class="system-icons"><span class="bars"><i></i><i></i><i></i><i></i></span><span class="battery"></span></span>
+          </div>
+          <div class="screen">
+            <nav class="nav">
+              <button class="nav-button">×</button>
+              <div class="nav-title">存入时刻</div>
+              <button class="nav-button"></button>
+            </nav>
+            <section class="editor">
+              <div class="field">
+                <label>Title</label>
+                <div class="input">妈做的腌菜</div>
+              </div>
+              <div class="field">
+                <label>Account</label>
+                <div class="input small">陪父母</div>
+              </div>
+              <div class="field">
+                <label>Duration</label>
+                <div class="input">30m</div>
+              </div>
+              <div class="field">
+                <label>Date</label>
+                <div class="input small">2026-03-15</div>
+              </div>
+              <div class="field">
+                <label>Note</label>
+                <div class="input small">她说还是我小时候那个味道。</div>
+              </div>
+              <div class="field">
+                <label>Media</label>
+                <div class="media-grid">
+                  <div class="media-cell"></div>
+                  <div class="media-cell"></div>
+                  <div class="media-cell add">+</div>
+                </div>
+              </div>
+            </section>
+            <div class="save-button">存入时间银行</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="shot">
+        <p class="shot-title"><strong>S5 账户 Tab</strong><span>annual archive</span></p>
+        <div class="phone">
+          <div class="statusbar">
+            <span>9:41</span>
+            <span class="system-icons"><span class="bars"><i></i><i></i><i></i><i></i></span><span class="battery"></span></span>
+          </div>
+          <div class="screen scroll">
+            <nav class="nav">
+              <button class="nav-button"></button>
+              <div class="nav-title">账户</div>
+              <button class="nav-button">⋯</button>
+            </nav>
+            <section class="accounts-hero">
+              <span class="kicker">DEPOSITED / ALL ACCOUNTS</span>
+              <div class="total">128h</div>
+              <p class="wall-label">27 个瞬间 · 跨 5 个时间账户</p>
+            </section>
+            <section class="year-list">
+              <div class="year-block">
+                <div class="year">2026</div>
+                <div>
+                  <div class="month-row">
+                    <span>3</span>
+                    <div class="bar"></div>
+                    <b>12h <small>4 瞬间</small></b>
+                  </div>
+                  <div class="month-row">
+                    <span>2</span>
+                    <div class="bar"></div>
+                    <b>8h <small>3 瞬间</small></b>
+                  </div>
+                  <div class="month-row">
+                    <span>1</span>
+                    <div class="bar"></div>
+                    <b>6h <small>2 瞬间</small></b>
+                  </div>
+                </div>
+              </div>
+              <div class="year-block">
+                <div class="year">2025</div>
+                <div>
+                  <div class="month-row">
+                    <span>12</span>
+                    <div class="bar"></div>
+                    <b>4h <small>2 瞬间</small></b>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="archive-list">
+              <div class="archive-row">
+                <div>
+                  <h4>陪父母</h4>
+                  <p>56h · 12 个瞬间</p>
+                </div>
+                <b>44%</b>
+              </div>
+              <div class="archive-row">
+                <div>
+                  <h4>陪孩子</h4>
+                  <p>23h · 8 个瞬间</p>
+                </div>
+                <b>18%</b>
+              </div>
+              <div class="archive-row">
+                <div>
+                  <h4>运动</h4>
+                  <p>18h · 6 个瞬间</p>
+                </div>
+                <b>14%</b>
+              </div>
+            </section>
+          </div>
+          <nav class="tabbar" aria-label="底部导航">
+            <div class="tab">主页</div>
+            <div class="fab">+</div>
+            <div class="tab active">账户</div>
+          </nav>
+        </div>
+      </article>
+    </section>
+
+    <section class="variants" aria-label="lifespan variants">
+      <h2>Lifespan variants</h2>
+      <div class="variant-grid">
+        <article class="variant variant-a">
+          <div class="kicker">A / Wall label installation</div>
+          <div class="huge">2,288 <span>周</span></div>
+          <p class="subline serif-note">44 年 · 386 Kh, 2026</p>
+          <div class="deposit">
+            <span>已存入 128 小时</span>
+            <span>27 个瞬间</span>
+          </div>
+        </article>
+
+        <article class="variant variant-b">
+          <div class="kicker" style="position:absolute;left:22px;top:22px;">B / Conceptual piece</div>
+          <div class="concept-circle">
+            <div class="around">约还剩 2,288 周。</div>
+            <div class="center">2,288</div>
+          </div>
+          <div class="concept-caption">
+            <span>已经留下 128 小时。</span>
+            <span>2026</span>
+          </div>
+        </article>
+
+        <article class="variant variant-c">
+          <div class="c-note">
+            <div class="kicker">C / Cy Twombly silence</div>
+          </div>
+          <div class="line"></div>
+          <div class="n2">128</div>
+          <div class="n1">2,288</div>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
