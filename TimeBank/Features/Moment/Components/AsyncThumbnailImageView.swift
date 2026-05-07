@@ -1,6 +1,7 @@
 // TimeBank/Features/Moment/Components/AsyncThumbnailImageView.swift
 
 import Foundation
+import AVFoundation
 import SwiftUI
 import UIKit
 
@@ -54,12 +55,15 @@ final class ThumbnailImageCache {
 
 enum ThumbnailImageSource {
     case file(relativePath: String, fileStore: FileStore)
+    case videoFile(relativePath: String, fileStore: FileStore, maxPixelSize: Int)
     case data(key: String, data: Data)
 
     var cacheKey: String {
         switch self {
         case .file(let relativePath, let fileStore):
             return "file:\(fileStore.baseURL.path):\(relativePath)"
+        case .videoFile(let relativePath, let fileStore, let maxPixelSize):
+            return "video-file:\(fileStore.baseURL.path):\(relativePath):\(maxPixelSize)"
         case .data(let key, _):
             return "data:\(key)"
         }
@@ -78,6 +82,25 @@ enum ThumbnailImageSource {
                 return nil
             }
             return UIImage(data: data)
+
+        case .videoFile(let relativePath, let fileStore, let maxPixelSize):
+            let url = fileStore.url(forRelativePath: relativePath)
+            return await Task.detached(priority: .utility) {
+                let asset = AVURLAsset(url: url)
+                let generator = AVAssetImageGenerator(asset: asset)
+                generator.appliesPreferredTrackTransform = true
+                generator.maximumSize = CGSize(width: maxPixelSize, height: maxPixelSize)
+
+                do {
+                    let image = try generator.copyCGImage(
+                        at: CMTime(seconds: 0.1, preferredTimescale: 600),
+                        actualTime: nil
+                    )
+                    return UIImage(cgImage: image)
+                } catch {
+                    return nil
+                }
+            }.value
 
         case .data(_, let data):
             return await Task.detached(priority: .utility) {

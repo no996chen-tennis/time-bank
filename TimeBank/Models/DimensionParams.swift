@@ -82,9 +82,37 @@ nonisolated extension CreateDimensionParams: Codable {}
 struct FreeDimensionParams: Sendable, Equatable {
     var awakeHoursPerDay: Double
 
-    init(awakeHoursPerDay: Double = 14) {
+    init(awakeHoursPerDay: Double = 16) {
         self.awakeHoursPerDay = awakeHoursPerDay
     }
 }
 
 nonisolated extension FreeDimensionParams: Codable {}
+
+enum CustomFormula: String, Codable, CaseIterable, Sendable, Equatable {
+    case weeklyHours
+    case dailyHours
+    case occurrenceBased
+}
+
+struct CustomDimensionParams: Codable, Sendable, Equatable {
+    var formula: CustomFormula
+    var weeklyHours: Double
+    var dailyHours: Double
+    var annualOccurrences: Int
+    var hoursPerOccurrence: Double
+
+    init(
+        formula: CustomFormula = .weeklyHours,
+        weeklyHours: Double = 5,
+        dailyHours: Double = 1,
+        annualOccurrences: Int = 12,
+        hoursPerOccurrence: Double = 2
+    ) {
+        self.formula = formula
+        self.weeklyHours = weeklyHours
+        self.dailyHours = dailyHours
+        self.annualOccurrences = annualOccurrences
+        self.hoursPerOccurrence = hoursPerOccurrence
+    }
+}

@@ -22,11 +22,12 @@ struct AccountTabView: View {
                         emptyState
                     } else {
                         distributionSection
+                        allMomentsSection
                         annualSection
                     }
                 }
                 .padding(.horizontal, TBSpace.s5)
-                .padding(.top, TBSpace.s4)
+                .padding(.top, TBSpace.s3)
                 .padding(.bottom, TBSpace.s7)
             }
         }
@@ -37,16 +38,26 @@ struct AccountTabView: View {
 
     private var summaryCard: some View {
         VStack(alignment: .leading, spacing: TBSpace.s4) {
-            VStack(alignment: .leading, spacing: TBSpace.s1) {
-                Text(Formatter.hoursCompact(aggregate.totalHours))
-                    .font(.tbDisplayL)
-                    .foregroundStyle(Color.tbInk)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.56)
+            HStack(alignment: .top, spacing: TBSpace.s3) {
+                Image(systemName: TimeBankIconography.depositIconSystemName)
+                    .font(.tbHeadM)
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(Color.tbPrimary)
+                    .frame(width: 40, height: 40)
+                    .background(Color.tbPrimary.opacity(0.12))
+                    .clipShape(Circle())
 
-                Text("已存入 · 包含其他时间账户")
-                    .font(.tbBodySm)
-                    .foregroundStyle(Color.tbInk2)
+                VStack(alignment: .leading, spacing: TBSpace.s1) {
+                    Text(Formatter.hoursCompact(aggregate.totalHours))
+                        .font(.tbDisplayL)
+                        .foregroundStyle(Color.tbInk)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.56)
+
+                    Text("已存入 · 包含其他时间账户")
+                        .font(.tbBodySm)
+                        .foregroundStyle(Color.tbInk2)
+                }
             }
 
             Divider()
@@ -66,9 +77,7 @@ struct AccountTabView: View {
         }
         .padding(TBSpace.s5)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.tbSurface)
-        .clipShape(RoundedRectangle(cornerRadius: TBRadius.lg))
-        .modifier(AccountSoftShadowModifier())
+        .tbThemedSurface()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("已存入 \(Int(aggregate.totalHours.rounded())) 小时，跨 \(aggregate.dimensionCount) 个时间账户，\(Formatter.momentsCount(aggregate.totalMoments))")
     }
@@ -86,7 +95,7 @@ struct AccountTabView: View {
                         innerRadius: .ratio(0.62),
                         angularInset: 1.5
                     )
-                    .foregroundStyle(DimensionPalette.color(for: slice.dimensionID))
+                    .foregroundStyle(DimensionPalette.color(forColorKey: slice.colorKey))
                     .cornerRadius(4)
                 }
                 .chartLegend(.hidden)
@@ -100,18 +109,19 @@ struct AccountTabView: View {
                 }
             }
             .padding(TBSpace.s4)
-            .background(Color.tbSurface)
-            .clipShape(RoundedRectangle(cornerRadius: TBRadius.lg))
-            .modifier(AccountSoftShadowModifier())
+            .tbThemedSurface()
         }
     }
 
     private func legendRow(_ slice: DimensionCompute.AccountTabSlice) -> some View {
         HStack(alignment: .top, spacing: TBSpace.s3) {
-            Circle()
-                .fill(DimensionPalette.color(for: slice.dimensionID))
-                .frame(width: 10, height: 10)
-                .padding(.top, 6)
+            Image(systemName: TimeBankIconography.dimensionIconSystemName(for: slice.dimensionID))
+                .font(.tbLabel)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(DimensionPalette.color(forColorKey: slice.colorKey))
+                .frame(width: 24, height: 24)
+                .background(DimensionPalette.soft(forColorKey: slice.colorKey))
+                .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: TBSpace.s1) {
                 Text(legendTitle(for: slice))
@@ -167,27 +177,116 @@ struct AccountTabView: View {
                 }
             }
             .padding(TBSpace.s4)
-            .background(Color.tbSurface)
-            .clipShape(RoundedRectangle(cornerRadius: TBRadius.lg))
-            .modifier(AccountSoftShadowModifier())
+            .tbThemedSurface()
         }
     }
 
-    private var emptyState: some View {
-        VStack(spacing: TBSpace.s4) {
-            Text("存入第一个瞬间，这里就会长出来。")
-                .font(.tbBody)
-                .foregroundStyle(Color.tbInk2)
-                .multilineTextAlignment(.center)
+    private var allMomentsSection: some View {
+        VStack(alignment: .leading, spacing: TBSpace.s4) {
+            Text("所有已存入瞬间")
+                .font(.tbHeadS)
+                .foregroundStyle(Color.tbInk)
 
-            Button("存入第一个", action: onCreateMoment)
-                .buttonStyle(AccountPrimaryButtonStyle())
+            VStack(spacing: 0) {
+                ForEach(sortedMoments) { moment in
+                    NavigationLink {
+                        MomentDetailView(momentID: moment.id)
+                    } label: {
+                        allMomentRow(moment)
+                    }
+                    .buttonStyle(.plain)
+
+                    if moment.id != sortedMoments.last?.id {
+                        Divider()
+                            .overlay(Color.tbHair)
+                    }
+                }
+            }
+            .padding(.horizontal, TBSpace.s4)
+            .tbThemedSurface()
         }
-        .padding(TBSpace.s6)
+    }
+
+    private var sortedMoments: [Moment] {
+        moments
+            .filter { $0.status == .normal }
+            .sorted { lhs, rhs in
+                if lhs.happenedAt == rhs.happenedAt {
+                    return lhs.createdAt > rhs.createdAt
+                }
+                return lhs.happenedAt > rhs.happenedAt
+            }
+    }
+
+    private func allMomentRow(_ moment: Moment) -> some View {
+        HStack(alignment: .center, spacing: TBSpace.s3) {
+            VStack(alignment: .leading, spacing: TBSpace.s1) {
+                Text(DimensionDetailCopy.timelineTitle(for: moment))
+                    .font(.tbBodySm)
+                    .foregroundStyle(Color.tbInk)
+                    .lineLimit(1)
+
+                Text(momentRowSubtitle(moment))
+                    .font(.tbLabel)
+                    .foregroundStyle(Color.tbInk3)
+                    .lineLimit(1)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.tbLabel)
+                .foregroundStyle(Color.tbInk3)
+        }
+        .padding(.vertical, TBSpace.s3)
+        .contentShape(Rectangle())
+    }
+
+    private func momentRowSubtitle(_ moment: Moment) -> String {
+        let dimensionName = dimensions.first { $0.id == moment.dimensionId }?.name ?? "时间账户"
+        let duration = moment.durationSeconds.map { Formatter.hoursWithMinutes($0) } ?? "未计时长"
+        return "\(dimensionName) · \(Formatter.absoluteDate(moment.happenedAt)) · \(duration)"
+    }
+
+    private var emptyState: some View {
+        VStack(alignment: .leading, spacing: TBSpace.s4) {
+            HStack(spacing: TBSpace.s3) {
+                ZStack {
+                    Circle()
+                        .fill(Color.tbPrimary.opacity(0.14))
+
+                    Image(systemName: TimeBankIconography.depositIconSystemName)
+                        .font(.tbHeadS)
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(Color.tbPrimary)
+                }
+                .frame(width: 44, height: 44)
+
+                VStack(alignment: .leading, spacing: TBSpace.s1) {
+                    Text("还没有存入")
+                        .font(.tbHeadS)
+                        .foregroundStyle(Color.tbInk)
+
+                    Text(emptyStateSubtitle)
+                        .font(.tbBodySm)
+                        .foregroundStyle(Color.tbInk2)
+                        .lineSpacing(TBSpace.s1)
+                }
+            }
+
+            Button(action: onCreateMoment) {
+                Label("存入第一个", systemImage: "plus")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(TBPrimaryActionButtonStyle(fillsWidth: true))
+        }
+        .padding(TBSpace.s5)
         .frame(maxWidth: .infinity)
-        .background(Color.tbSurface)
-        .clipShape(RoundedRectangle(cornerRadius: TBRadius.lg))
-        .modifier(AccountSoftShadowModifier())
+        .tbThemedSurface()
+    }
+
+    private var emptyStateSubtitle: String {
+        "第一段被认真感受过的时间，会从这里进入账户索引。"
     }
 
     private func chartWeight(for slice: DimensionCompute.AccountTabSlice) -> Double {
@@ -209,23 +308,5 @@ struct AccountTabView: View {
         aggregate.slices
             .map { "\($0.name) 占 \($0.percent)%" }
             .joined(separator: "，")
-    }
-}
-
-private struct AccountSoftShadowModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        TBShadow.soft(for: content)
-    }
-}
-
-private struct AccountPrimaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.tbBody)
-            .foregroundStyle(Color.tbSurface)
-            .padding(.horizontal, TBSpace.s6)
-            .padding(.vertical, TBSpace.s3)
-            .background(Color.tbPrimary.opacity(configuration.isPressed ? 0.78 : 1))
-            .clipShape(Capsule())
     }
 }

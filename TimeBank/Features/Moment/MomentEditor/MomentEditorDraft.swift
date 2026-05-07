@@ -200,6 +200,7 @@ struct MomentEditorMediaItem: Identifiable, Equatable {
     var isFailed: Bool
     var relativePath: String?
     var thumbnailPath: String?
+    var previewThumbnailData: Data?
 
     init(
         id: UUID = UUID(),
@@ -210,7 +211,8 @@ struct MomentEditorMediaItem: Identifiable, Equatable {
         originalFilename: String? = nil,
         isFailed: Bool = false,
         relativePath: String? = nil,
-        thumbnailPath: String? = nil
+        thumbnailPath: String? = nil,
+        previewThumbnailData: Data? = nil
     ) {
         self.id = id
         self.existingMediaID = existingMediaID
@@ -221,6 +223,7 @@ struct MomentEditorMediaItem: Identifiable, Equatable {
         self.isFailed = isFailed
         self.relativePath = relativePath
         self.thumbnailPath = thumbnailPath
+        self.previewThumbnailData = previewThumbnailData
     }
 
     var isSaveable: Bool {

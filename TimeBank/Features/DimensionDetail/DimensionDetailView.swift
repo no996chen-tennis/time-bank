@@ -10,8 +10,16 @@ struct DimensionDetailView: View {
     @Query private var dimensions: [Dimension]
     @Query private var moments: [Moment]
 
-    @State private var momentEditorRoute: MomentEditorRoute?
     @State private var fileStore = FileStore()
+    @State private var timeScope: DimensionCompute.TimeBalanceScope
+
+    init(
+        dimensionID: String,
+        initialTimeScope: DimensionCompute.TimeBalanceScope = .lifetime
+    ) {
+        self.dimensionID = dimensionID
+        _timeScope = State(initialValue: initialTimeScope)
+    }
 
     var body: some View {
         Group {
@@ -30,27 +38,6 @@ struct DimensionDetailView: View {
         .background(Color.tbBg)
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            if let dimension = dimensions.first(where: { $0.id == dimensionID }),
-               dimension.kind == .builtin || dimension.kind == .custom {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        if dimension.mode == .normal {
-                            momentEditorRoute = .dimension(dimension)
-                        }
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                    .disabled(dimension.mode == .memorial)
-                    .accessibilityLabel(dimension.mode == .memorial
-                        ? "\(dimension.name)已标记纪念，不再添加新瞬间"
-                        : DimensionDetailCopy.depositAccessibilityLabel)
-                }
-            }
-        }
-        .sheet(item: $momentEditorRoute) { route in
-            MomentEditorView(route: route)
-        }
     }
 
     private func detailContent(
@@ -61,20 +48,24 @@ struct DimensionDetailView: View {
         let normalMoments = moments.filter { $0.status == .normal }
 
         return ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: TBSpace.s5) {
+            VStack(alignment: .leading, spacing: TBSpace.s3) {
+                TimeBalanceScopeControl(scope: $timeScope)
+
                 DimensionDetailHeaderView(
                     dimension: dimension,
                     profile: profile,
-                    dimensionsByID: dimensionsByID
+                    dimensionsByID: dimensionsByID,
+                    timeScope: timeScope
                 )
 
                 NavigationLink {
-                    DimensionParameterEditorView(dimensionID: dimension.id)
+                    DimensionParameterEditorView(dimensionID: dimension.id, initialTimeScope: timeScope)
                 } label: {
                     CalculationSummaryCard(
                         dimension: dimension,
                         profile: profile,
-                        dimensionsByID: dimensionsByID
+                        dimensionsByID: dimensionsByID,
+                        timeScope: timeScope
                     )
                 }
                 .buttonStyle(.plain)

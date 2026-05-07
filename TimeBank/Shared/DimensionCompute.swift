@@ -7,6 +7,20 @@ enum DimensionCompute {
     static let weeksPerYear = 52.1429
     static let daysPerYear = 365.25
 
+    enum TimeBalanceScope: String, CaseIterable, Identifiable, Sendable {
+        case lifetime
+        case year
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .lifetime: return "今生"
+            case .year: return "今年"
+            }
+        }
+    }
+
     struct LifespanProjection: Sendable, Equatable {
         let remainingWeeks: Double
         let remainingYears: Double
@@ -30,6 +44,7 @@ enum DimensionCompute {
     struct AccountTabSlice: Identifiable, Sendable, Equatable {
         let dimensionID: String
         let name: String
+        let colorKey: String
         let hours: Double
         let moments: Int
         let percent: Int
@@ -72,8 +87,12 @@ enum DimensionCompute {
     }
 
     static func ageYears(fromBirthYear birthYear: Int, now: Date = .now) -> Double {
-        let currentYear = Calendar(identifier: .gregorian).component(.year, from: now)
-        return max(0, Double(currentYear - birthYear))
+        let calendar = Calendar(identifier: .gregorian)
+        guard let birthdayApproximation = calendar.date(from: DateComponents(year: birthYear, month: 1, day: 1)) else {
+            let currentYear = calendar.component(.year, from: now)
+            return max(0, Double(currentYear - birthYear))
+        }
+        return ageYears(birthday: birthdayApproximation, now: now)
     }
 
     enum Lifespan {
@@ -92,8 +111,21 @@ enum DimensionCompute {
         }
     }
 
-    static func projection(profile: UserProfile, now: Date = .now) -> LifespanProjection {
-        LifespanProjection(
+    static func projection(
+        profile: UserProfile,
+        scope: TimeBalanceScope = .lifetime,
+        now: Date = .now
+    ) -> LifespanProjection {
+        if scope == .year {
+            let remainingYears = remainingCalendarYearsThisYear(now: now)
+            return LifespanProjection(
+                remainingWeeks: remainingYears * weeksPerYear,
+                remainingYears: remainingYears,
+                remainingHoursK: remainingYears * daysPerYear * 24 / 1_000
+            )
+        }
+
+        return LifespanProjection(
             remainingWeeks: Lifespan.remainingWeeks(profile: profile, now: now),
             remainingYears: Lifespan.remainingYears(profile: profile, now: now),
             remainingHoursK: Lifespan.remainingHoursK(profile: profile, now: now)
@@ -104,6 +136,7 @@ enum DimensionCompute {
         for dimension: Dimension,
         profile: UserProfile,
         dimensionsByID: [String: Dimension] = [:],
+        scope: TimeBalanceScope = .lifetime,
         now: Date = .now
     ) -> Double {
         guard dimension.mode == .normal else { return 0 }
@@ -113,23 +146,23 @@ enum DimensionCompute {
             return 0
 
         case DimensionReservedID.parents.rawValue:
-            return parentsHours(profile: profile, now: now)
+            return parentsHours(profile: profile, scope: scope, now: now)
 
         case DimensionReservedID.kids.rawValue:
-            return kidsHours(dimension: dimension, profile: profile, now: now)
+            return kidsHours(dimension: dimension, profile: profile, scope: scope, now: now)
 
         case DimensionReservedID.partner.rawValue:
-            return partnerHours(profile: profile, now: now)
+            return partnerHours(profile: profile, scope: scope, now: now)
 
         case DimensionReservedID.sport.rawValue:
-            return sportHours(dimension: dimension, profile: profile, now: now)
+            return sportHours(dimension: dimension, profile: profile, scope: scope, now: now)
 
         case DimensionReservedID.create.rawValue:
-            return createHours(dimension: dimension, profile: profile, now: now)
+            return createHours(dimension: dimension, profile: profile, scope: scope, now: now)
 
         case DimensionReservedID.free.rawValue:
             let awakeHoursPerDay = dimension.decodeParams(FreeDimensionParams.self, default: FreeDimensionParams()).awakeHoursPerDay
-            let totalAwakeHours = Lifespan.remainingYears(profile: profile, now: now) * daysPerYear * awakeHoursPerDay
+            let totalAwakeHours = remainingSelfYears(profile: profile, scope: scope, now: now) * daysPerYear * awakeHoursPerDay
 
             let parentsDimension = dimensionsByID[DimensionReservedID.parents.rawValue] ?? defaultDimension(id: .parents)
             let kidsDimension = dimensionsByID[DimensionReservedID.kids.rawValue] ?? defaultDimension(id: .kids)
@@ -137,15 +170,18 @@ enum DimensionCompute {
             let sportDimension = dimensionsByID[DimensionReservedID.sport.rawValue] ?? defaultDimension(id: .sport)
             let createDimension = dimensionsByID[DimensionReservedID.create.rawValue] ?? defaultDimension(id: .create)
 
-            let consumed = consumeHours(for: parentsDimension, profile: profile, dimensionsByID: dimensionsByID, now: now)
-                + consumeHours(for: kidsDimension, profile: profile, dimensionsByID: dimensionsByID, now: now)
-                + consumeHours(for: partnerDimension, profile: profile, dimensionsByID: dimensionsByID, now: now)
-                + consumeHours(for: sportDimension, profile: profile, dimensionsByID: dimensionsByID, now: now)
-                + consumeHours(for: createDimension, profile: profile, dimensionsByID: dimensionsByID, now: now)
+            let consumed = consumeHours(for: parentsDimension, profile: profile, dimensionsByID: dimensionsByID, scope: scope, now: now)
+                + consumeHours(for: kidsDimension, profile: profile, dimensionsByID: dimensionsByID, scope: scope, now: now)
+                + consumeHours(for: partnerDimension, profile: profile, dimensionsByID: dimensionsByID, scope: scope, now: now)
+                + consumeHours(for: sportDimension, profile: profile, dimensionsByID: dimensionsByID, scope: scope, now: now)
+                + consumeHours(for: createDimension, profile: profile, dimensionsByID: dimensionsByID, scope: scope, now: now)
 
             return max(0, totalAwakeHours - consumed)
 
         default:
+            if dimension.kind == .custom {
+                return customHours(dimension: dimension, profile: profile, scope: scope, now: now)
+            }
             return 0
         }
     }
@@ -156,19 +192,21 @@ enum DimensionCompute {
         for dimension: Dimension,
         profile: UserProfile,
         dimensionsByID: [String: Dimension] = [:],
+        scope: TimeBalanceScope = .lifetime,
         now: Date = .now
     ) -> DimensionSubtitle {
         guard dimension.mode == .normal else { return .none }
 
         switch dimension.id {
         case DimensionReservedID.lifespan.rawValue:
+            let projection = projection(profile: profile, scope: scope, now: now)
             return .lifespan(
-                years: Lifespan.remainingYears(profile: profile, now: now),
-                hoursK: Lifespan.remainingHoursK(profile: profile, now: now)
+                years: projection.remainingYears,
+                hoursK: projection.remainingHoursK
             )
 
         case DimensionReservedID.parents.rawValue:
-            return .occurrence(count: parentsTotalMeetings(profile: profile, now: now), noun: "见面")
+            return .occurrence(count: parentsTotalMeetings(profile: profile, scope: scope, now: now), noun: "见面")
 
         case DimensionReservedID.kids.rawValue:
             return .weeklyHours(kidsCurrentHoursPerWeek(dimension: dimension, profile: profile, now: now))
@@ -187,10 +225,14 @@ enum DimensionCompute {
             return .percentOfAwake(freePercentOfAwake(
                 profile: profile,
                 dimensionsByID: dimensionsByID,
+                scope: scope,
                 now: now
             ))
 
         default:
+            if dimension.kind == .custom {
+                return customSubtitle(dimension: dimension)
+            }
             return .none
         }
     }
@@ -279,6 +321,7 @@ enum DimensionCompute {
             return AccountTabSlice(
                 dimensionID: dimension.id,
                 name: accountTabDisplayName(for: dimension),
+                colorKey: dimension.colorKey,
                 hours: Double(dimensionSeconds) / 3600.0,
                 moments: dimensionMoments.count,
                 percent: max(0, percent),
@@ -331,7 +374,45 @@ enum DimensionCompute {
         return accountTabAggregate(dimensions: dimensions, moments: moments)
     }
 
-    private static func parentsHours(profile: UserProfile, now: Date) -> Double {
+    static func remainingCalendarYearsThisYear(now: Date = .now) -> Double {
+        let calendar = Calendar(identifier: .gregorian)
+        let nextYear = calendar.component(.year, from: now) + 1
+        guard let nextYearStart = calendar.date(from: DateComponents(year: nextYear, month: 1, day: 1)) else {
+            return 0
+        }
+
+        let seconds = max(0, nextYearStart.timeIntervalSince(now))
+        return seconds / (daysPerYear * 24 * 60 * 60)
+    }
+
+    private static func remainingSelfYears(
+        profile: UserProfile,
+        scope: TimeBalanceScope,
+        now: Date
+    ) -> Double {
+        let lifetimeYears = Lifespan.remainingYears(profile: profile, now: now)
+        switch scope {
+        case .lifetime:
+            return lifetimeYears
+        case .year:
+            return min(lifetimeYears, remainingCalendarYearsThisYear(now: now))
+        }
+    }
+
+    private static func scopedYears(
+        _ years: Double,
+        scope: TimeBalanceScope,
+        now: Date
+    ) -> Double {
+        switch scope {
+        case .lifetime:
+            return max(0, years)
+        case .year:
+            return min(max(0, years), remainingCalendarYearsThisYear(now: now))
+        }
+    }
+
+    private static func parentsHours(profile: UserProfile, scope: TimeBalanceScope, now: Date) -> Double {
         guard let parents = profile.parents else { return 0 }
 
         let livingParentAges = [parents.father, parents.mother]
@@ -343,11 +424,15 @@ enum DimensionCompute {
         guard livingParentAges.isEmpty == false else { return 0 }
 
         let representativeAge = livingParentAges.reduce(0, +) / Double(livingParentAges.count)
-        let remainingYears = max(0, Double(parents.expectedLifespan) - representativeAge)
+        let remainingYears = scopedYears(
+            Double(parents.expectedLifespan) - representativeAge,
+            scope: scope,
+            now: now
+        )
         return remainingYears * Double(max(0, parents.visitsPerYear)) * max(0, parents.hoursPerVisit)
     }
 
-    private static func kidsHours(dimension: Dimension, profile: UserProfile, now: Date) -> Double {
+    private static func kidsHours(dimension: Dimension, profile: UserProfile, scope: TimeBalanceScope, now: Date) -> Double {
         let livingChildren = profile.children.filter { $0.deceased == false }
         guard livingChildren.isEmpty == false else { return 0 }
 
@@ -358,15 +443,15 @@ enum DimensionCompute {
         let params = dimension.decodeParams(KidsDimensionParams.self, default: KidsDimensionParams())
         return childQualityHours(
             fromCurrentAge: youngestAge,
-            remainingYears: Lifespan.remainingYears(profile: profile, now: now),
+            remainingYears: remainingSelfYears(profile: profile, scope: scope, now: now),
             weeklyHoursOverride: params.weeklyHoursOverride
         )
     }
 
-    private static func partnerHours(profile: UserProfile, now: Date) -> Double {
+    private static func partnerHours(profile: UserProfile, scope: TimeBalanceScope, now: Date) -> Double {
         guard let partner = profile.partner, partner.deceased == false else { return 0 }
 
-        let selfRemainingYears = Lifespan.remainingYears(profile: profile, now: now)
+        let selfRemainingYears = remainingSelfYears(profile: profile, scope: scope, now: now)
         let partnerAge = ageYears(fromBirthYear: partner.birthYear, now: now)
         let partnerRemainingYears = max(0, Double(profile.expectedLifespanYears) - partnerAge)
         let sharedYears = min(selfRemainingYears, partnerRemainingYears)
@@ -374,10 +459,13 @@ enum DimensionCompute {
         return sharedYears * daysPerYear * max(0, partner.hoursPerDay)
     }
 
-    private static func sportHours(dimension: Dimension, profile: UserProfile, now: Date) -> Double {
+    private static func sportHours(dimension: Dimension, profile: UserProfile, scope: TimeBalanceScope, now: Date) -> Double {
         let params = dimension.decodeParams(SportDimensionParams.self, default: SportDimensionParams())
         let currentAge = ageYears(birthday: profile.birthday, now: now)
-        let lifeEndAge = Double(profile.expectedLifespanYears)
+        let lifeEndAge = min(
+            Double(profile.expectedLifespanYears),
+            currentAge + remainingSelfYears(profile: profile, scope: scope, now: now)
+        )
 
         return hoursAcrossAgeBands(
             startAge: currentAge,
@@ -390,16 +478,63 @@ enum DimensionCompute {
         )
     }
 
-    private static func createHours(dimension: Dimension, profile: UserProfile, now: Date) -> Double {
+    private static func createHours(dimension: Dimension, profile: UserProfile, scope: TimeBalanceScope, now: Date) -> Double {
         let params = dimension.decodeParams(CreateDimensionParams.self, default: CreateDimensionParams())
         let currentAge = ageYears(birthday: profile.birthday, now: now)
+        let endAge = min(
+            Double(profile.expectedLifespanYears),
+            currentAge + remainingSelfYears(profile: profile, scope: scope, now: now)
+        )
         let focusedEndAge = Double(params.focusedPhaseEndAge)
 
-        if currentAge < focusedEndAge {
-            return max(0, focusedEndAge - currentAge) * weeksPerYear * max(0, params.focusedPhaseHoursPerWeek)
-        }
+        return hoursAcrossAgeBands(
+            startAge: currentAge,
+            endAge: endAge,
+            bands: [
+                (lower: 0.0, upper: focusedEndAge, hoursPerWeek: params.focusedPhaseHoursPerWeek),
+                (lower: focusedEndAge, upper: Double.greatestFiniteMagnitude, hoursPerWeek: params.freePhaseHoursPerWeek)
+            ]
+        )
+    }
 
-        return Lifespan.remainingYears(profile: profile, now: now) * weeksPerYear * max(0, params.freePhaseHoursPerWeek)
+    static func customHours(
+        params: CustomDimensionParams,
+        profile: UserProfile,
+        scope: TimeBalanceScope = .lifetime,
+        now: Date = .now
+    ) -> Double {
+        let remainingYears = remainingSelfYears(profile: profile, scope: scope, now: now)
+        switch params.formula {
+        case .weeklyHours:
+            return remainingYears * weeksPerYear * max(0, params.weeklyHours)
+        case .dailyHours:
+            return remainingYears * daysPerYear * max(0, params.dailyHours)
+        case .occurrenceBased:
+            return remainingYears
+                * Double(max(0, params.annualOccurrences))
+                * max(0, params.hoursPerOccurrence)
+        }
+    }
+
+    private static func customHours(dimension: Dimension, profile: UserProfile, scope: TimeBalanceScope, now: Date) -> Double {
+        customHours(
+            params: dimension.decodeParams(CustomDimensionParams.self, default: CustomDimensionParams()),
+            profile: profile,
+            scope: scope,
+            now: now
+        )
+    }
+
+    private static func customSubtitle(dimension: Dimension) -> DimensionSubtitle {
+        let params = dimension.decodeParams(CustomDimensionParams.self, default: CustomDimensionParams())
+        switch params.formula {
+        case .weeklyHours:
+            return .weeklyHours(max(0, params.weeklyHours))
+        case .dailyHours:
+            return .dailyHoursWith(max(0, params.dailyHours), action: "")
+        case .occurrenceBased:
+            return .occurrence(count: max(0, params.annualOccurrences), noun: "")
+        }
     }
 
     private static func childQualityHours(
@@ -455,7 +590,7 @@ enum DimensionCompute {
 
     // MARK: - 副文案数字 helpers（PRD §22.3.1）
 
-    private static func parentsTotalMeetings(profile: UserProfile, now: Date) -> Int {
+    private static func parentsTotalMeetings(profile: UserProfile, scope: TimeBalanceScope, now: Date) -> Int {
         guard let parents = profile.parents else { return 0 }
         let livingParentAges = [parents.father, parents.mother]
             .compactMap { member -> Double? in
@@ -465,7 +600,11 @@ enum DimensionCompute {
         guard livingParentAges.isEmpty == false else { return 0 }
 
         let representativeAge = livingParentAges.reduce(0, +) / Double(livingParentAges.count)
-        let remainingYears = max(0, Double(parents.expectedLifespan) - representativeAge)
+        let remainingYears = scopedYears(
+            Double(parents.expectedLifespan) - representativeAge,
+            scope: scope,
+            now: now
+        )
         return Int((remainingYears * Double(max(0, parents.visitsPerYear))).rounded())
     }
 
@@ -512,11 +651,12 @@ enum DimensionCompute {
     private static func freePercentOfAwake(
         profile: UserProfile,
         dimensionsByID: [String: Dimension],
+        scope: TimeBalanceScope,
         now: Date
     ) -> Double {
         let freeDimension = dimensionsByID[DimensionReservedID.free.rawValue] ?? defaultDimension(id: .free)
         let awakeHoursPerDay = freeDimension.decodeParams(FreeDimensionParams.self, default: FreeDimensionParams()).awakeHoursPerDay
-        let totalAwakeHours = Lifespan.remainingYears(profile: profile, now: now) * daysPerYear * max(0, awakeHoursPerDay)
+        let totalAwakeHours = remainingSelfYears(profile: profile, scope: scope, now: now) * daysPerYear * max(0, awakeHoursPerDay)
 
         guard totalAwakeHours > 0 else { return 0 }
 
@@ -524,6 +664,7 @@ enum DimensionCompute {
             for: freeDimension,
             profile: profile,
             dimensionsByID: dimensionsByID,
+            scope: scope,
             now: now
         )
         return (freeHours / totalAwakeHours) * 100

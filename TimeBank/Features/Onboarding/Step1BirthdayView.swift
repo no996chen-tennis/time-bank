@@ -58,6 +58,7 @@ struct Step1BirthdayView: View {
             .frame(maxWidth: .infinity)
             .background(Color.tbBg2)
             .clipShape(RoundedRectangle(cornerRadius: TBRadius.lg))
+            .environment(\.locale, Locale(identifier: "zh_Hans_CN"))
         }
     }
 

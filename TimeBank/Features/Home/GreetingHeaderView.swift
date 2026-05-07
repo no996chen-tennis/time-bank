@@ -10,16 +10,6 @@ struct GreetingHeaderView: View {
                 .foregroundStyle(Color.tbInk)
 
             Spacer()
-
-            Button(action: {}) {
-                Image(systemName: "gearshape")
-                    .font(.tbHeadM)
-                    .foregroundStyle(Color.tbInk2)
-                    .frame(width: 44, height: 44)
-                    .contentShape(Circle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("设置")
         }
     }
 

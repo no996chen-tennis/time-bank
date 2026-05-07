@@ -144,7 +144,7 @@ final class MomentStore {
         var insertedMoment = false
 
         do {
-            let writtenMedia = try fileStore.writeMedia(request.media, to: request.id)
+            let writtenMedia = try await fileStore.writeMediaOffMain(request.media, to: request.id)
             for media in writtenMedia {
                 let item = MediaItem(
                     momentId: request.id,
@@ -193,7 +193,7 @@ final class MomentStore {
 
         do {
             if newMediaRequests.isEmpty == false {
-                writtenNewMedia = try fileStore.writeAdditionalMedia(
+                writtenNewMedia = try await fileStore.writeAdditionalMediaOffMain(
                     newMediaRequests,
                     to: request.id,
                     startingSortIndex: 0,

@@ -1,6 +1,7 @@
 // TimeBank/TimeBankTests/DataLayerTests.swift
 
 import Foundation
+import AVFoundation
 import SwiftData
 import UIKit
 import XCTest
@@ -100,6 +101,31 @@ final class DataLayerTests: XCTestCase {
             XCTAssertTrue(env.fileStore.fileExists(atRelativePath: try XCTUnwrap(media.thumbnailPath)))
             XCTAssertGreaterThan(media.fileSize, 0)
         }
+    }
+
+    func testSaveMomentWithVideoWritesThumbnailAndDuration() async throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        let store = env.makeMomentStore()
+        _ = try store.bootstrapReservedData()
+
+        let request = MomentStore.SaveRequest(
+            dimensionId: DimensionReservedID.parents.rawValue,
+            title: "一段视频",
+            media: [
+                .video(data: try makeMP4VideoData(), fileExtension: "mp4")
+            ]
+        )
+
+        let savedMoment = try await store.save(moment: request)
+        let media = try XCTUnwrap(savedMoment.mediaItems.first)
+
+        XCTAssertEqual(media.mediaKind, .video)
+        XCTAssertTrue(env.fileStore.fileExists(atRelativePath: media.relativePath))
+        XCTAssertTrue(env.fileStore.fileExists(atRelativePath: try XCTUnwrap(media.thumbnailPath)))
+        XCTAssertGreaterThan(media.fileSize, 0)
+        XCTAssertEqual(media.durationSeconds, 1)
     }
 
     func testSaveRollbackWhenSecondImageFailsLeavesNoDatabaseRecordAndNoOrphans() async throws {
@@ -521,7 +547,7 @@ final class DataLayerTests: XCTestCase {
             iconKey: "book",
             colorKey: "sky",
             sortIndex: 100,
-            params: TimeBank.Dimension.encodedParams(EmptyDimensionParams())
+            params: TimeBank.Dimension.encodedParams(CustomDimensionParams())
         )
         env.context.insert(customDimension)
 
@@ -580,6 +606,204 @@ final class DataLayerTests: XCTestCase {
         XCTAssertEqual(totalAccount.hours, 1.5, accuracy: 0.0001)
         XCTAssertEqual(totalAccount.moments, 3)
         XCTAssertEqual(totalAccount.dimensionCount, 2)
+    }
+
+    func testCreateCustomDimensionWithThreeFormulas() throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        let paramsByName: [(String, CustomDimensionParams)] = [
+            ("读书", CustomDimensionParams(formula: .weeklyHours, weeklyHours: 5)),
+            ("冥想", CustomDimensionParams(formula: .dailyHours, dailyHours: 1.5)),
+            ("旅行", CustomDimensionParams(formula: .occurrenceBased, annualOccurrences: 6, hoursPerOccurrence: 48))
+        ]
+
+        for (index, item) in paramsByName.enumerated() {
+            let dimension = TimeBank.Dimension(
+                id: UUID().uuidString,
+                name: item.0,
+                kind: .custom,
+                status: .visible,
+                mode: .normal,
+                iconKey: CustomDimensionAccount.iconOptions[index],
+                colorKey: CustomDimensionAccount.colorOptions[index].key,
+                sortIndex: 100 + index,
+                params: TimeBank.Dimension.encodedParams(item.1)
+            )
+            env.context.insert(dimension)
+        }
+        try env.context.save()
+
+        let customDimensions = try env.context.fetch(FetchDescriptor<TimeBank.Dimension>())
+            .filter { $0.kind == .custom }
+            .sorted { $0.name < $1.name }
+
+        XCTAssertEqual(customDimensions.count, 3)
+        XCTAssertTrue(customDimensions.contains { dimension in
+            dimension.decodeParams(CustomDimensionParams.self, default: CustomDimensionParams()).formula == .weeklyHours
+        })
+        XCTAssertTrue(customDimensions.contains { dimension in
+            dimension.decodeParams(CustomDimensionParams.self, default: CustomDimensionParams()).formula == .dailyHours
+        })
+        XCTAssertTrue(customDimensions.contains { dimension in
+            dimension.decodeParams(CustomDimensionParams.self, default: CustomDimensionParams()).formula == .occurrenceBased
+        })
+    }
+
+    func testCustomDimensionConsumeHoursMatchesFormula() throws {
+        let calendar = Calendar(identifier: .gregorian)
+        let birthday = calendar.date(from: DateComponents(year: 1990, month: 4, day: 1)) ?? .now
+        let now = calendar.date(from: DateComponents(year: 2026, month: 4, day: 1)) ?? .now
+        let profile = UserProfile(
+            birthday: birthday,
+            gender: .undisclosed,
+            expectedLifespanYears: 85,
+            parents: nil,
+            children: [],
+            partner: nil,
+            soloEmphasis: false,
+            extras: []
+        )
+        let remainingYears = DimensionCompute.Lifespan.remainingYears(profile: profile, now: now)
+
+        let weekly = TimeBank.Dimension(
+            name: "读书",
+            kind: .custom,
+            params: TimeBank.Dimension.encodedParams(CustomDimensionParams(formula: .weeklyHours, weeklyHours: 5))
+        )
+        XCTAssertEqual(
+            DimensionCompute.consumeHours(for: weekly, profile: profile, now: now),
+            remainingYears * DimensionCompute.weeksPerYear * 5,
+            accuracy: 0.001
+        )
+
+        let daily = TimeBank.Dimension(
+            name: "冥想",
+            kind: .custom,
+            params: TimeBank.Dimension.encodedParams(CustomDimensionParams(formula: .dailyHours, dailyHours: 1.5))
+        )
+        XCTAssertEqual(
+            DimensionCompute.consumeHours(for: daily, profile: profile, now: now),
+            remainingYears * DimensionCompute.daysPerYear * 1.5,
+            accuracy: 0.001
+        )
+
+        let occurrence = TimeBank.Dimension(
+            name: "旅行",
+            kind: .custom,
+            params: TimeBank.Dimension.encodedParams(CustomDimensionParams(
+                formula: .occurrenceBased,
+                annualOccurrences: 6,
+                hoursPerOccurrence: 48
+            ))
+        )
+        XCTAssertEqual(
+            DimensionCompute.consumeHours(for: occurrence, profile: profile, now: now),
+            remainingYears * 6 * 48,
+            accuracy: 0.001
+        )
+    }
+
+    func testCustomDimensionLimitTenMax() throws {
+        let dimensions = (0..<10).map { index in
+            TimeBank.Dimension(
+                id: UUID().uuidString,
+                name: "自定义\(index)",
+                kind: .custom,
+                status: .visible,
+                mode: .normal,
+                iconKey: "star.fill",
+                colorKey: "mint",
+                sortIndex: index,
+                params: TimeBank.Dimension.encodedParams(CustomDimensionParams())
+            )
+        }
+
+        XCTAssertEqual(CustomDimensionAccount.customCount(in: dimensions), 10)
+        XCTAssertFalse(CustomDimensionAccount.canCreateCustomDimension(in: dimensions))
+
+        dimensions[0].status = .hidden
+        XCTAssertEqual(CustomDimensionAccount.customCount(in: dimensions), 9)
+        XCTAssertTrue(CustomDimensionAccount.canCreateCustomDimension(in: dimensions))
+        XCTAssertFalse(CustomDimensionAccount.managerDimensions(from: dimensions).contains { $0.id == dimensions[0].id })
+    }
+
+    func testDeleteCustomDimensionDemotesMomentsToOther() throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        try TimeBank.Dimension.seedReservedDimensionsIfNeeded(in: env.context)
+
+        let custom = TimeBank.Dimension(
+            id: UUID().uuidString,
+            name: "读书",
+            kind: .custom,
+            status: .visible,
+            mode: .normal,
+            iconKey: "book.fill",
+            colorKey: "mint",
+            sortIndex: 100,
+            params: TimeBank.Dimension.encodedParams(CustomDimensionParams())
+        )
+        env.context.insert(custom)
+
+        let moment = Moment(
+            dimensionId: custom.id,
+            durationSeconds: 3600,
+            status: .normal
+        )
+        env.context.insert(moment)
+        try env.context.save()
+
+        let movedCount = try DimensionDemotionStore(modelContext: env.context)
+            .demote(dimensionID: custom.id)
+
+        XCTAssertEqual(movedCount, 1)
+        XCTAssertEqual(custom.status, .hidden)
+        XCTAssertEqual(moment.dimensionId, DimensionReservedID.other.rawValue)
+        XCTAssertEqual(moment.originDimensionId, custom.id)
+    }
+
+    func testDimensionPaletteColorByColorKey() {
+        let expectedKeys = [
+            "rose", "warm", "lavender", "sky", "sage", "peach",
+            "coral", "mint", "denim", "mauve"
+        ]
+
+        XCTAssertEqual(DimensionPalette.supportedColorKeys, expectedKeys)
+        XCTAssertEqual(CustomDimensionAccount.colorOptions.map(\.key), expectedKeys)
+    }
+
+    func testReorderDimensionsUpdatesSortIndex() throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        try TimeBank.Dimension.seedReservedDimensionsIfNeeded(in: env.context)
+        let sport = try XCTUnwrap(TimeBank.Dimension.fetch(by: DimensionReservedID.sport.rawValue, in: env.context))
+        let create = try XCTUnwrap(TimeBank.Dimension.fetch(by: DimensionReservedID.create.rawValue, in: env.context))
+        let custom = TimeBank.Dimension(
+            id: UUID().uuidString,
+            name: "读书",
+            kind: .custom,
+            status: .visible,
+            mode: .normal,
+            iconKey: "book.fill",
+            colorKey: "mint",
+            sortIndex: 100,
+            params: TimeBank.Dimension.encodedParams(CustomDimensionParams())
+        )
+        env.context.insert(custom)
+        try env.context.save()
+
+        try CustomDimensionAccount.persistSortOrder(
+            orderedIDs: [custom.id, sport.id, create.id],
+            dimensions: [sport, create, custom],
+            modelContext: env.context
+        )
+
+        XCTAssertEqual(custom.sortIndex, 1)
+        XCTAssertEqual(sport.sortIndex, 2)
+        XCTAssertEqual(create.sortIndex, 3)
     }
 
     func testAccountTabAggregateIncludesOtherWhileHomeTotalExcludesIt() throws {
@@ -660,9 +884,9 @@ final class DataLayerTests: XCTestCase {
 
     func testFormatterMatrixCoversAllInterfaces() {
         // 既有 7 接口
-        XCTAssertEqual(TimeBank.Formatter.hoursCompact(552), "552h")
-        XCTAssertEqual(TimeBank.Formatter.hoursCompact(1_240), "1,240h")
-        XCTAssertEqual(TimeBank.Formatter.hoursCompact(18_240), "18.2Kh")
+        XCTAssertEqual(TimeBank.Formatter.hoursCompact(552), "552 小时")
+        XCTAssertEqual(TimeBank.Formatter.hoursCompact(1_240), "1,240 小时")
+        XCTAssertEqual(TimeBank.Formatter.hoursCompact(18_240), "1.8 万小时")
 
         XCTAssertEqual(TimeBank.Formatter.hoursReadable(128), "128 小时")
         XCTAssertEqual(TimeBank.Formatter.hoursReadable(48.5), "48.5 小时")
@@ -675,13 +899,13 @@ final class DataLayerTests: XCTestCase {
         XCTAssertEqual(TimeBank.Formatter.hoursInDays(240), "≈ 10 天")
         XCTAssertEqual(TimeBank.Formatter.hoursInDays(2_400), "≈ 100 天")
 
-        XCTAssertEqual(TimeBank.Formatter.hoursWithMinutes(30 * 60), "30m")
-        XCTAssertEqual(TimeBank.Formatter.hoursWithMinutes(2 * 3600), "2h")
-        XCTAssertEqual(TimeBank.Formatter.hoursWithMinutes(2 * 3600 + 30 * 60), "2h 30m")
-        XCTAssertEqual(TimeBank.Formatter.storedDuration(0), "0h")
-        XCTAssertEqual(TimeBank.Formatter.storedDuration(0.5), "30m")
-        XCTAssertEqual(TimeBank.Formatter.storedDuration(1), "1h")
-        XCTAssertEqual(TimeBank.Formatter.storedDuration(1.5), "1h 30m")
+        XCTAssertEqual(TimeBank.Formatter.hoursWithMinutes(30 * 60), "30 分钟")
+        XCTAssertEqual(TimeBank.Formatter.hoursWithMinutes(2 * 3600), "2 小时")
+        XCTAssertEqual(TimeBank.Formatter.hoursWithMinutes(2 * 3600 + 30 * 60), "2 小时 30 分钟")
+        XCTAssertEqual(TimeBank.Formatter.storedDuration(0), "0 小时")
+        XCTAssertEqual(TimeBank.Formatter.storedDuration(0.5), "30 分钟")
+        XCTAssertEqual(TimeBank.Formatter.storedDuration(1), "1 小时")
+        XCTAssertEqual(TimeBank.Formatter.storedDuration(1.5), "1 小时 30 分钟")
 
         XCTAssertEqual(TimeBank.Formatter.occurrenceCount(92, noun: "见面"), "约 92 次见面")
         XCTAssertEqual(TimeBank.Formatter.occurrenceCount(40, noun: "通话"), "约 40 次通话")
@@ -722,14 +946,14 @@ final class DataLayerTests: XCTestCase {
         XCTAssertEqual(TimeBank.Formatter.percentOfAwake(150), "占清醒时间约 100%") // clamped
         XCTAssertEqual(TimeBank.Formatter.percentOfAwake(-10), "占清醒时间约 0%") // clamped
 
-        XCTAssertEqual(TimeBank.Formatter.lifespanSubtitle(years: 45, hoursK: 473), "45 年 · 473 Kh")
-        XCTAssertEqual(TimeBank.Formatter.lifespanSubtitle(years: 0, hoursK: 0), "0 年 · 0 Kh")
-        XCTAssertEqual(TimeBank.Formatter.lifespanSubtitle(years: 44.6, hoursK: 472.7), "45 年 · 473 Kh") // round
+        XCTAssertEqual(TimeBank.Formatter.lifespanSubtitle(years: 45, hoursK: 473), "45 年 · 47.3 万小时")
+        XCTAssertEqual(TimeBank.Formatter.lifespanSubtitle(years: 0, hoursK: 0), "0 年 · 0 小时")
+        XCTAssertEqual(TimeBank.Formatter.lifespanSubtitle(years: 44.6, hoursK: 472.7), "45 年 · 47.3 万小时") // round
 
         // 负数 input clamp（Codex review 二轮加固，PRD §21 4 个新接口的边界契约）
         XCTAssertEqual(TimeBank.Formatter.weeklyHours(-5), "每周约 0 小时")
         XCTAssertEqual(TimeBank.Formatter.dailyHoursWith(-3, action: "共处"), "每天约 0 小时共处")
-        XCTAssertEqual(TimeBank.Formatter.lifespanSubtitle(years: -10, hoursK: -100), "0 年 · 0 Kh")
+        XCTAssertEqual(TimeBank.Formatter.lifespanSubtitle(years: -10, hoursK: -100), "0 年 · 0 小时")
     }
 
     func testRelationshipCodablesDecodeLegacyMissingMemorialFields() throws {
@@ -1008,7 +1232,7 @@ final class DataLayerTests: XCTestCase {
             iconKey: "book",
             colorKey: "sky",
             sortIndex: 100,
-            params: TimeBank.Dimension.encodedParams(EmptyDimensionParams())
+            params: TimeBank.Dimension.encodedParams(CustomDimensionParams())
         )
         env.context.insert(customDim)
         try env.context.save()
@@ -1161,14 +1385,14 @@ final class DataLayerTests: XCTestCase {
 
         let kidsHours = DimensionCompute.consumeHours(for: kidsDim, profile: profile, dimensionsByID: [:], now: now)
 
-        // 5 岁孩子，剩余 49 年（self 寿命 85 - age 36）
-        // 0-6 段：1 年 × 52.1429 × 30 ≈ 1564.29
+        // 约 5.25 岁孩子（出生年按 1 月 1 日近似连续年龄），剩余 49 年（self 寿命 85 - age 36）
+        // 0-6 段：约 0.75 年 × 52.1429 × 30 ≈ 1180
         // 6-13 段：7 年 × 52.1429 × 20 ≈ 7300.01
         // 13-18 段：5 年 × 52.1429 × 10 ≈ 2607.15
-        // 18+ 段：49 - 13 = 36 年 × 52.1429 × 2 ≈ 3754.29
-        // 总：约 15225.74
-        XCTAssertGreaterThan(kidsHours, 15000, "kidsHours 必须包含 18+ 尾段，应 > 15000h（旧实现漏算约 3754h）")
-        XCTAssertLessThan(kidsHours, 16000)
+        // 18+ 段：约 36.25 年 × 52.1429 × 2 ≈ 3781
+        // 总：约 14868
+        XCTAssertGreaterThan(kidsHours, 14800, "kidsHours 必须包含 18+ 尾段，应 > 14800h（旧实现漏算约 3781h）")
+        XCTAssertLessThan(kidsHours, 15000)
 
         // 孩子已成年（25 岁）case
         let adultProfile = UserProfile(
@@ -1436,6 +1660,96 @@ final class DataLayerTests: XCTestCase {
         }
 
         return data
+    }
+
+    private func makeMP4VideoData() throws -> Data {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("mp4")
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let writer = try AVAssetWriter(outputURL: url, fileType: .mp4)
+        let input = AVAssetWriterInput(
+            mediaType: .video,
+            outputSettings: [
+                AVVideoCodecKey: AVVideoCodecType.h264,
+                AVVideoWidthKey: 64,
+                AVVideoHeightKey: 64
+            ]
+        )
+        input.expectsMediaDataInRealTime = false
+
+        let adaptor = AVAssetWriterInputPixelBufferAdaptor(
+            assetWriterInput: input,
+            sourcePixelBufferAttributes: [
+                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32ARGB,
+                kCVPixelBufferWidthKey as String: 64,
+                kCVPixelBufferHeightKey as String: 64
+            ]
+        )
+
+        XCTAssertTrue(writer.canAdd(input))
+        writer.add(input)
+        XCTAssertTrue(writer.startWriting())
+        writer.startSession(atSourceTime: .zero)
+
+        for frame in 0..<30 {
+            while input.isReadyForMoreMediaData == false {
+                Thread.sleep(forTimeInterval: 0.002)
+            }
+
+            let pixelBuffer = try makePixelBuffer(frame: frame)
+            XCTAssertTrue(
+                adaptor.append(
+                    pixelBuffer,
+                    withPresentationTime: CMTime(value: CMTimeValue(frame), timescale: 30)
+                )
+            )
+        }
+
+        input.markAsFinished()
+        let semaphore = DispatchSemaphore(value: 0)
+        writer.finishWriting {
+            semaphore.signal()
+        }
+        semaphore.wait()
+
+        XCTAssertEqual(writer.status, .completed)
+        return try Data(contentsOf: url)
+    }
+
+    private func makePixelBuffer(frame: Int) throws -> CVPixelBuffer {
+        var pixelBuffer: CVPixelBuffer?
+        let status = CVPixelBufferCreate(
+            kCFAllocatorDefault,
+            64,
+            64,
+            kCVPixelFormatType_32ARGB,
+            nil,
+            &pixelBuffer
+        )
+        XCTAssertEqual(status, kCVReturnSuccess)
+
+        let buffer = try XCTUnwrap(pixelBuffer)
+        CVPixelBufferLockBaseAddress(buffer, [])
+        defer { CVPixelBufferUnlockBaseAddress(buffer, []) }
+
+        let context = CGContext(
+            data: CVPixelBufferGetBaseAddress(buffer),
+            width: 64,
+            height: 64,
+            bitsPerComponent: 8,
+            bytesPerRow: CVPixelBufferGetBytesPerRow(buffer),
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue
+        )
+        let cgContext = try XCTUnwrap(context)
+
+        let color = frame.isMultiple(of: 2) ? UIColor.systemOrange : UIColor.systemTeal
+        cgContext.setFillColor(color.cgColor)
+        cgContext.fill(CGRect(x: 0, y: 0, width: 64, height: 64))
+
+        return buffer
     }
 
     private func XCTAssertThrowsErrorAsync(

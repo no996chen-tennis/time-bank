@@ -1,0 +1,1312 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>时间银行 · 今年余额与 Widget Demo</title>
+  <style>
+    :root {
+      --bg: #f4efe7;
+      --paper: #fffaf2;
+      --paper-2: #f7efe2;
+      --ink: #251f1a;
+      --ink-2: #6d6257;
+      --ink-3: #9a8d80;
+      --hair: rgba(37, 31, 26, 0.12);
+      --rose: #be6b68;
+      --warm: #d89a53;
+      --lavender: #8c78a8;
+      --sage: #527761;
+      --sky: #4f7f9c;
+      --peach: #d68162;
+      --coral: #db765f;
+      --shadow: 0 24px 70px rgba(44, 36, 29, 0.14);
+      --radius: 22px;
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(135deg, rgba(219, 118, 95, 0.10), transparent 32%),
+        linear-gradient(315deg, rgba(79, 127, 156, 0.12), transparent 36%),
+        var(--bg);
+      color: var(--ink);
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .page {
+      width: min(1280px, calc(100vw - 36px));
+      margin: 0 auto;
+      padding: 34px 0 48px;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 22px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      color: var(--ink-3);
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 52px);
+      line-height: 1.04;
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+
+    .toolbar-note {
+      max-width: 430px;
+      margin: 0;
+      color: var(--ink-2);
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(360px, 420px) minmax(360px, 420px) minmax(360px, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .showcase {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .caption {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--ink-2);
+      font-size: 13px;
+      padding: 0 6px;
+    }
+
+    .phone {
+      width: 390px;
+      height: 844px;
+      border-radius: 44px;
+      background: #171412;
+      padding: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .screen {
+      position: relative;
+      height: 100%;
+      overflow: hidden;
+      border-radius: 34px;
+      background: var(--paper);
+      border: 1px solid rgba(255, 255, 255, 0.56);
+    }
+
+    .screen-scroll {
+      height: 100%;
+      overflow: auto;
+      padding: 18px 16px 88px;
+      scrollbar-width: none;
+    }
+
+    .screen-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .statusbar {
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--ink);
+      padding: 0 8px;
+      margin-bottom: 12px;
+    }
+
+    .signal {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .signal span {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--ink);
+      opacity: 0.35;
+    }
+
+    .signal span:nth-child(2) {
+      opacity: 0.55;
+    }
+
+    .signal span:nth-child(3) {
+      opacity: 0.8;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .greeting {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .greeting strong {
+      font-size: 22px;
+      font-weight: 520;
+      letter-spacing: 0;
+    }
+
+    .greeting span {
+      color: var(--ink-2);
+      font-size: 12px;
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #fffaf2;
+      background: linear-gradient(135deg, var(--coral), var(--sky));
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      height: 34px;
+      padding: 3px;
+      border-radius: 999px;
+      background: rgba(37, 31, 26, 0.07);
+      border: 1px solid rgba(37, 31, 26, 0.07);
+      flex: 0 0 138px;
+    }
+
+    .segmented button {
+      border: 0;
+      border-radius: 999px;
+      color: var(--ink-2);
+      background: transparent;
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 1;
+      min-width: 0;
+      transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+    }
+
+    body[data-mode="life"] .segmented button[data-mode="life"],
+    body[data-mode="year"] .segmented button[data-mode="year"] {
+      color: var(--ink);
+      background: var(--paper);
+      box-shadow: 0 4px 14px rgba(37, 31, 26, 0.09);
+    }
+
+    .hero-card,
+    .account-card,
+    .formula-card,
+    .deposit-card {
+      background: rgba(255, 250, 242, 0.88);
+      border: 1px solid var(--hair);
+      box-shadow: 0 14px 32px rgba(44, 36, 29, 0.08);
+    }
+
+    .hero-card {
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+      min-height: 146px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .hero-pane {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 18px 16px;
+      min-width: 0;
+    }
+
+    .divider {
+      background: var(--hair);
+      margin: 16px 0;
+    }
+
+    .pane-title,
+    .metric-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--coral);
+      font-size: 12px;
+    }
+
+    .big-number {
+      display: block;
+      font-size: 31px;
+      line-height: 1.03;
+      font-weight: 460;
+      letter-spacing: 0;
+      color: var(--ink);
+      margin: 10px 0 6px;
+    }
+
+    .detail {
+      color: var(--ink-2);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .section-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 14px 0 10px;
+    }
+
+    .section-line h2 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 540;
+      letter-spacing: 0;
+    }
+
+    .section-line span {
+      color: var(--ink-3);
+      font-size: 12px;
+    }
+
+    .accounts {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .account-card {
+      min-height: 105px;
+      border-radius: 18px;
+      padding: 13px;
+    }
+
+    .account-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      color: var(--paper);
+      flex: 0 0 auto;
+    }
+
+    .account-name {
+      font-size: 15px;
+      font-weight: 540;
+      min-width: 0;
+    }
+
+    .chev {
+      margin-left: auto;
+      color: var(--ink-3);
+      font-size: 18px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .metric {
+      min-width: 0;
+    }
+
+    .metric-value {
+      margin: 4px 0 3px;
+      display: block;
+      color: var(--ink);
+      font-size: 19px;
+      line-height: 1.1;
+      font-weight: 520;
+      letter-spacing: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .metric-note {
+      color: var(--ink-2);
+      font-size: 12px;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bottom-tab {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 12px;
+      height: 58px;
+      border-radius: 22px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: center;
+      background: rgba(255, 250, 242, 0.92);
+      border: 1px solid rgba(37, 31, 26, 0.1);
+      box-shadow: 0 10px 28px rgba(44, 36, 29, 0.12);
+      backdrop-filter: blur(14px);
+      color: var(--ink-3);
+      font-size: 11px;
+    }
+
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .tab-item.active {
+      color: var(--ink);
+    }
+
+    .detail-nav {
+      display: grid;
+      grid-template-columns: 36px 1fr 138px;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .detail-layer {
+      display: none;
+    }
+
+    body[data-detail-screen="overview"] .detail-overview,
+    body[data-detail-screen="formula"] .formula-detail-screen {
+      display: block;
+    }
+
+    .back {
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      background: rgba(37, 31, 26, 0.07);
+      box-shadow: inset 0 0 0 1px rgba(37, 31, 26, 0.07);
+      cursor: pointer;
+    }
+
+    .nav-title {
+      text-align: center;
+      font-size: 14px;
+      color: var(--ink-2);
+    }
+
+    .detail-hero {
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, rgba(190, 107, 104, 0.18), transparent 55%),
+        rgba(255, 250, 242, 0.9);
+      border: 1px solid var(--hair);
+      display: grid;
+      grid-template-columns: 54px 1fr;
+      align-items: center;
+      column-gap: 13px;
+      padding: 14px;
+      text-align: left;
+      box-shadow: 0 14px 32px rgba(44, 36, 29, 0.08);
+    }
+
+    .large-icon {
+      width: 54px;
+      height: 54px;
+      grid-row: 1 / 4;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--paper);
+      background: var(--rose);
+      font-size: 22px;
+    }
+
+    .detail-hero h2 {
+      grid-column: 2;
+      margin: 0 0 2px;
+      font-size: 17px;
+      font-weight: 540;
+    }
+
+    .detail-value {
+      grid-column: 2;
+      display: block;
+      font-size: 38px;
+      line-height: 1;
+      font-weight: 450;
+      letter-spacing: 0;
+      margin: 0 0 4px;
+    }
+
+    .detail-sub {
+      grid-column: 2;
+      color: var(--ink-2);
+      font-size: 12px;
+      line-height: 1.38;
+      margin: 0;
+    }
+
+    .formula-card,
+    .deposit-card {
+      margin-top: 9px;
+      border-radius: 18px;
+      padding: 12px;
+    }
+
+    .formula-card h3,
+    .deposit-card h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      font-weight: 540;
+    }
+
+    .formula-card p,
+    .deposit-card p {
+      margin: 0;
+      color: var(--ink-2);
+      font-size: 12px;
+      line-height: 1.52;
+    }
+
+    .formula-entry {
+      width: 100%;
+      margin-top: 9px;
+      border: 1px solid var(--hair);
+      border-radius: 18px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 1fr 24px;
+      gap: 10px;
+      text-align: left;
+      color: inherit;
+      background: rgba(255, 250, 242, 0.88);
+      box-shadow: 0 14px 32px rgba(44, 36, 29, 0.08);
+      cursor: pointer;
+    }
+
+    .entry-title {
+      display: block;
+      margin: 0 0 5px;
+      font-size: 14px;
+      font-weight: 540;
+    }
+
+    .entry-copy {
+      display: block;
+      margin: 0;
+      color: var(--ink-2);
+      font-size: 12px;
+      line-height: 1.48;
+    }
+
+    .entry-arrow {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      align-self: center;
+      color: var(--ink-3);
+      background: rgba(37, 31, 26, 0.06);
+      font-size: 18px;
+    }
+
+    .formula-detail-card {
+      border-radius: 20px;
+      padding: 14px;
+      background: rgba(255, 250, 242, 0.88);
+      border: 1px solid var(--hair);
+      box-shadow: 0 14px 32px rgba(44, 36, 29, 0.08);
+    }
+
+    .formula-detail-card h2 {
+      margin: 0 0 7px;
+      font-size: 18px;
+      font-weight: 540;
+    }
+
+    .formula-detail-card p {
+      margin: 0;
+      color: var(--ink-2);
+      font-size: 12px;
+      line-height: 1.56;
+    }
+
+    .formula-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 9px;
+    }
+
+    .formula-chip {
+      min-height: 46px;
+      border-radius: 12px;
+      background: rgba(37, 31, 26, 0.055);
+      padding: 8px;
+    }
+
+    .formula-chip span {
+      display: block;
+      color: var(--ink-3);
+      font-size: 10px;
+      margin-bottom: 3px;
+    }
+
+    .formula-chip strong {
+      display: block;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 520;
+      letter-spacing: 0;
+    }
+
+    .formula-explainer {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--hair);
+      color: var(--ink-2);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .formula-explainer strong {
+      display: block;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 540;
+      margin-bottom: 2px;
+    }
+
+    .widget-zone {
+      display: grid;
+      gap: 18px;
+    }
+
+    .lock-preview {
+      border-radius: 34px;
+      min-height: 296px;
+      padding: 22px;
+      color: rgba(255, 255, 255, 0.92);
+      background:
+        linear-gradient(160deg, rgba(0, 0, 0, 0.35), transparent 52%),
+        linear-gradient(135deg, #27373d, #785b51 52%, #1b1919);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .lock-time {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .lock-time strong {
+      display: block;
+      font-size: 60px;
+      line-height: 1;
+      font-weight: 300;
+      letter-spacing: 0;
+    }
+
+    .lock-time span {
+      display: block;
+      margin-top: 5px;
+      font-size: 14px;
+      opacity: 0.76;
+    }
+
+    .lock-widget {
+      width: 312px;
+      min-height: 68px;
+      margin: 0 auto;
+      border-radius: 18px;
+      padding: 10px 13px;
+      display: grid;
+      grid-template-columns: 94px 1px 1fr;
+      gap: 11px;
+      align-items: center;
+      color: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      backdrop-filter: blur(18px);
+    }
+
+    .widget-title {
+      font-size: 11px;
+      opacity: 0.82;
+      margin-bottom: 2px;
+    }
+
+    .widget-weeks {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .widget-weeks strong {
+      font-size: 29px;
+      line-height: 1;
+      font-weight: 520;
+      letter-spacing: 0;
+    }
+
+    .widget-weeks span {
+      font-size: 13px;
+      opacity: 0.86;
+    }
+
+    .widget-divider {
+      width: 1px;
+      height: 42px;
+      background: rgba(255, 255, 255, 0.24);
+    }
+
+    .lock-list {
+      display: grid;
+      gap: 2px;
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .desktop-preview {
+      border-radius: 34px;
+      min-height: 328px;
+      padding: 22px;
+      background:
+        radial-gradient(circle at 12% 16%, rgba(216, 154, 83, 0.22), transparent 32%),
+        linear-gradient(140deg, #e9dfd1, #c7d1c8 52%, #d9c4ba);
+      box-shadow: var(--shadow);
+    }
+
+    .desktop-widget {
+      width: min(100%, 360px);
+      margin: 0 auto;
+      border-radius: 28px;
+      padding: 18px;
+      background: rgba(255, 250, 242, 0.84);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      box-shadow: 0 18px 48px rgba(44, 36, 29, 0.14);
+      backdrop-filter: blur(18px);
+    }
+
+    .desktop-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--hair);
+    }
+
+    .desktop-head span {
+      display: block;
+      color: var(--ink-2);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .desktop-head strong {
+      display: block;
+      font-size: 31px;
+      line-height: 1;
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+
+    .desktop-head em {
+      color: var(--ink-3);
+      font-size: 12px;
+      font-style: normal;
+      white-space: nowrap;
+      padding-top: 4px;
+    }
+
+    .desktop-rows {
+      display: grid;
+      gap: 8px;
+      padding-top: 12px;
+    }
+
+    .desktop-row {
+      display: grid;
+      grid-template-columns: 50px 58px 66px 1fr;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      color: var(--ink-2);
+      min-height: 22px;
+    }
+
+    .desktop-row strong {
+      color: var(--ink);
+      font-weight: 530;
+      font-size: 12px;
+      letter-spacing: 0;
+    }
+
+    .desktop-row span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .swatch {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+      vertical-align: 1px;
+    }
+
+    .note-card {
+      border-radius: 24px;
+      padding: 18px;
+      background: rgba(255, 250, 242, 0.65);
+      border: 1px solid var(--hair);
+      color: var(--ink-2);
+      font-size: 13px;
+      line-height: 1.75;
+    }
+
+    .note-card strong {
+      color: var(--ink);
+      font-weight: 540;
+    }
+
+    [data-life],
+    [data-year] {
+      transition: opacity 120ms ease;
+    }
+
+    body[data-mode="life"] [data-year],
+    body[data-mode="year"] [data-life] {
+      display: none;
+    }
+
+    @media (max-width: 1220px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .widget-zone {
+        grid-column: 1 / -1;
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .page {
+        width: min(100vw - 20px, 430px);
+        padding-top: 18px;
+      }
+
+      .toolbar {
+        align-items: start;
+        flex-direction: column;
+      }
+
+      .grid,
+      .widget-zone {
+        grid-template-columns: 1fr;
+      }
+
+      .phone {
+        width: 100%;
+        height: 844px;
+      }
+    }
+  </style>
+</head>
+<body data-mode="year" data-detail-screen="overview">
+  <main class="page">
+    <header class="toolbar">
+      <div>
+        <p class="eyebrow">Time Bank Prototype · 2026-05-07</p>
+        <h1>今年余额与 Widget</h1>
+      </div>
+      <p class="toolbar-note">首页与详情页保留原卡片结构，只把时间窗口从今生切到今年。锁屏和桌面 Widget 顶部统一显示今年余额的周数。</p>
+    </header>
+
+    <section class="grid">
+      <div class="showcase">
+        <div class="caption">
+          <span>首页 · 时间窗口切换</span>
+          <span>默认展示今年</span>
+        </div>
+        <div class="phone">
+          <div class="screen">
+            <div class="screen-scroll">
+              <div class="statusbar">
+                <span>9:41</span>
+                <div class="signal"><span></span><span></span><span></span></div>
+              </div>
+
+              <div class="app-header">
+                <div class="greeting">
+                  <strong>早上好，林晚</strong>
+                  <span data-year>从今天到年底，还有一段可以好好用的时间。</span>
+                  <span data-life>这些时间账户，会陪你看见更长的一生。</span>
+                </div>
+                <div class="avatar">晚</div>
+              </div>
+
+              <div class="app-header">
+                <div class="segmented" aria-label="首页时间窗口">
+                  <button type="button" data-mode="life">今生</button>
+                  <button type="button" data-mode="year">今年</button>
+                </div>
+                <span class="detail" data-year>2026.05.07 - 12.31</span>
+                <span class="detail" data-life>预期寿命 85 岁</span>
+              </div>
+
+              <section class="hero-card">
+                <div class="hero-pane">
+                  <div>
+                    <div class="pane-title">⌛ <span data-year>今年余额</span><span data-life>时间余额</span></div>
+                    <strong class="big-number" data-year>约 34 周</strong>
+                    <strong class="big-number" data-life>约 2,704 周</strong>
+                  </div>
+                  <span class="detail" data-year>239 天 · 5,736 小时</span>
+                  <span class="detail" data-life>45 年 · 47.3 万小时</span>
+                </div>
+                <div class="divider"></div>
+                <div class="hero-pane">
+                  <div>
+                    <div class="pane-title">▣ 已存入</div>
+                    <strong class="big-number">56 小时</strong>
+                  </div>
+                  <span class="detail">12 个瞬间<br>跨 4 个账户</span>
+                </div>
+              </section>
+
+              <div class="section-line">
+                <h2>时间账户 · 6 个</h2>
+                <span data-year>今年还剩</span>
+                <span data-life>今生还剩</span>
+              </div>
+
+              <div class="accounts">
+                <article class="account-card">
+                  <div class="account-top">
+                    <span class="icon" style="background: var(--rose)">亲</span>
+                    <span class="account-name">陪父母</span>
+                    <span class="chev">›</span>
+                  </div>
+                  <div class="metrics">
+                    <div class="metric">
+                      <div class="metric-label">还能共度</div>
+                      <strong class="metric-value" data-year>96 小时</strong>
+                      <strong class="metric-value" data-life>552 小时</strong>
+                      <div class="metric-note" data-year>约 16 次见面</div>
+                      <div class="metric-note" data-life>约 92 次见面</div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="metric">
+                      <div class="metric-label">已存入</div>
+                      <strong class="metric-value">31 小时</strong>
+                      <div class="metric-note">7 个瞬间</div>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="account-card">
+                  <div class="account-top">
+                    <span class="icon" style="background: var(--warm)">孩</span>
+                    <span class="account-name">陪孩子</span>
+                    <span class="chev">›</span>
+                  </div>
+                  <div class="metrics">
+                    <div class="metric">
+                      <div class="metric-label">还能共度</div>
+                      <strong class="metric-value" data-year>680 小时</strong>
+                      <strong class="metric-value" data-life>15,226 小时</strong>
+                      <div class="metric-note">每周约 20 小时</div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="metric">
+                      <div class="metric-label">已存入</div>
+                      <strong class="metric-value">12 小时</strong>
+                      <div class="metric-note">3 个瞬间</div>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="account-card">
+                  <div class="account-top">
+                    <span class="icon" style="background: var(--lavender)">伴</span>
+                    <span class="account-name">陪伴侣</span>
+                    <span class="chev">›</span>
+                  </div>
+                  <div class="metrics">
+                    <div class="metric">
+                      <div class="metric-label">还能共度</div>
+                      <strong class="metric-value" data-year>956 小时</strong>
+                      <strong class="metric-value" data-life>65,745 小时</strong>
+                      <div class="metric-note">每天约 4 小时共处</div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="metric">
+                      <div class="metric-label">已存入</div>
+                      <strong class="metric-value">8 小时</strong>
+                      <div class="metric-note">2 个瞬间</div>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="account-card">
+                  <div class="account-top">
+                    <span class="icon" style="background: var(--sage)">动</span>
+                    <span class="account-name">运动</span>
+                    <span class="chev">›</span>
+                  </div>
+                  <div class="metrics">
+                    <div class="metric">
+                      <div class="metric-label">未来</div>
+                      <strong class="metric-value" data-year>171 小时</strong>
+                      <strong class="metric-value" data-life>9,382 小时</strong>
+                      <div class="metric-note">每周约 5 小时</div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="metric">
+                      <div class="metric-label">已存入</div>
+                      <strong class="metric-value">5 小时</strong>
+                      <div class="metric-note">2 个瞬间</div>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="account-card">
+                  <div class="account-top">
+                    <span class="icon" style="background: var(--sky)">作</span>
+                    <span class="account-name">创造</span>
+                    <span class="chev">›</span>
+                  </div>
+                  <div class="metrics">
+                    <div class="metric">
+                      <div class="metric-label">未来</div>
+                      <strong class="metric-value" data-year>1,366 小时</strong>
+                      <strong class="metric-value" data-life>61,879 小时</strong>
+                      <div class="metric-note">每周约 40 小时</div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="metric">
+                      <div class="metric-label">已存入</div>
+                      <strong class="metric-value">0 小时</strong>
+                      <div class="metric-note">0 个瞬间</div>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="account-card">
+                  <div class="account-top">
+                    <span class="icon" style="background: var(--peach)">闲</span>
+                    <span class="account-name">自由</span>
+                    <span class="chev">›</span>
+                  </div>
+                  <div class="metrics">
+                    <div class="metric">
+                      <div class="metric-label">未来</div>
+                      <strong class="metric-value" data-year>555 小时</strong>
+                      <strong class="metric-value" data-life>98,020 小时</strong>
+                      <div class="metric-note" data-year>占清醒时间约 15%</div>
+                      <div class="metric-note" data-life>占清醒时间约 56%</div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="metric">
+                      <div class="metric-label">已存入</div>
+                      <strong class="metric-value">0 小时</strong>
+                      <div class="metric-note">0 个瞬间</div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </div>
+
+            <nav class="bottom-tab" aria-label="底部导航">
+              <div class="tab-item active">⌂<span>主页</span></div>
+              <div class="tab-item">＋<span>存入</span></div>
+              <div class="tab-item">◌<span>我</span></div>
+            </nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="showcase">
+        <div class="caption">
+          <span>详情页 · 继承首页时间窗口</span>
+          <span>点击时间公式查看扣减周期</span>
+        </div>
+        <div class="phone">
+          <div class="screen">
+            <div class="screen-scroll">
+              <div class="statusbar">
+                <span>9:41</span>
+                <div class="signal"><span></span><span></span><span></span></div>
+              </div>
+
+              <div class="detail-layer detail-overview">
+                <div class="detail-nav">
+                  <div class="back">‹</div>
+                  <div class="nav-title">陪父母</div>
+                  <div class="segmented" aria-label="详情页时间窗口">
+                    <button type="button" data-mode="life">今生</button>
+                    <button type="button" data-mode="year">今年</button>
+                  </div>
+                </div>
+
+                <section class="detail-hero">
+                  <div class="large-icon">亲</div>
+                  <h2>陪父母</h2>
+                  <strong class="detail-value" data-year>96h</strong>
+                  <strong class="detail-value" data-life>552h</strong>
+                  <p class="detail-sub" data-year>从今天到 2026 年底，约还能一起度过 16 次见面。</p>
+                  <p class="detail-sub" data-life>按现在的频率，约还能一起度过 92 次见面。</p>
+                </section>
+
+                <button class="formula-entry" type="button" data-open-formula>
+                  <span>
+                    <span class="entry-title">时间公式</span>
+                    <span class="entry-copy" data-year>今年视角 · 每年 24 次 · 每次 6 小时 · 约每 2 周减少一次</span>
+                    <span class="entry-copy" data-life>今生视角 · 父母平均年龄 · 预期寿命 82 岁 · 约每 2 周减少一次</span>
+                  </span>
+                  <span class="entry-arrow">›</span>
+                </button>
+
+                <section class="deposit-card">
+                  <h3>已存入瞬间 · 7 · 31 小时</h3>
+                  <p>这些已经发生、被记录下来的时间，不会因为切换今年或今生而被扣减。</p>
+                </section>
+              </div>
+
+              <div class="detail-layer formula-detail-screen">
+                <div class="detail-nav">
+                  <button class="back" type="button" data-close-formula>‹</button>
+                  <div class="nav-title">时间公式</div>
+                  <div class="segmented" aria-label="公式详情时间窗口">
+                    <button type="button" data-mode="life">今生</button>
+                    <button type="button" data-mode="year">今年</button>
+                  </div>
+                </div>
+
+                <section class="formula-detail-card">
+                  <h2>陪父母的时间公式</h2>
+                  <p data-year>今年视角：从今天到 2026 年底，按每年 24 次、每次 6 小时折算。约每 2 周减少一次见面机会，每次约 6 小时。</p>
+                  <p data-life>今生视角：按父母平均年龄、预期寿命 82 岁、每年 24 次、每次 6 小时折算。约每 2 周减少一次见面机会。</p>
+                  <div class="formula-grid">
+                    <div class="formula-chip">
+                      <span>频率</span>
+                      <strong>每年 24 次</strong>
+                    </div>
+                    <div class="formula-chip">
+                      <span>间隔</span>
+                      <strong>约每 2 周</strong>
+                    </div>
+                    <div class="formula-chip">
+                      <span>每次</span>
+                      <strong>6 小时</strong>
+                    </div>
+                    <div class="formula-chip">
+                      <span data-year>今年剩余</span>
+                      <span data-life>今生剩余</span>
+                      <strong data-year>约 16 次</strong>
+                      <strong data-life>约 92 次</strong>
+                    </div>
+                  </div>
+                  <div class="formula-explainer">
+                    <strong>其他账户的减少节奏</strong>
+                    孩子按当前年龄段显示每周减少的陪伴小时；伴侣按每天共处小时连续减少；运动与创造按每周小时减少；自由时间随其他账户一起重算。
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="widget-zone">
+        <div class="showcase">
+          <div class="caption">
+            <span>锁屏 Widget · Rectangular</span>
+            <span>今年余额优先</span>
+          </div>
+          <div class="lock-preview">
+            <div class="lock-time">
+              <strong>9:41</strong>
+              <span>5月7日 周四</span>
+            </div>
+
+            <div class="lock-widget">
+              <div>
+                <div class="widget-title">今年余额</div>
+                <div class="widget-weeks"><strong>34</strong><span>周</span></div>
+              </div>
+              <div class="widget-divider"></div>
+              <div class="lock-list">
+                <span>父母 96h · 约 16 次</span>
+                <span>伴侣 956h · 每天约 4h</span>
+                <span>运动 171h · 每周约 5h</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="showcase">
+          <div class="caption">
+            <span>桌面 Widget · Medium</span>
+            <span>多个账户一眼看见</span>
+          </div>
+          <div class="desktop-preview">
+            <div class="desktop-widget">
+              <div class="desktop-head">
+                <div>
+                  <span>今年余额</span>
+                  <strong>34 周</strong>
+                </div>
+                <em>2026.05.07 - 12.31</em>
+              </div>
+
+              <div class="desktop-rows">
+                <div class="desktop-row">
+                  <span><i class="swatch" style="background: var(--rose)"></i>父母</span>
+                  <strong>96h</strong>
+                  <span>7 个瞬间</span>
+                  <span>约 16 次</span>
+                </div>
+                <div class="desktop-row">
+                  <span><i class="swatch" style="background: var(--warm)"></i>孩子</span>
+                  <strong>680h</strong>
+                  <span>3 个瞬间</span>
+                  <span>每周约 20h</span>
+                </div>
+                <div class="desktop-row">
+                  <span><i class="swatch" style="background: var(--lavender)"></i>伴侣</span>
+                  <strong>956h</strong>
+                  <span>2 个瞬间</span>
+                  <span>每天约 4h</span>
+                </div>
+                <div class="desktop-row">
+                  <span><i class="swatch" style="background: var(--sage)"></i>运动</span>
+                  <strong>171h</strong>
+                  <span>2 个瞬间</span>
+                  <span>每周约 5h</span>
+                </div>
+                <div class="desktop-row">
+                  <span><i class="swatch" style="background: var(--sky)"></i>创造</span>
+                  <strong>1,366h</strong>
+                  <span>0 个瞬间</span>
+                  <span>每周约 40h</span>
+                </div>
+                <div class="desktop-row">
+                  <span><i class="swatch" style="background: var(--peach)"></i>自由</span>
+                  <strong>555h</strong>
+                  <span>0 个瞬间</span>
+                  <span>清醒时间约 15%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="note-card">
+          <strong>交互约定：</strong>首页切到今年后，点进时间账户详情页仍然保持今年视角；详情页也可独立切回今生。Widget 顶部只显示今年余额周数，账户信息在下方补充今年剩余、已存入瞬间和减少节奏。
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const buttons = document.querySelectorAll('.segmented button');
+    function setMode(mode) {
+      document.body.dataset.mode = mode;
+      buttons.forEach((button) => {
+        button.setAttribute('aria-pressed', button.dataset.mode === mode ? 'true' : 'false');
+      });
+    }
+
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => setMode(button.dataset.mode));
+    });
+
+    const openFormulaButtons = document.querySelectorAll('[data-open-formula]');
+    const closeFormulaButtons = document.querySelectorAll('[data-close-formula]');
+
+    function setDetailScreen(screen) {
+      document.body.dataset.detailScreen = screen;
+      if (screen === 'formula') {
+        history.replaceState(null, '', '#formula');
+      } else if (window.location.hash === '#formula') {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+    }
+
+    openFormulaButtons.forEach((button) => {
+      button.addEventListener('click', () => setDetailScreen('formula'));
+    });
+
+    closeFormulaButtons.forEach((button) => {
+      button.addEventListener('click', () => setDetailScreen('overview'));
+    });
+
+    setMode(document.body.dataset.mode || 'year');
+    setDetailScreen(window.location.hash === '#formula' ? 'formula' : 'overview');
+  </script>
+</body>
+</html>

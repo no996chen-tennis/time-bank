@@ -6,12 +6,14 @@ struct DimensionDetailHeaderView: View {
     let dimension: Dimension
     let profile: UserProfile
     let dimensionsByID: [String: Dimension]
+    let timeScope: DimensionCompute.TimeBalanceScope
 
     private var consumeHours: Double {
         DimensionCompute.consumeHours(
             for: dimension,
             profile: profile,
-            dimensionsByID: dimensionsByID
+            dimensionsByID: dimensionsByID,
+            scope: timeScope
         )
     }
 
@@ -19,67 +21,88 @@ struct DimensionDetailHeaderView: View {
         DimensionDetailCopy.headerSubtitleLines(
             for: dimension,
             profile: profile,
-            dimensionsByID: dimensionsByID
+            dimensionsByID: dimensionsByID,
+            scope: timeScope
         )
     }
 
     var body: some View {
-        VStack(spacing: TBSpace.s4) {
-            ZStack {
-                Circle()
-                    .fill(DimensionPalette.soft(for: dimension.id))
+        softBody
+    }
 
-                Image(systemName: DimensionDetailCopy.iconSystemName(for: dimension))
-                    .font(.tbHeadL)
-                    .foregroundStyle(DimensionPalette.color(for: dimension.id))
+    private var softBody: some View {
+        HStack(alignment: .center, spacing: TBSpace.s3) {
+            headerSymbol(size: 56)
+            headerTextBlock(alignment: .leading)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(TBSpace.s4)
+        .tbThemedSurface()
+    }
+
+    private var editorialBody: some View {
+        HStack(alignment: .top, spacing: TBSpace.s5) {
+            headerSymbol(size: 56)
+
+            VStack(alignment: .leading, spacing: TBSpace.s3) {
+                Text("账户详情")
+                    .font(.tbLabel)
+                    .foregroundStyle(Color.tbInk3)
+                    .textCase(.uppercase)
+
+                headerTextBlock(alignment: .leading)
             }
-            .frame(width: 72, height: 72)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(TBSpace.s5)
+        .tbThemedSurface()
+    }
 
-            VStack(spacing: TBSpace.s2) {
-                Text(dimension.name)
-                    .font(.tbHeadM)
-                    .foregroundStyle(Color.tbInk)
+    private func headerSymbol(size: CGFloat) -> some View {
+        ZStack {
+            Circle()
+                .fill(DimensionPalette.soft(for: dimension))
 
-                if let memorialSubtitle {
-                    Text(memorialSubtitle)
-                        .font(.tbBody)
-                        .foregroundStyle(Color.tbInk2)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(TBSpace.s1)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, TBSpace.s2)
-                } else {
-                    Text(Formatter.hoursCompact(consumeHours))
-                        .font(.tbDisplayL)
-                        .foregroundStyle(Color.tbInk)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.52)
-                        .frame(maxWidth: .infinity)
+            Image(systemName: DimensionDetailCopy.iconSystemName(for: dimension))
+                .font(.tbHeadL)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(DimensionPalette.color(for: dimension))
+        }
+        .frame(width: size, height: size)
+    }
 
-                    VStack(spacing: TBSpace.s1) {
-                        ForEach(subtitleLines, id: \.self) { line in
-                            Text(line)
-                                .font(.tbBodySm)
-                                .foregroundStyle(Color.tbInk2)
-                                .multilineTextAlignment(.center)
-                        }
-                    }
-                }
-            }
+    private func headerTextBlock(alignment: HorizontalAlignment, isLeading: Bool = true) -> some View {
+        VStack(alignment: alignment, spacing: TBSpace.s2) {
+            Text(dimension.name)
+                .font(.tbHeadM)
+                .foregroundStyle(Color.tbInk)
 
-            if memorialSubtitle == nil,
-               let insight = DimensionDetailCopy.insight(for: dimension, profile: profile) {
-                Text(insight)
+            if let memorialSubtitle {
+                Text(memorialSubtitle)
                     .font(.tbBody)
                     .foregroundStyle(Color.tbInk2)
-                    .multilineTextAlignment(.center)
+                    .multilineTextAlignment(isLeading ? .leading : .center)
                     .lineSpacing(TBSpace.s1)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, TBSpace.s2)
+            } else {
+                Text(Formatter.hoursCompact(consumeHours))
+                    .font(.tbDisplayM)
+                    .foregroundStyle(Color.tbInk)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.52)
+                    .frame(maxWidth: .infinity, alignment: isLeading ? .leading : .center)
+
+                VStack(alignment: alignment, spacing: TBSpace.s1) {
+                    ForEach(subtitleLines, id: \.self) { line in
+                        Text(line)
+                            .font(.tbBodySm)
+                            .foregroundStyle(Color.tbInk2)
+                            .multilineTextAlignment(isLeading ? .leading : .center)
+                    }
+                }
             }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, TBSpace.s6)
     }
 
     private var memorialSubtitle: String? {

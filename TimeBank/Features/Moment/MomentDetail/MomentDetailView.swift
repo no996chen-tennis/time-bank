@@ -118,7 +118,7 @@ struct MomentDetailView: View {
                             for: moment,
                             dimension: dimension
                         ),
-                        dimensionID: dimension?.id
+                        dimension: dimension
                     )
 
                     if let note = MomentDetailPresentation.note(for: moment) {
@@ -132,9 +132,7 @@ struct MomentDetailView: View {
                 }
                 .padding(TBSpace.s5)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.tbSurface)
-                .clipShape(RoundedRectangle(cornerRadius: TBRadius.lg, style: .continuous))
-                .modifier(DimensionDetailSoftShadowModifier())
+                .tbThemedSurface()
 
                 bottomActions(for: moment)
             }
@@ -155,11 +153,7 @@ struct MomentDetailView: View {
         .tabViewStyle(.page(indexDisplayMode: mediaItems.count > 1 ? .automatic : .never))
         .frame(height: 396)
         .clipShape(RoundedRectangle(cornerRadius: TBRadius.lg, style: .continuous))
-        .background(
-            RoundedRectangle(cornerRadius: TBRadius.lg, style: .continuous)
-                .fill(Color.tbSurface)
-        )
-        .modifier(DimensionDetailSoftShadowModifier())
+        .tbThemedSurface(.media)
         .onAppear {
             if selectedMediaID == nil {
                 selectedMediaID = mediaItems.first?.id
@@ -169,16 +163,11 @@ struct MomentDetailView: View {
 
     @ViewBuilder
     private func mediaPage(_ media: MediaItem) -> some View {
-        let displayPath = media.mediaKind == .video
-            ? (media.thumbnailPath ?? media.relativePath)
-            : media.relativePath
-
         ZStack {
             AsyncThumbnailImageView(
-                source: .file(
-                    relativePath: displayPath,
-                    fileStore: fileStore
-                )
+                source: media.mediaKind == .video
+                    ? .videoFile(relativePath: media.relativePath, fileStore: fileStore, maxPixelSize: 1100)
+                    : .file(relativePath: media.relativePath, fileStore: fileStore)
             ) {
                 ZStack {
                     Color.tbBg2
@@ -208,27 +197,27 @@ struct MomentDetailView: View {
         }
     }
 
-    private func chipGrid(chips: [String], dimensionID: String?) -> some View {
+    private func chipGrid(chips: [String], dimension: Dimension?) -> some View {
         LazyVGrid(
             columns: [GridItem(.adaptive(minimum: 92), spacing: TBSpace.s2, alignment: .leading)],
             alignment: .leading,
             spacing: TBSpace.s2
         ) {
             ForEach(chips, id: \.self) { chip in
-                detailChip(chip, dimensionID: chip.hasPrefix("♡") ? dimensionID : nil)
+                detailChip(chip, dimension: chip.hasPrefix("♡") ? dimension : nil)
             }
         }
     }
 
-    private func detailChip(_ text: String, dimensionID: String?) -> some View {
+    private func detailChip(_ text: String, dimension: Dimension?) -> some View {
         Text(text)
             .font(.tbLabel)
-            .foregroundStyle(dimensionID.map { DimensionPalette.color(for: $0) } ?? Color.tbInk2)
+            .foregroundStyle(dimension.map { DimensionPalette.color(for: $0) } ?? Color.tbInk2)
             .lineLimit(1)
             .minimumScaleFactor(0.82)
             .padding(.horizontal, TBSpace.s3)
             .padding(.vertical, TBSpace.s2)
-            .background(dimensionID.map { DimensionPalette.soft(for: $0) } ?? Color.tbBg2)
+            .background(dimension.map { DimensionPalette.soft(for: $0) } ?? Color.tbBg2)
             .clipShape(Capsule())
             .accessibilityLabel(text)
     }
@@ -407,19 +396,27 @@ struct DimensionPickerSheet: View {
                 } label: {
                     HStack(spacing: TBSpace.s3) {
                         Circle()
-                            .fill(DimensionPalette.soft(for: dimension.id))
+                            .fill(DimensionPalette.soft(for: dimension))
                             .frame(width: 28, height: 28)
                             .overlay {
                                 Image(systemName: DimensionDetailCopy.iconSystemName(for: dimension))
                                     .font(.tbLabel)
-                                    .foregroundStyle(DimensionPalette.color(for: dimension.id))
+                                    .symbolRenderingMode(.hierarchical)
+                                    .foregroundStyle(DimensionPalette.color(for: dimension))
                             }
 
                         Text(dimension.name)
                             .font(.tbBody)
                             .foregroundStyle(Color.tbInk)
                     }
+                    .padding(TBSpace.s3)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .tbThemedSurface(.row)
                 }
+                .buttonStyle(.plain)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: TBSpace.s1, leading: TBSpace.s5, bottom: TBSpace.s1, trailing: TBSpace.s5))
+                .listRowBackground(Color.clear)
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
@@ -445,9 +442,21 @@ private struct MomentDetailActionButtonStyle: ButtonStyle {
             .font(.tbLabel)
             .foregroundStyle(isDestructive ? Color.tbDanger : Color.tbInk2)
             .labelStyle(.titleAndIcon)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, TBSpace.s3)
+            .frame(maxWidth: .infinity, minHeight: 44)
             .background(Color.tbSurface.opacity(configuration.isPressed ? 0.72 : 1))
-            .clipShape(Capsule())
+            .clipShape(RoundedRectangle(cornerRadius: actionRadius, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: actionRadius, style: .continuous)
+                    .stroke(isDestructive ? Color.tbDanger.opacity(0.35) : TimeBankTheme.current.style.cardBorderColor, lineWidth: TimeBankTheme.current.style.cardBorderWidth)
+            }
+    }
+
+    private var actionRadius: CGFloat {
+        switch TimeBankTheme.current.kind {
+        case .gallery, .localRemoteEditorial:
+            return 0
+        default:
+            return TBRadius.pill
+        }
     }
 }

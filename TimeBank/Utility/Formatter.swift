@@ -28,20 +28,17 @@ enum Formatter {
         let roundedHours = max(0, h.rounded())
 
         switch roundedHours {
-        case ..<1_000:
-            return "\(Int(roundedHours))h"
-
-        case 1_000..<10_000:
+        case ..<10_000:
             let number = decimalGroupingFormatter.string(from: NSNumber(value: Int(roundedHours))) ?? "\(Int(roundedHours))"
-            return "\(number)h"
+            return "\(number) 小时"
 
-        case 10_000..<100_000:
-            let compact = (roundedHours / 1_000).rounded(toPlaces: 1)
-            return "\(trimmedDecimalString(compact, fractionDigits: 1))Kh"
+        case 10_000..<1_000_000:
+            let compact = (roundedHours / 10_000).rounded(toPlaces: 1)
+            return "\(trimmedDecimalString(compact, fractionDigits: 1)) 万小时"
 
         default:
-            let compact = Int((roundedHours / 1_000).rounded())
-            return "\(compact)Kh"
+            let compact = Int((roundedHours / 10_000).rounded())
+            return "\(compact) 万小时"
         }
     }
 
@@ -65,19 +62,19 @@ enum Formatter {
 
         switch (hours, minutes) {
         case (0, _):
-            return "\(minutes)m"
+            return "\(minutes) 分钟"
 
         case (_, 0):
-            return "\(hours)h"
+            return "\(hours) 小时"
 
         default:
-            return "\(hours)h \(minutes)m"
+            return "\(hours) 小时 \(minutes) 分钟"
         }
     }
 
     static func storedDuration(_ hours: Double) -> String {
         let seconds = Int((max(0, hours) * 3600.0).rounded())
-        guard seconds > 0 else { return "0h" }
+        guard seconds > 0 else { return "0 小时" }
         return hoursWithMinutes(seconds)
     }
 
@@ -118,12 +115,11 @@ enum Formatter {
         return "占清醒时间约 \(clamped)%"
     }
 
-    /// lifespan 顶部卡副文案：N 年 · N Kh
-    /// 例：lifespanSubtitle(years: 45, hoursK: 473) → "45 年 · 473 Kh"
+    /// lifespan 顶部卡副文案：N 年 · N 万小时
+    /// 例：lifespanSubtitle(years: 45, hoursK: 473) → "45 年 · 47.3 万小时"
     static func lifespanSubtitle(years: Double, hoursK: Double) -> String {
         let y = max(0, Int(years.rounded()))
-        let k = max(0, Int(hoursK.rounded()))
-        return "\(y) 年 · \(k) Kh"
+        return "\(y) 年 · \(hoursCompact(max(0, hoursK) * 1_000))"
     }
 
     static func relativeTime(_ date: Date, relativeTo now: Date = .now) -> String {

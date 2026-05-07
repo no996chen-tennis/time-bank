@@ -24,6 +24,7 @@
 		F2D000052FB0010100000001 /* DoubleLayerAccountCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D000042FB0010100000001 /* DoubleLayerAccountCardView.swift */; };
 		F2D000072FB0010100000001 /* DimensionCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D000062FB0010100000001 /* DimensionCardView.swift */; };
 		F2D000092FB0010100000001 /* BottomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D000082FB0010100000001 /* BottomTabBar.swift */; };
+		F32000012FF101010000001 /* HomeDimensionEditSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32000002FF101010000001 /* HomeDimensionEditSupport.swift */; };
 		F2E000012FC1010100000001 /* DimensionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E000002FC1010100000001 /* DimensionDetailView.swift */; };
 		F2E000032FC1010100000001 /* DimensionDetailHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E000022FC1010100000001 /* DimensionDetailHeaderView.swift */; };
 		F2E000052FC1010100000001 /* CalculationSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E000042FC1010100000001 /* CalculationSummaryCard.swift */; };
@@ -34,6 +35,8 @@
 		F2F000082FD0010100000001 /* ProfileEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2F000072FD0010100000001 /* ProfileEditorView.swift */; };
 		F2F0000A2FD0010100000001 /* RelationshipEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2F000092FD0010100000001 /* RelationshipEditorSheet.swift */; };
 		F2F0000C2FD0010100000001 /* DimensionDemotionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2F0000B2FD0010100000001 /* DimensionDemotionStore.swift */; };
+		F32000042FF101010000001 /* DimensionEditorDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32000032FF101010000001 /* DimensionEditorDraft.swift */; };
+		F32000062FF101010000001 /* DimensionManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32000052FF101010000001 /* DimensionManagerView.swift */; };
 		F30000092FE2010100000001 /* AsyncThumbnailImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30000082FE2010100000001 /* AsyncThumbnailImageView.swift */; };
 		F300000B2FE2010100000001 /* MomentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F300000A2FE2010100000001 /* MomentDetailView.swift */; };
 		F30000012FE1010100000001 /* MomentEditorDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30000002FE1010100000001 /* MomentEditorDraft.swift */; };
@@ -43,6 +46,7 @@
 		F135277D2F99D3E500847E51 /* MediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527702F99D3E400847E51 /* MediaItem.swift */; };
 		F135277E2F99D3E500847E51 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527782F99D3E400847E51 /* DesignTokens.swift */; };
 		F135277F2F99D3E500847E51 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F135277A2F99D3E400847E51 /* Formatter.swift */; };
+		F13527862F99D3E500847E51 /* KeyboardDismiss.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527872F99D3E400847E51 /* KeyboardDismiss.swift */; };
 		F13527802F99D3E500847E51 /* MomentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527762F99D3E400847E51 /* MomentStore.swift */; };
 		F13527812F99D3E500847E51 /* Moment.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527712F99D3E400847E51 /* Moment.swift */; };
 		F13527822F99D3E500847E51 /* Dimension.swift in Sources */ = {isa = PBXBuildFile; fileRef = F135276F2F99D3E400847E51 /* Dimension.swift */; };
@@ -87,6 +91,7 @@
 		F2D000042FB0010100000001 /* DoubleLayerAccountCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubleLayerAccountCardView.swift; sourceTree = "<group>"; };
 		F2D000062FB0010100000001 /* DimensionCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionCardView.swift; sourceTree = "<group>"; };
 		F2D000082FB0010100000001 /* BottomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomTabBar.swift; sourceTree = "<group>"; };
+		F32000002FF101010000001 /* HomeDimensionEditSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeDimensionEditSupport.swift; sourceTree = "<group>"; };
 		F2E000002FC1010100000001 /* DimensionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionDetailView.swift; sourceTree = "<group>"; };
 		F2E000022FC1010100000001 /* DimensionDetailHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionDetailHeaderView.swift; sourceTree = "<group>"; };
 		F2E000042FC1010100000001 /* CalculationSummaryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculationSummaryCard.swift; sourceTree = "<group>"; };
@@ -97,6 +102,8 @@
 		F2F000072FD0010100000001 /* ProfileEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileEditorView.swift; sourceTree = "<group>"; };
 		F2F000092FD0010100000001 /* RelationshipEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelationshipEditorSheet.swift; sourceTree = "<group>"; };
 		F2F0000B2FD0010100000001 /* DimensionDemotionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionDemotionStore.swift; sourceTree = "<group>"; };
+		F32000032FF101010000001 /* DimensionEditorDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionEditorDraft.swift; sourceTree = "<group>"; };
+		F32000052FF101010000001 /* DimensionManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionManagerView.swift; sourceTree = "<group>"; };
 		F30000082FE2010100000001 /* AsyncThumbnailImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncThumbnailImageView.swift; sourceTree = "<group>"; };
 		F300000A2FE2010100000001 /* MomentDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentDetailView.swift; sourceTree = "<group>"; };
 		F30000002FE1010100000001 /* MomentEditorDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentEditorDraft.swift; sourceTree = "<group>"; };
@@ -113,6 +120,7 @@
 		F13527782F99D3E400847E51 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
 		F13527792F99D3E400847E51 /* FileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileStore.swift; sourceTree = "<group>"; };
 		F135277A2F99D3E400847E51 /* Formatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
+		F13527872F99D3E400847E51 /* KeyboardDismiss.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardDismiss.swift; sourceTree = "<group>"; };
 		F13D3F722F989EE4007D270B /* TimeBank.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TimeBank.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F13D3F812F989EE5007D270B /* TimeBankTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TimeBankTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F13D3F8B2F989EE5007D270B /* TimeBankUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TimeBankUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -247,6 +255,7 @@
 				F2D000042FB0010100000001 /* DoubleLayerAccountCardView.swift */,
 				F2D000062FB0010100000001 /* DimensionCardView.swift */,
 				F2D000082FB0010100000001 /* BottomTabBar.swift */,
+				F32000002FF101010000001 /* HomeDimensionEditSupport.swift */,
 			);
 			path = Home;
 			sourceTree = "<group>";
@@ -281,8 +290,18 @@
 			children = (
 				F2F000052FD0010100000001 /* SettingsHomeView.swift */,
 				F2F0000E2FD0010100000001 /* ProfileEditor */,
+				F32000072FF101010000001 /* DimensionManager */,
 			);
 			path = SettingsUI;
+			sourceTree = "<group>";
+		};
+		F32000072FF101010000001 /* DimensionManager */ = {
+			isa = PBXGroup;
+			children = (
+				F32000032FF101010000001 /* DimensionEditorDraft.swift */,
+				F32000052FF101010000001 /* DimensionManagerView.swift */,
+			);
+			path = DimensionManager;
 			sourceTree = "<group>";
 		};
 		F2F0000E2FD0010100000001 /* ProfileEditor */ = {
@@ -323,6 +342,7 @@
 				F13527782F99D3E400847E51 /* DesignTokens.swift */,
 				F13527792F99D3E400847E51 /* FileStore.swift */,
 				F135277A2F99D3E400847E51 /* Formatter.swift */,
+				F13527872F99D3E400847E51 /* KeyboardDismiss.swift */,
 			);
 			path = Utility;
 			sourceTree = "<group>";
@@ -513,6 +533,7 @@
 				F2D000052FB0010100000001 /* DoubleLayerAccountCardView.swift in Sources */,
 				F2D000072FB0010100000001 /* DimensionCardView.swift in Sources */,
 				F2D000092FB0010100000001 /* BottomTabBar.swift in Sources */,
+				F32000012FF101010000001 /* HomeDimensionEditSupport.swift in Sources */,
 				F2E000012FC1010100000001 /* DimensionDetailView.swift in Sources */,
 				F2E000032FC1010100000001 /* DimensionDetailHeaderView.swift in Sources */,
 				F2E000052FC1010100000001 /* CalculationSummaryCard.swift in Sources */,
@@ -527,11 +548,14 @@
 				F2F000062FD0010100000001 /* SettingsHomeView.swift in Sources */,
 				F2F000082FD0010100000001 /* ProfileEditorView.swift in Sources */,
 				F2F0000A2FD0010100000001 /* RelationshipEditorSheet.swift in Sources */,
+				F32000042FF101010000001 /* DimensionEditorDraft.swift in Sources */,
+				F32000062FF101010000001 /* DimensionManagerView.swift in Sources */,
 				F2F0000C2FD0010100000001 /* DimensionDemotionStore.swift in Sources */,
 				F135277C2F99D3E500847E51 /* DimensionCompute.swift in Sources */,
 				F135277D2F99D3E500847E51 /* MediaItem.swift in Sources */,
 				F135277E2F99D3E500847E51 /* DesignTokens.swift in Sources */,
 				F135277F2F99D3E500847E51 /* Formatter.swift in Sources */,
+				F13527862F99D3E500847E51 /* KeyboardDismiss.swift in Sources */,
 				F13527802F99D3E500847E51 /* MomentStore.swift in Sources */,
 				F13527812F99D3E500847E51 /* Moment.swift in Sources */,
 				F13527822F99D3E500847E51 /* Dimension.swift in Sources */,

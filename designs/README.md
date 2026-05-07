@@ -10,6 +10,7 @@
 | `index.html` | 设计稿网页入口页：嵌入主原型，并链接其他 HTML / PNG 可视化稿 |
 | `ui-theme-1-magazine-apartamento.html` | **UI 主题评审页**：主题 1 杂志 Apartamento 风完整画板 + 主题 4 禅意宋瓷茶道嵌入预览 + 主题 5 Local Remote Editorial |
 | `ui-theme-3-gallery.html` | **UI 主题 3**：当代艺术 Gallery 风 iOS 原型（5 屏 + lifespan 3 变体） |
+| `year-balance-widget-demo.html` | **今年余额 + Widget 交互 Demo**：首页/详情页 `今生/今年` 切换 + 锁屏 Rectangular + 桌面 Medium Widget |
 | `time-bank-artbook-showcase.html` | **UI 主题 2**：Art Book / 装帧方向网页展示页（说明 + iframe 预览 + 设计要点） |
 | `v1-ui-final.html` | Claude Design UI 定稿（6 屏 React 组件 + tokens + 插画）· 7.7MB bundle · 双击本地打开查看 |
 | `time-bank-magazine-apartamento.html` | 2026-04-26 杂志 Apartamento 风 iOS 原型（5 屏 + lifespan 3 变体）· 本地 HTML 可直接打开 |

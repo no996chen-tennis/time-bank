@@ -138,6 +138,7 @@ struct ProfileEditorView: View {
         ProfileSection(title: "我自己") {
             DatePicker("生日", selection: birthdayBinding, displayedComponents: .date)
                 .datePickerStyle(.compact)
+                .environment(\.locale, Locale(identifier: "zh_Hans_CN"))
 
             Picker("性别", selection: genderBinding) {
                 Text("男").tag(Gender.male)
@@ -210,7 +211,7 @@ struct ProfileEditorView: View {
                     Label("添加孩子", systemImage: "plus")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(ProfileSecondaryButtonStyle())
+                .buttonStyle(TBSecondaryActionButtonStyle(fillsWidth: true))
             }
         }
     }
@@ -506,13 +507,12 @@ private struct ProfileSection<Content: View>: View {
 
             VStack(alignment: .leading, spacing: TBSpace.s3) {
                 content()
-            }
-            .padding(TBSpace.s4)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.tbBg2)
-            .clipShape(RoundedRectangle(cornerRadius: TBRadius.lg))
         }
+        .padding(TBSpace.s4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .tbThemedSurface(.inset)
     }
+}
 }
 
 private struct EmptyRelationRow: View {
@@ -530,7 +530,7 @@ private struct EmptyRelationRow: View {
                 Label(buttonTitle, systemImage: "plus")
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(ProfileSecondaryButtonStyle())
+            .buttonStyle(TBSecondaryActionButtonStyle(fillsWidth: true))
         }
     }
 }
@@ -548,20 +548,7 @@ private struct RelationInfoCard: View {
             }
         }
         .padding(TBSpace.s4)
-        .background(Color.tbSurface)
-        .clipShape(RoundedRectangle(cornerRadius: TBRadius.md))
-    }
-}
-
-private struct ProfileSecondaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.tbBody)
-            .foregroundStyle(Color.tbPrimary)
-            .padding(.vertical, TBSpace.s3)
-            .padding(.horizontal, TBSpace.s4)
-            .background(Color.tbSurface.opacity(configuration.isPressed ? 0.72 : 1))
-            .clipShape(RoundedRectangle(cornerRadius: TBRadius.md))
+        .tbThemedSurface(.row)
     }
 }
 

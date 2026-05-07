@@ -3,6 +3,8 @@
 import Combine
 import SwiftData
 import SwiftUI
+import UIKit
+import UniformTypeIdentifiers
 
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
@@ -14,7 +16,15 @@ struct HomeView: View {
     @StateObject private var undoToastController = UndoToastController()
     @State private var selectedTab: HomeTab = .home
     @State private var momentEditorRoute: MomentEditorRoute?
+    @State private var dimensionEditorRoute: DimensionEditorRoute?
     @State private var sharedMomentStore: MomentStore?
+    @State private var homeEditMode: HomeDimensionEditMode = .inactive
+    @State private var orderedDimensionIDs: [String] = []
+    @State private var draggingDimensionID: String?
+    @State private var dimensionDeleteRequest: HomeDimensionDeleteRequest?
+    @State private var homeToastMessage: String?
+    @State private var homeToastDismissTask: Task<Void, Never>?
+    @State private var timeScope: DimensionCompute.TimeBalanceScope = .lifetime
 
     var body: some View {
         NavigationStack {
@@ -39,11 +49,43 @@ struct HomeView: View {
             .sheet(item: $momentEditorRoute) { route in
                 MomentEditorView(route: route)
             }
+            .sheet(item: $dimensionEditorRoute) { route in
+                NavigationStack {
+                    DimensionEditorView(route: route)
+                }
+            }
+            .alert(dimensionDeleteRequest?.title ?? "", isPresented: Binding(
+                get: { dimensionDeleteRequest != nil },
+                set: { if $0 == false { dimensionDeleteRequest = nil } }
+            )) {
+                Button("取消", role: .cancel) {
+                    dimensionDeleteRequest = nil
+                }
+
+                Button("删除", role: .destructive) {
+                    confirmDeleteDimension()
+                }
+            } message: {
+                Text(dimensionDeleteRequest?.message ?? "")
+            }
         }
         .overlay(alignment: .bottom) {
-            UndoToastView()
-                .environmentObject(undoToastController)
-                .padding(.bottom, 96)
+            VStack(spacing: TBSpace.s2) {
+                if let homeToastMessage {
+                    Text(homeToastMessage)
+                        .font(.tbLabel)
+                        .foregroundStyle(Color.tbSurface)
+                        .padding(.horizontal, TBSpace.s4)
+                        .padding(.vertical, TBSpace.s3)
+                        .background(Color.tbInk.opacity(0.88))
+                        .clipShape(Capsule())
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+
+                UndoToastView()
+                    .environmentObject(undoToastController)
+            }
+            .padding(.bottom, 96)
         }
         .environmentObject(undoToastController)
         .environment(\.sharedMomentStore, sharedMomentStore)
@@ -56,9 +98,11 @@ struct HomeView: View {
 
     private func homeContent(profile: UserProfile) -> some View {
         let visibleDimensions = visibleAccountDimensions
+        let displayDimensions = displayDimensions(from: visibleDimensions)
+        let isEditing = homeEditMode.isEditing
         let dimensionsByID = Dictionary(uniqueKeysWithValues: dimensions.map { ($0.id, $0) })
         let normalMoments = moments.filter { $0.status == .normal }
-        let projection = DimensionCompute.projection(profile: profile)
+        let projection = DimensionCompute.projection(profile: profile, scope: timeScope)
         let totalAccount = DimensionCompute.totalAccount(
             dimensions: visibleDimensions,
             moments: normalMoments
@@ -68,38 +112,58 @@ struct HomeView: View {
             GreetingHeaderView()
                 .padding(.horizontal, TBSpace.s5)
                 .padding(.top, TBSpace.s4)
-                .padding(.bottom, TBSpace.s3)
+                .padding(.bottom, TBSpace.s2)
+
+            TimeBalanceScopeControl(scope: $timeScope)
+                .padding(.horizontal, TBSpace.s5)
+                .padding(.bottom, TBSpace.s2)
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: TBSpace.s4) {
+                VStack(alignment: .leading, spacing: TBSpace.s3) {
                     DoubleLayerAccountCardView(
                         projection: projection,
-                        totalAccount: totalAccount
+                        totalAccount: totalAccount,
+                        scope: timeScope,
+                        onDepositsTap: {
+                            selectedTab = .account
+                        }
                     )
+                    .opacity(isEditing ? 0.4 : 1)
+                    .allowsHitTesting(isEditing == false)
 
-                    Text("时间账户 · \(visibleDimensions.count) 个")
-                        .font(.tbHeadS)
-                        .foregroundStyle(Color.tbInk)
-                        .padding(.top, TBSpace.s2)
+                    dimensionSectionHeader(count: visibleDimensions.count)
+                        .padding(.top, TBSpace.s1)
 
-                    VStack(spacing: TBSpace.s3) {
-                        ForEach(visibleDimensions, id: \.id) { dimension in
-                            NavigationLink {
-                                DimensionDetailView(dimensionID: dimension.id)
-                            } label: {
-                                DimensionCardView(
-                                    dimension: dimension,
-                                    profile: profile,
-                                    dimensionsByID: dimensionsByID,
-                                    moments: normalMoments
-                                )
-                            }
-                            .buttonStyle(.plain)
+                    VStack(spacing: TBSpace.s2) {
+                        ForEach(Array(displayDimensions.enumerated()), id: \.element.id) { index, dimension in
+                            dimensionCard(
+                                index: index,
+                                dimension: dimension,
+                                profile: profile,
+                                dimensionsByID: dimensionsByID,
+                                moments: normalMoments,
+                                timeScope: timeScope
+                            )
+                        }
+
+                        if isEditing == false {
+                            Color.clear
+                                .frame(height: TBSpace.s3)
+                        } else {
+                            Color.clear
+                                .frame(height: TBSpace.s6)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    finishDimensionEditing()
+                                }
                         }
                     }
                 }
                 .padding(.horizontal, TBSpace.s5)
-                .padding(.bottom, TBSpace.s7)
+                .padding(.bottom, TBSpace.s5)
+            }
+            .onChange(of: visibleDimensions.map(\.id)) { _, newIDs in
+                reconcileOrderedDimensionIDs(visibleIDs: newIDs)
             }
 
             tabBar
@@ -126,32 +190,223 @@ struct HomeView: View {
         }
     }
 
+    private func dimensionSectionHeader(count: Int) -> some View {
+        HStack(alignment: .center, spacing: TBSpace.s3) {
+            Text(homeEditMode.isEditing ? "长按拖动 · 调整顺序" : "时间账户 · \(count) 个")
+                .font(.tbHeadS)
+                .foregroundStyle(Color.tbInk)
+
+            Spacer()
+
+            if homeEditMode.isEditing {
+                Button {
+                    finishDimensionEditing()
+                } label: {
+                    Label("完成", systemImage: "checkmark")
+                        .font(.tbBodySm)
+                        .labelStyle(.titleAndIcon)
+                }
+                .buttonStyle(HomeHeaderActionButtonStyle(role: .primary))
+                .accessibilityLabel("完成编辑时间账户")
+            } else {
+                Button {
+                    enterDimensionEditing(haptic: false)
+                } label: {
+                    Label("编辑", systemImage: "pencil")
+                        .font(.tbBodySm)
+                        .labelStyle(.titleAndIcon)
+                }
+                .buttonStyle(HomeHeaderActionButtonStyle(role: .secondary))
+                .accessibilityLabel("编辑时间账户顺序")
+
+                Button {
+                    dimensionEditorRoute = .create
+                } label: {
+                    Label("新增", systemImage: "plus")
+                        .font(.tbBodySm)
+                        .labelStyle(.titleAndIcon)
+                }
+                .buttonStyle(HomeHeaderActionButtonStyle(role: .accent))
+                .accessibilityLabel("添加自定义时间账户")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func dimensionCard(
+        index: Int,
+        dimension: Dimension,
+        profile: UserProfile,
+        dimensionsByID: [String: Dimension],
+        moments: [Moment],
+        timeScope: DimensionCompute.TimeBalanceScope
+    ) -> some View {
+        let card = DimensionCardView(
+            dimension: dimension,
+            profile: profile,
+            dimensionsByID: dimensionsByID,
+            moments: moments,
+            timeScope: timeScope
+        )
+
+        if homeEditMode.isEditing {
+            card
+                .modifier(HomeDimensionJiggleEffect(
+                    isActive: true,
+                    phaseDelay: Double(index) * 0.04
+                ))
+                .overlay(alignment: .topLeading) {
+                    if dimension.kind == .custom {
+                        HomeDimensionDeleteBadge {
+                            prepareDeleteDimension(dimension)
+                        }
+                        .offset(x: -8, y: -8)
+                    }
+                }
+                .onDrag {
+                    draggingDimensionID = dimension.id
+                    return NSItemProvider(object: dimension.id as NSString)
+                }
+                .onDrop(
+                    of: [UTType.text],
+                    delegate: HomeDimensionDropDelegate(
+                        targetID: dimension.id,
+                        orderedIDs: $orderedDimensionIDs,
+                        draggingID: $draggingDimensionID
+                    )
+                )
+        } else {
+            NavigationLink {
+                DimensionDetailView(dimensionID: dimension.id, initialTimeScope: timeScope)
+            } label: {
+                card
+            }
+            .buttonStyle(.plain)
+            .simultaneousGesture(
+                LongPressGesture(minimumDuration: 0.5)
+                    .onEnded { _ in
+                        enterDimensionEditing(haptic: true)
+                    }
+            )
+        }
+    }
+
     private var tabBar: some View {
         BottomTabBar(
             selectedTab: selectedTab,
             onSelect: { tab in
                 selectedTab = tab
-            },
-            onCreateMoment: {
-                momentEditorRoute = .newMoment
             }
         )
     }
 
     private var visibleAccountDimensions: [Dimension] {
-        dimensions
-            .filter { dimension in
-                dimension.status == .visible
-                    && (dimension.kind == .builtin || dimension.kind == .custom)
-                    && dimension.name.hasPrefix("__") == false
-            }
-            .sorted { lhs, rhs in
-                if lhs.sortIndex == rhs.sortIndex {
-                    return lhs.name < rhs.name
-                }
-                return lhs.sortIndex < rhs.sortIndex
-            }
+        CustomDimensionAccount.visibleAccountDimensions(from: dimensions)
     }
+
+    private func displayDimensions(from visibleDimensions: [Dimension]) -> [Dimension] {
+        guard homeEditMode.isEditing, orderedDimensionIDs.isEmpty == false else {
+            return visibleDimensions
+        }
+
+        let lookup = Dictionary(uniqueKeysWithValues: visibleDimensions.map { ($0.id, $0) })
+        let ordered = orderedDimensionIDs.compactMap { lookup[$0] }
+        let appended = visibleDimensions.filter { orderedDimensionIDs.contains($0.id) == false }
+        return ordered + appended
+    }
+
+    private func enterDimensionEditing(haptic: Bool) {
+        guard homeEditMode.isEditing == false else { return }
+        if haptic {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        }
+        orderedDimensionIDs = visibleAccountDimensions.map(\.id)
+        withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+            homeEditMode = .editing
+        }
+    }
+
+    private func finishDimensionEditing() {
+        let idsToPersist = orderedDimensionIDs.isEmpty
+            ? visibleAccountDimensions.map(\.id)
+            : orderedDimensionIDs
+
+        do {
+            try CustomDimensionAccount.persistSortOrder(
+                orderedIDs: idsToPersist,
+                dimensions: dimensions,
+                modelContext: modelContext
+            )
+        } catch {
+            showHomeToast("顺序没保存上。再试一次")
+        }
+
+        draggingDimensionID = nil
+        withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+            homeEditMode = .inactive
+        }
+    }
+
+    private func reconcileOrderedDimensionIDs(visibleIDs: [String]) {
+        guard homeEditMode.isEditing else { return }
+        let visibleSet = Set(visibleIDs)
+        orderedDimensionIDs = orderedDimensionIDs.filter { visibleSet.contains($0) }
+        for id in visibleIDs where orderedDimensionIDs.contains(id) == false {
+            orderedDimensionIDs.append(id)
+        }
+    }
+
+    private func prepareDeleteDimension(_ dimension: Dimension) {
+        do {
+            let count = try DimensionDemotionStore(modelContext: modelContext)
+                .sourceMomentCount(for: dimension.id)
+            let message = count > 0
+                ? "已存入的 \(Formatter.momentsCount(count))会移到「其他」时间账户，仍然可以查看。"
+                : "这个时间账户还没有存入瞬间。删除后会从主页隐藏。"
+            dimensionDeleteRequest = HomeDimensionDeleteRequest(
+                dimensionID: dimension.id,
+                name: dimension.name,
+                message: message
+            )
+        } catch {
+            showHomeToast("没删上。再试一次")
+        }
+    }
+
+    private func confirmDeleteDimension() {
+        guard let request = dimensionDeleteRequest else { return }
+        do {
+            let movedCount = try DimensionDemotionStore(modelContext: modelContext)
+                .demote(dimensionID: request.dimensionID)
+            dimensionDeleteRequest = nil
+            reconcileOrderedDimensionIDs(visibleIDs: visibleAccountDimensions.map(\.id))
+            showHomeToast("已删除 · \(Formatter.momentsCount(movedCount))已转入「其他」")
+        } catch {
+            dimensionDeleteRequest = nil
+            showHomeToast("没删上。再试一次")
+        }
+    }
+
+    private func showHomeToast(_ message: String) {
+        homeToastDismissTask?.cancel()
+        withAnimation(.spring(response: 0.28, dampingFraction: 0.86)) {
+            homeToastMessage = message
+        }
+        homeToastDismissTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_400_000_000)
+            withAnimation(.spring(response: 0.28, dampingFraction: 0.86)) {
+                homeToastMessage = nil
+            }
+        }
+    }
+}
+
+private struct HomeDimensionDeleteRequest {
+    let dimensionID: String
+    let name: String
+    let message: String
+
+    var title: String { "删除「\(name)」？" }
 }
 
 @MainActor
@@ -221,6 +476,21 @@ private struct UndoToastView: View {
             .clipShape(Capsule())
             .transition(.opacity.combined(with: .move(edge: .bottom)))
         }
+    }
+}
+
+struct TimeBalanceScopeControl: View {
+    @Binding var scope: DimensionCompute.TimeBalanceScope
+
+    var body: some View {
+        Picker("时间窗口", selection: $scope) {
+            ForEach(DimensionCompute.TimeBalanceScope.allCases) { option in
+                Text(option.title).tag(option)
+            }
+        }
+        .pickerStyle(.segmented)
+        .tint(Color.tbPrimary)
+        .accessibilityLabel("时间窗口")
     }
 }
 

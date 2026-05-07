@@ -11,76 +11,64 @@ enum HomeTab: Hashable {
 struct BottomTabBar: View {
     let selectedTab: HomeTab
     let onSelect: (HomeTab) -> Void
-    let onCreateMoment: () -> Void
 
     init(
         selectedTab: HomeTab = .home,
-        onSelect: @escaping (HomeTab) -> Void = { _ in },
-        onCreateMoment: @escaping () -> Void = {}
+        onSelect: @escaping (HomeTab) -> Void = { _ in }
     ) {
         self.selectedTab = selectedTab
         self.onSelect = onSelect
-        self.onCreateMoment = onCreateMoment
     }
 
     var body: some View {
-        ZStack {
-            HStack(alignment: .center) {
-                tabItem(icon: "house.fill", title: "主页", tab: .home)
+        HStack(alignment: .center, spacing: TBSpace.s2) {
+            tabItem(title: "主页", tab: .home)
 
-                tabItem(icon: "chart.pie", title: "账户", tab: .account)
+            tabItem(title: "账户", tab: .account)
 
-                Spacer()
-                    .frame(width: 104)
-
-                tabItem(icon: "person.circle", title: "我", tab: .me)
-            }
-            .padding(.horizontal, TBSpace.s5)
-            .frame(height: 84)
-            .frame(maxWidth: .infinity)
-            .background(Color.tbSurface)
-            .overlay(alignment: .top) {
-                Rectangle()
-                    .fill(Color.tbHair)
-                    .frame(height: 1)
-            }
-
-            Button(action: onCreateMoment) {
-                Image(systemName: "plus")
-                    .font(.tbHeadM)
-                    .foregroundStyle(Color.white)
-                    .frame(width: 52, height: 52)
-                    .background(Color.tbPrimary)
-                    .clipShape(Circle())
-                    .contentShape(Circle())
-            }
-            .buttonStyle(.plain)
-            .offset(y: -22)
-            .accessibilityLabel("存入时刻")
+            tabItem(title: "我", tab: .me)
         }
-        .frame(height: 84)
+        .padding(.horizontal, TBSpace.s5)
+        .padding(.top, 6)
+        .padding(.bottom, 8)
+        .frame(height: 62)
+        .frame(maxWidth: .infinity)
+        .background(tabBackground)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Color.tbHair)
+                .frame(height: TimeBankTheme.current.style.cardBorderWidth)
+        }
     }
 
     private func tabItem(
-        icon: String,
         title: String,
         tab: HomeTab
     ) -> some View {
         let isSelected = selectedTab == tab
+        let icon = TimeBankIconography.tabIconSystemName(for: tab, isSelected: isSelected)
 
         return Button {
             onSelect(tab)
         } label: {
-            VStack(spacing: TBSpace.s1) {
+            VStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.tbHeadS)
+                    .font(.system(size: 16, weight: isSelected ? .semibold : .regular))
+                    .frame(height: 19)
 
                 Text(title)
-                    .font(.tbLabel)
+                    .font(.system(size: 11.5, weight: isSelected ? .semibold : .medium))
             }
             .foregroundStyle(isSelected ? Color.tbPrimary : Color.tbInk3)
             .frame(maxWidth: .infinity)
+            .frame(height: 48)
         }
         .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private var tabBackground: some View {
+        Color.tbSurface
+            .ignoresSafeArea(edges: .bottom)
     }
 }

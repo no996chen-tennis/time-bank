@@ -20,13 +20,27 @@ struct DimensionParameterEditorView: View {
     @State private var sportHoursPerSession = 1.0
     @State private var createFocusedEndAge = 65.0
     @State private var createWeeklyHours = 40.0
-    @State private var freeAwakeHoursPerDay = 16.0
+    @State private var freeAwakeHoursPerDay = FreeDimensionParams().awakeHoursPerDay
+    @State private var customFormula = CustomFormula.weeklyHours
+    @State private var customWeeklyHours = CustomDimensionParams().weeklyHours
+    @State private var customDailyHours = CustomDimensionParams().dailyHours
+    @State private var customAnnualOccurrences = Double(CustomDimensionParams().annualOccurrences)
+    @State private var customHoursPerOccurrence = CustomDimensionParams().hoursPerOccurrence
 
     @State private var loaded = false
     @State private var snapshot = ParameterSnapshot()
     @State private var showDiscardAlert = false
     @State private var showRestoreAlert = false
     @State private var showSaveFailureAlert = false
+    @State private var timeScope: DimensionCompute.TimeBalanceScope
+
+    init(
+        dimensionID: String,
+        initialTimeScope: DimensionCompute.TimeBalanceScope = .lifetime
+    ) {
+        self.dimensionID = dimensionID
+        _timeScope = State(initialValue: initialTimeScope)
+    }
 
     private var profile: UserProfile? { profiles.first }
     private var dimension: Dimension? { dimensions.first(where: { $0.id == dimensionID }) }
@@ -41,15 +55,9 @@ struct DimensionParameterEditorView: View {
             }
         }
         .background(Color.tbBg)
-        .navigationTitle("\(dimension?.name ?? "") · 计算方式")
+        .navigationTitle("\(dimension?.name ?? "") · 时间公式")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("取消") {
-                    cancel()
-                }
-            }
-
             ToolbarItem(placement: .confirmationAction) {
                 Button("完成") {
                     save()
@@ -75,15 +83,18 @@ struct DimensionParameterEditorView: View {
     private func editorContent(dimension: Dimension, profile: UserProfile) -> some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: TBSpace.s5) {
+                TimeBalanceScopeControl(scope: $timeScope)
+
                 parameterControls(for: dimension, profile: profile)
 
                 previewCard(dimension: dimension, profile: profile)
 
+                deductionRhythmCard(dimension: dimension, profile: profile)
+
                 Button("恢复默认") {
                     showRestoreAlert = true
                 }
-                .font(.tbBodySm)
-                .foregroundStyle(Color.tbInk2)
+                .buttonStyle(TBSecondaryActionButtonStyle())
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.top, TBSpace.s2)
             }
@@ -174,7 +185,42 @@ struct DimensionParameterEditorView: View {
             }
 
         default:
-            EmptyView()
+            if dimension.kind == .custom {
+                parameterCard {
+                    Picker("计算方式", selection: $customFormula) {
+                        Text("每周").tag(CustomFormula.weeklyHours)
+                        Text("每天").tag(CustomFormula.dailyHours)
+                        Text("每年").tag(CustomFormula.occurrenceBased)
+                    }
+                    .pickerStyle(.segmented)
+                    .tint(Color.tbPrimary)
+
+                    switch customFormula {
+                    case .weeklyHours:
+                        sliderRow(title: "每周时长", valueText: Formatter.hoursReadable(customWeeklyHours)) {
+                            Slider(value: $customWeeklyHours, in: 0...80, step: 0.5)
+                                .tint(Color.tbPrimary)
+                        }
+                    case .dailyHours:
+                        sliderRow(title: "每天时长", valueText: Formatter.hoursReadable(customDailyHours)) {
+                            Slider(value: $customDailyHours, in: 0...16, step: 0.5)
+                                .tint(Color.tbPrimary)
+                        }
+                    case .occurrenceBased:
+                        sliderRow(title: "每年次数", valueText: "\(Int(customAnnualOccurrences.rounded())) 次") {
+                            Slider(value: $customAnnualOccurrences, in: 1...365, step: 1)
+                                .tint(Color.tbPrimary)
+                        }
+
+                        sliderRow(title: "每次时长", valueText: Formatter.hoursReadable(customHoursPerOccurrence)) {
+                            Slider(value: $customHoursPerOccurrence, in: 0.5...72, step: 0.5)
+                                .tint(Color.tbPrimary)
+                        }
+                    }
+                }
+            } else {
+                EmptyView()
+            }
         }
     }
 
@@ -184,8 +230,7 @@ struct DimensionParameterEditorView: View {
         }
         .padding(TBSpace.s5)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.tbBg2)
-        .clipShape(RoundedRectangle(cornerRadius: TBRadius.lg))
+        .tbThemedSurface(.inset)
     }
 
     private func previewCard(dimension: Dimension, profile: UserProfile) -> some View {
@@ -196,7 +241,8 @@ struct DimensionParameterEditorView: View {
         let lines = DimensionDetailCopy.headerSubtitleLines(
             for: previewDimension,
             profile: previewProfile,
-            dimensionsByID: lookup
+            dimensionsByID: lookup,
+            scope: timeScope
         )
 
         return VStack(alignment: .leading, spacing: TBSpace.s3) {
@@ -213,9 +259,67 @@ struct DimensionParameterEditorView: View {
         }
         .padding(TBSpace.s5)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.tbSurface)
-        .clipShape(RoundedRectangle(cornerRadius: TBRadius.lg))
-        .modifier(DimensionDetailSoftShadowModifier())
+        .tbThemedSurface()
+    }
+
+    private func deductionRhythmCard(dimension: Dimension, profile: UserProfile) -> some View {
+        VStack(alignment: .leading, spacing: TBSpace.s3) {
+            Text("减少节奏")
+                .font(.tbHeadS)
+                .foregroundStyle(Color.tbInk)
+
+            Text(deductionRhythmText(for: dimension, profile: profile))
+                .font(.tbBodySm)
+                .foregroundStyle(Color.tbInk2)
+                .lineSpacing(TBSpace.s1)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(TBSpace.s5)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .tbThemedSurface()
+    }
+
+    private func deductionRhythmText(for dimension: Dimension, profile: UserProfile) -> String {
+        switch dimension.id {
+        case DimensionReservedID.parents.rawValue:
+            let visits = max(0, Int(parentsVisitsPerYear.rounded()))
+            let intervalDays = visits > 0 ? DimensionCompute.daysPerYear / Double(visits) : 0
+            let interval = intervalDays >= 13
+                ? "约每 \(max(1, Int((intervalDays / 7).rounded()))) 周"
+                : "约每 \(max(1, Int(intervalDays.rounded()))) 天"
+            return "按每年 \(visits) 次、每次 \(Formatter.hoursReadable(parentsHoursPerVisit))计算，\(interval)减少一次见面机会。\(timeScope.title)视角只改变计算窗口，不扣减已存入瞬间。"
+
+        case DimensionReservedID.kids.rawValue:
+            return "按当前年龄段折算，约每周减少 \(Formatter.hoursReadable(kidsWeeklyHours))陪伴时间。"
+
+        case DimensionReservedID.partner.rawValue:
+            return "按每天 \(Formatter.hoursReadable(partnerHoursPerDay))共处折算，时间会随每天过去连续减少。"
+
+        case DimensionReservedID.sport.rawValue:
+            let weekly = sportSessionsPerWeek * sportHoursPerSession
+            return "按每周约 \(Formatter.hoursReadable(weekly))运动折算，约每周减少一次周额度。"
+
+        case DimensionReservedID.create.rawValue:
+            return "按每周 \(Formatter.hoursReadable(createWeeklyHours))创造折算；跨过创造期结束年龄后，改用自由创造期参数。"
+
+        case DimensionReservedID.free.rawValue:
+            return "自由时间不是单独扣减，而是每天清醒时间减去其他账户后实时重算。"
+
+        default:
+            guard dimension.kind == .custom else { return "这个时间账户暂时没有可调整的减少节奏。" }
+            switch customFormula {
+            case .weeklyHours:
+                return "按每周 \(Formatter.hoursReadable(customWeeklyHours))折算，约每周减少一次周额度。"
+            case .dailyHours:
+                return "按每天 \(Formatter.hoursReadable(customDailyHours))折算，时间会随每天过去连续减少。"
+            case .occurrenceBased:
+                let intervalDays = customAnnualOccurrences > 0 ? DimensionCompute.daysPerYear / customAnnualOccurrences : 0
+                let interval = intervalDays >= 13
+                    ? "约每 \(max(1, Int((intervalDays / 7).rounded()))) 周"
+                    : "约每 \(max(1, Int(intervalDays.rounded()))) 天"
+                return "按每年 \(Int(customAnnualOccurrences.rounded())) 次、每次 \(Formatter.hoursReadable(customHoursPerOccurrence))折算，\(interval)减少一次机会。"
+            }
+        }
     }
 
     private func sliderRow<Content: View>(
@@ -279,7 +383,12 @@ struct DimensionParameterEditorView: View {
             sportHoursPerSession: sportHoursPerSession,
             createFocusedEndAge: Int(createFocusedEndAge.rounded()),
             createWeeklyHours: createWeeklyHours,
-            freeAwakeHoursPerDay: freeAwakeHoursPerDay
+            freeAwakeHoursPerDay: freeAwakeHoursPerDay,
+            customFormula: customFormula,
+            customWeeklyHours: customWeeklyHours,
+            customDailyHours: customDailyHours,
+            customAnnualOccurrences: Int(customAnnualOccurrences.rounded()),
+            customHoursPerOccurrence: customHoursPerOccurrence
         )
     }
 
@@ -373,6 +482,13 @@ struct DimensionParameterEditorView: View {
         let free = dimension.decodeParams(FreeDimensionParams.self, default: FreeDimensionParams())
         freeAwakeHoursPerDay = free.awakeHoursPerDay
 
+        let custom = dimension.decodeParams(CustomDimensionParams.self, default: CustomDimensionParams())
+        customFormula = custom.formula
+        customWeeklyHours = custom.weeklyHours
+        customDailyHours = custom.dailyHours
+        customAnnualOccurrences = Double(custom.annualOccurrences)
+        customHoursPerOccurrence = custom.hoursPerOccurrence
+
         snapshot = currentSnapshot
     }
 
@@ -401,9 +517,16 @@ struct DimensionParameterEditorView: View {
             createFocusedEndAge = 65
             createWeeklyHours = 40
         case DimensionReservedID.free.rawValue:
-            freeAwakeHoursPerDay = 16
+            freeAwakeHoursPerDay = FreeDimensionParams().awakeHoursPerDay
         default:
-            break
+            if dimension?.kind == .custom {
+                let defaults = CustomDimensionParams()
+                customFormula = defaults.formula
+                customWeeklyHours = defaults.weeklyHours
+                customDailyHours = defaults.dailyHours
+                customAnnualOccurrences = Double(defaults.annualOccurrences)
+                customHoursPerOccurrence = defaults.hoursPerOccurrence
+            }
         }
     }
 
@@ -460,7 +583,9 @@ struct DimensionParameterEditorView: View {
                 dimension.setParams(FreeDimensionParams(awakeHoursPerDay: freeAwakeHoursPerDay))
 
             default:
-                break
+                if dimension.kind == .custom {
+                    dimension.setParams(customParams)
+                }
             }
 
             profile.updatedAt = .now
@@ -542,10 +667,22 @@ struct DimensionParameterEditorView: View {
         case DimensionReservedID.free.rawValue:
             copy.setParams(FreeDimensionParams(awakeHoursPerDay: freeAwakeHoursPerDay))
         default:
-            break
+            if dimension.kind == .custom {
+                copy.setParams(customParams)
+            }
         }
 
         return copy
+    }
+
+    private var customParams: CustomDimensionParams {
+        CustomDimensionParams(
+            formula: customFormula,
+            weeklyHours: customWeeklyHours,
+            dailyHours: customDailyHours,
+            annualOccurrences: Int(customAnnualOccurrences.rounded()),
+            hoursPerOccurrence: customHoursPerOccurrence
+        )
     }
 
     private func currentKidsWeeklyHours(dimension: Dimension, profile: UserProfile) -> Double {
@@ -590,5 +727,10 @@ private struct ParameterSnapshot: Equatable {
     var sportHoursPerSession: Double = 1
     var createFocusedEndAge: Int = 65
     var createWeeklyHours: Double = 40
-    var freeAwakeHoursPerDay: Double = 16
+    var freeAwakeHoursPerDay: Double = FreeDimensionParams().awakeHoursPerDay
+    var customFormula: CustomFormula = .weeklyHours
+    var customWeeklyHours: Double = CustomDimensionParams().weeklyHours
+    var customDailyHours: Double = CustomDimensionParams().dailyHours
+    var customAnnualOccurrences: Int = CustomDimensionParams().annualOccurrences
+    var customHoursPerOccurrence: Double = CustomDimensionParams().hoursPerOccurrence
 }

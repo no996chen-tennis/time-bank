@@ -5,6 +5,8 @@ import SwiftUI
 
 struct RootView: View {
     @Environment(\.modelContext) private var modelContext
+    @AppStorage(TimeBankThemeKind.storageKey) private var selectedThemeRawValue = TimeBankThemeKind.magazineApartamento.rawValue
+    @AppStorage(TimeBankIconSetKind.storageKey) private var selectedIconSetRawValue = TimeBankIconSetKind.nativeFilled.rawValue
     @State private var launchState: LaunchState = .bootstrapping
 
     var body: some View {
@@ -13,6 +15,11 @@ struct RootView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.tbBg)
+        .tint(Color.tbPrimary)
+        .accessibilityIdentifier("time-bank-root-\(selectedThemeRawValue)-\(selectedIconSetRawValue)")
+        .animation(.easeInOut(duration: 0.18), value: selectedThemeRawValue)
+        .animation(.easeInOut(duration: 0.18), value: selectedIconSetRawValue)
+        .timeBankKeyboardDismissBehavior()
         .task {
             await bootstrapIfNeeded()
         }

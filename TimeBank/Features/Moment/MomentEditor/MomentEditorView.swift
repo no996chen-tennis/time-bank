@@ -1,5 +1,6 @@
 // TimeBank/Features/Moment/MomentEditor/MomentEditorView.swift
 
+import AVKit
 import PhotosUI
 import SwiftData
 import SwiftUI
@@ -21,6 +22,8 @@ struct MomentEditorView: View {
     @State private var isLoadingMedia = false
     @State private var showDiscardAlert = false
     @State private var toastMessage: String?
+    @State private var playableVideo: MomentEditorPlayableVideo?
+    @State private var playableVideoTempDirectory: URL?
     @State private var slowSaveTask: Task<Void, Never>?
     @State private var didPrefillEditDraft = false
     @State private var draggingMediaID: UUID?
@@ -70,6 +73,10 @@ struct MomentEditorView: View {
                 }
             }
             .interactiveDismissDisabled(isSaving || draft.hasDiscardableChanges)
+            .sheet(item: $playableVideo, onDismiss: cleanupPlayableVideo) { video in
+                MomentEditorSystemVideoPlayerView(url: video.url)
+                    .ignoresSafeArea()
+            }
             .alert("还没存呢。先这样吗？", isPresented: $showDiscardAlert) {
                 Button("继续编辑", role: .cancel) {}
                 Button("不存了", role: .destructive) {
@@ -100,6 +107,7 @@ struct MomentEditorView: View {
             .onDisappear {
                 slowSaveTask?.cancel()
             }
+            .timeBankKeyboardDismissBehavior()
         }
     }
 
@@ -133,6 +141,7 @@ struct MomentEditorView: View {
                 .font(.tbBody)
                 .foregroundStyle(Color.tbInk)
                 .tint(Color.tbPrimary)
+                .environment(\.locale, Locale(identifier: "zh_Hans_CN"))
 
                 Divider()
                     .overlay(Color.tbHair)
@@ -164,7 +173,7 @@ struct MomentEditorView: View {
         editorCard {
             VStack(alignment: .leading, spacing: TBSpace.s4) {
                 labeledTextField(
-                    title: "叫什么",
+                    title: "回忆",
                     placeholder: "一句话概括",
                     text: $draft.title
                 )
@@ -208,7 +217,7 @@ struct MomentEditorView: View {
 
                     Spacer()
 
-                    Text("最多 9 张")
+                    Text(isLoadingMedia ? "正在导入" : "最多 9 张")
                         .font(.tbLabel)
                         .foregroundStyle(Color.tbInk3)
                 }
@@ -217,6 +226,13 @@ struct MomentEditorView: View {
                     emptyMediaPicker
                 } else {
                     mediaGrid
+                }
+
+                if isLoadingMedia {
+                    Label("正在导入媒体，视频可能需要几秒钟", systemImage: "arrow.down.circle")
+                        .font(.tbLabel)
+                        .foregroundStyle(Color.tbPrimary)
+                        .transition(.opacity)
                 }
 
                 Text("图片和视频存在你的 iPhone 里，不会上传任何服务器。")
@@ -234,20 +250,26 @@ struct MomentEditorView: View {
             matching: .any(of: [.images, .videos])
         ) {
             VStack(spacing: TBSpace.s2) {
-                Image(systemName: isLoadingMedia ? "hourglass" : "photo.on.rectangle.angled")
-                    .font(.system(size: 28, weight: .medium))
+                if isLoadingMedia {
+                    ProgressView()
+                        .tint(Color.tbPrimary)
+                } else {
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .font(.system(size: 28, weight: .medium))
+                }
 
-                Text("选照片或视频")
+                Text(isLoadingMedia ? "正在导入媒体" : "选照片或视频")
                     .font(.tbBody)
+
+                if isLoadingMedia {
+                    Text("视频会比照片慢一点")
+                        .font(.tbLabel)
+                        .foregroundStyle(Color.tbInk3)
+                }
             }
             .foregroundStyle(Color.tbPrimary)
-            .frame(maxWidth: .infinity, minHeight: 136)
-            .background(Color.tbBg2)
-            .clipShape(RoundedRectangle(cornerRadius: TBRadius.md, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: TBRadius.md, style: .continuous)
-                    .stroke(Color.tbHair, lineWidth: 1)
-            )
+            .frame(maxWidth: .infinity, minHeight: 112)
+            .tbThemedSurface(.media)
         }
         .disabled(isLoadingMedia || remainingMediaSlots <= 0)
         .accessibilityLabel(remainingMediaSlots <= 0 ? "最多 9 张了" : "选照片或视频")
@@ -261,6 +283,7 @@ struct MomentEditorView: View {
         ) {
             ForEach(draft.mediaItems) { item in
                 mediaTile(item)
+                    .frame(maxWidth: .infinity)
                     .onDrag {
                         draggingMediaID = item.id
                         return NSItemProvider(object: item.id.uuidString as NSString)
@@ -278,7 +301,29 @@ struct MomentEditorView: View {
             if remainingMediaSlots > 0 {
                 addMediaButton
             }
+
+            if isLoadingMedia {
+                mediaLoadingTile
+            }
         }
+    }
+
+    private var mediaLoadingTile: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: TBRadius.md, style: .continuous)
+                .fill(Color.tbBg3)
+
+            VStack(spacing: TBSpace.s2) {
+                ProgressView()
+                    .tint(Color.tbPrimary)
+                Text("导入中")
+                    .font(.tbLabel)
+                    .foregroundStyle(Color.tbInk3)
+            }
+        }
+        .tbThemedSurface(.media)
+        .aspectRatio(1, contentMode: .fit)
+        .accessibilityLabel("正在导入媒体")
     }
 
     private var addMediaButton: some View {
@@ -289,11 +334,12 @@ struct MomentEditorView: View {
         ) {
             ZStack {
                 RoundedRectangle(cornerRadius: TBRadius.md, style: .continuous)
-                    .fill(Color.tbBg2)
+                    .fill(Color.clear)
                 Image(systemName: isLoadingMedia ? "hourglass" : "plus")
                     .font(.system(size: 26, weight: .semibold))
                     .foregroundStyle(Color.tbPrimary)
             }
+            .tbThemedSurface(.media)
             .aspectRatio(1, contentMode: .fit)
         }
         .disabled(isLoadingMedia)
@@ -306,6 +352,11 @@ struct MomentEditorView: View {
             mediaPreview(item)
                 .aspectRatio(1, contentMode: .fit)
                 .clipShape(RoundedRectangle(cornerRadius: TBRadius.md, style: .continuous))
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    playVideoIfPossible(item)
+                }
 
             if item.isFailed {
                 Image(systemName: "exclamationmark.triangle.fill")
@@ -364,6 +415,24 @@ struct MomentEditorView: View {
                             .foregroundStyle(Color.tbInk3)
                     }
             }
+                .aspectRatio(1, contentMode: .fill)
+                .clipped()
+        } else if let previewData = item.previewThumbnailData {
+            AsyncThumbnailImageView(
+                source: .data(
+                    key: "moment-editor-preview-\(item.id.uuidString)",
+                    data: previewData
+                )
+            ) {
+                Rectangle()
+                    .fill(Color.tbBg3)
+                    .overlay {
+                        ProgressView()
+                            .tint(Color.tbPrimary)
+                    }
+            }
+                .aspectRatio(1, contentMode: .fill)
+                .clipped()
         } else if item.kind == .image,
                   let data = item.data {
             AsyncThumbnailImageView(
@@ -380,13 +449,14 @@ struct MomentEditorView: View {
                             .foregroundStyle(Color.tbInk3)
                     }
             }
+                .aspectRatio(1, contentMode: .fill)
+                .clipped()
         } else {
             Rectangle()
                 .fill(Color.tbBg3)
                 .overlay {
-                    Image(systemName: "video.fill")
-                        .font(.system(size: 24, weight: .medium))
-                        .foregroundStyle(Color.tbInk3)
+                    ProgressView()
+                        .tint(Color.tbPrimary)
                 }
         }
     }
@@ -413,8 +483,7 @@ struct MomentEditorView: View {
         content()
             .padding(TBSpace.s4)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.tbSurface)
-            .clipShape(RoundedRectangle(cornerRadius: TBRadius.md, style: .continuous))
+            .tbThemedSurface()
     }
 
     @ViewBuilder
@@ -556,10 +625,32 @@ struct MomentEditorView: View {
 
             draft.mediaItems.append(contentsOf: loadedItems)
             isLoadingMedia = false
+            generatePreviewThumbnails(for: loadedItems)
 
             if loadedItems.isEmpty == false,
                loadedItems.allSatisfy(\.isFailed) {
                 showToast("照片没加载上。换一张试试？")
+            }
+        }
+    }
+
+    private func generatePreviewThumbnails(for items: [MomentEditorMediaItem]) {
+        for item in items where item.isFailed == false && item.thumbnailPath == nil {
+            guard let data = item.data else { continue }
+
+            Task { @MainActor in
+                let previewData = await fileStore.makeInMemoryThumbnailData(
+                    from: data,
+                    kind: item.kind,
+                    fileExtension: item.preferredFileExtension
+                )
+
+                guard let previewData,
+                      let index = draft.mediaItems.firstIndex(where: { $0.id == item.id }) else {
+                    return
+                }
+
+                draft.mediaItems[index].previewThumbnailData = previewData
             }
         }
     }
@@ -586,6 +677,59 @@ struct MomentEditorView: View {
 
     private func removeMedia(_ item: MomentEditorMediaItem) {
         draft.mediaItems.removeAll { $0.id == item.id }
+    }
+
+    private func playVideoIfPossible(_ item: MomentEditorMediaItem) {
+        guard item.kind == .video, item.isFailed == false else { return }
+
+        if let relativePath = item.relativePath {
+            playableVideo = MomentEditorPlayableVideo(url: fileStore.url(forRelativePath: relativePath))
+            return
+        }
+
+        guard let data = item.data else { return }
+        Task { @MainActor in
+            guard let playable = await makeTemporaryPlayableVideo(
+                data: data,
+                fileExtension: item.preferredFileExtension
+            ) else {
+                showToast("视频暂时打不开。再试试？")
+                return
+            }
+
+            playableVideoTempDirectory = playable.temporaryDirectory
+            playableVideo = MomentEditorPlayableVideo(url: playable.url)
+        }
+    }
+
+    private func makeTemporaryPlayableVideo(
+        data: Data,
+        fileExtension: String
+    ) async -> (url: URL, temporaryDirectory: URL)? {
+        await Task.detached(priority: .userInitiated) {
+            let directory = FileManager.default.temporaryDirectory
+                .appendingPathComponent("TimeBankEditorPlayback-\(UUID().uuidString)", isDirectory: true)
+            let ext = fileExtension
+                .trimmingCharacters(in: CharacterSet(charactersIn: "."))
+                .lowercased()
+            let url = directory.appendingPathComponent("preview.\(ext.isEmpty ? "mov" : ext)")
+
+            do {
+                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                try data.write(to: url, options: .atomic)
+                return (url, directory)
+            } catch {
+                try? FileManager.default.removeItem(at: directory)
+                return nil
+            }
+        }.value
+    }
+
+    private func cleanupPlayableVideo() {
+        if let playableVideoTempDirectory {
+            try? FileManager.default.removeItem(at: playableVideoTempDirectory)
+        }
+        playableVideoTempDirectory = nil
     }
 
     private func requestDismiss() {
@@ -686,4 +830,22 @@ private struct MomentEditorMediaDropDelegate: DropDelegate {
     func dropUpdated(info: DropInfo) -> DropProposal? {
         DropProposal(operation: .move)
     }
+}
+
+private struct MomentEditorPlayableVideo: Identifiable {
+    let id = UUID()
+    let url: URL
+}
+
+private struct MomentEditorSystemVideoPlayerView: UIViewControllerRepresentable {
+    let url: URL
+
+    func makeUIViewController(context: Context) -> AVPlayerViewController {
+        let viewController = AVPlayerViewController()
+        viewController.player = AVPlayer(url: url)
+        viewController.player?.play()
+        return viewController
+    }
+
+    func updateUIViewController(_ viewController: AVPlayerViewController, context: Context) {}
 }

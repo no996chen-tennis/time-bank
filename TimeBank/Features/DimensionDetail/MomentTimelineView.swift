@@ -98,6 +98,9 @@ struct MomentTimelineView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.top, TBSpace.s2)
                 }
+
+                depositButton(title: "继续存入")
+                    .padding(.top, TBSpace.s2)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -171,8 +174,7 @@ struct MomentTimelineView: View {
         }
         .padding(.horizontal, TBSpace.s3)
         .padding(.vertical, TBSpace.s2)
-        .background(Color.tbSurface)
-        .clipShape(RoundedRectangle(cornerRadius: TBRadius.md))
+        .tbThemedSurface(.row)
     }
 
     private var batchActionBar: some View {
@@ -250,11 +252,12 @@ struct MomentTimelineView: View {
         VStack(spacing: TBSpace.s4) {
             ZStack {
                 Circle()
-                    .fill(DimensionPalette.soft(for: dimension.id))
+                    .fill(DimensionPalette.soft(for: dimension))
 
-                Image(systemName: "tray")
+                Image(systemName: TimeBankIconography.depositIconSystemName)
                     .font(.tbHeadL)
-                    .foregroundStyle(DimensionPalette.color(for: dimension.id))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(DimensionPalette.color(for: dimension))
             }
             .frame(width: 60, height: 60)
 
@@ -265,16 +268,29 @@ struct MomentTimelineView: View {
                 .lineSpacing(TBSpace.s1)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Button(DimensionDetailCopy.firstDepositCTA) {}
-                .buttonStyle(DimensionDetailDisabledButtonStyle())
-                .disabled(true)
-                .accessibilityLabel(DimensionDetailCopy.depositAccessibilityLabel)
+            depositButton(title: DimensionDetailCopy.firstDepositCTA)
         }
         .padding(TBSpace.s6)
         .frame(maxWidth: .infinity)
-        .background(Color.tbSurface)
-        .clipShape(RoundedRectangle(cornerRadius: TBRadius.lg))
-        .modifier(DimensionDetailSoftShadowModifier())
+        .tbThemedSurface()
+    }
+
+    private func depositButton(title: String) -> some View {
+        Button(title) {
+            guard canDeposit else { return }
+            momentEditorRoute = .dimension(dimension)
+        }
+        .buttonStyle(DimensionDetailDepositButtonStyle())
+        .disabled(canDeposit == false)
+        .opacity(canDeposit ? 1 : 0.45)
+        .accessibilityLabel(canDeposit
+            ? title
+            : "\(dimension.name)已标记纪念，不再添加新瞬间")
+    }
+
+    private var canDeposit: Bool {
+        (dimension.kind == .builtin || dimension.kind == .custom)
+            && dimension.mode == .normal
     }
 
     private func loadNextPageIfNeeded(currentIndex: Int) {
@@ -429,10 +445,22 @@ private struct MomentTimelineBatchActionButtonStyle: ButtonStyle {
             .font(.tbBodySm)
             .foregroundStyle(isDestructive ? Color.tbDanger : Color.tbInk)
             .labelStyle(.titleAndIcon)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, TBSpace.s3)
+            .frame(maxWidth: .infinity, minHeight: 44)
             .background(Color.tbSurface.opacity(configuration.isPressed ? 0.72 : 1))
-            .clipShape(Capsule())
+            .clipShape(RoundedRectangle(cornerRadius: actionRadius, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: actionRadius, style: .continuous)
+                    .stroke(isDestructive ? Color.tbDanger.opacity(0.35) : TimeBankTheme.current.style.cardBorderColor, lineWidth: TimeBankTheme.current.style.cardBorderWidth)
+            }
+    }
+
+    private var actionRadius: CGFloat {
+        switch TimeBankTheme.current.kind {
+        case .gallery, .localRemoteEditorial:
+            return 0
+        default:
+            return TBRadius.pill
+        }
     }
 }
 
@@ -492,8 +520,7 @@ private struct MomentTimelineRowView: View {
         .contentShape(Rectangle())
         .padding(TBSpace.s3)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.tbSurface)
-        .clipShape(RoundedRectangle(cornerRadius: TBRadius.md))
+        .tbThemedSurface(.row)
     }
 }
 
@@ -559,14 +586,23 @@ private struct MomentThumbnailView: View {
     }
 }
 
-private struct DimensionDetailDisabledButtonStyle: ButtonStyle {
+private struct DimensionDetailDepositButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.tbBody)
-            .foregroundStyle(Color.tbInk2)
-            .padding(.horizontal, TBSpace.s6)
-            .padding(.vertical, TBSpace.s3)
-            .background(Color.tbBg2.opacity(configuration.isPressed ? 0.72 : 1))
-            .clipShape(Capsule())
+            .foregroundStyle(Color.tbSurface)
+            .frame(minHeight: 44)
+            .padding(.horizontal, TBSpace.s5)
+            .background(Color.tbPrimary.opacity(configuration.isPressed ? 0.72 : 1))
+            .clipShape(RoundedRectangle(cornerRadius: actionRadius, style: .continuous))
+    }
+
+    private var actionRadius: CGFloat {
+        switch TimeBankTheme.current.kind {
+        case .gallery, .localRemoteEditorial:
+            return 0
+        default:
+            return TBRadius.pill
+        }
     }
 }

@@ -129,18 +129,16 @@ final class FileStore {
         let sortIndex: Int
     }
 
-    typealias FailureInjector = (_ media: PendingMedia, _ index: Int, _ stage: FailureStage) throws -> Void
+    typealias FailureInjector = @Sendable (_ media: PendingMedia, _ index: Int, _ stage: FailureStage) throws -> Void
 
-    let baseURL: URL
-    private let fileManager: FileManager
-    private let failureInjector: FailureInjector?
+    nonisolated let baseURL: URL
+    private nonisolated let failureInjector: FailureInjector?
 
-    init(
+    nonisolated init(
         baseURL: URL? = nil,
         fileManager: FileManager = .default,
         failureInjector: FailureInjector? = nil
     ) {
-        self.fileManager = fileManager
         self.failureInjector = failureInjector
 
         if let baseURL {
@@ -151,43 +149,43 @@ final class FileStore {
         }
     }
 
-    func ensureBaseDirectories() throws {
-        try fileManager.createDirectory(at: baseURL, withIntermediateDirectories: true)
-        try fileManager.createDirectory(at: momentsRootURL(), withIntermediateDirectories: true)
-        try fileManager.createDirectory(at: exportsRootURL(), withIntermediateDirectories: true)
+    nonisolated func ensureBaseDirectories() throws {
+        try FileManager.default.createDirectory(at: baseURL, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: momentsRootURL(), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: exportsRootURL(), withIntermediateDirectories: true)
     }
 
-    func momentsRootURL() -> URL {
+    nonisolated func momentsRootURL() -> URL {
         baseURL.appendingPathComponent("moments", isDirectory: true)
     }
 
-    func exportsRootURL() -> URL {
+    nonisolated func exportsRootURL() -> URL {
         baseURL.appendingPathComponent("exports", isDirectory: true)
     }
 
-    func momentDirectory(for momentID: UUID) -> URL {
+    nonisolated func momentDirectory(for momentID: UUID) -> URL {
         momentsRootURL().appendingPathComponent(momentID.uuidString, isDirectory: true)
     }
 
     @discardableResult
-    func createMomentDirectory(for momentID: UUID) throws -> URL {
+    nonisolated func createMomentDirectory(for momentID: UUID) throws -> URL {
         try ensureBaseDirectories()
         let directoryURL = momentDirectory(for: momentID)
-        try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         return directoryURL
     }
 
-    func removeMomentDirectoryIfExists(for momentID: UUID) throws {
+    nonisolated func removeMomentDirectoryIfExists(for momentID: UUID) throws {
         let directoryURL = momentDirectory(for: momentID)
-        guard fileManager.fileExists(atPath: directoryURL.path) else { return }
-        try fileManager.removeItem(at: directoryURL)
+        guard FileManager.default.fileExists(atPath: directoryURL.path) else { return }
+        try FileManager.default.removeItem(at: directoryURL)
     }
 
-    func url(forRelativePath relativePath: String) -> URL {
+    nonisolated func url(forRelativePath relativePath: String) -> URL {
         baseURL.appendingPathComponent(relativePath, isDirectory: false)
     }
 
-    func relativePath(forAbsoluteURL absoluteURL: URL) throws -> String {
+    nonisolated func relativePath(forAbsoluteURL absoluteURL: URL) throws -> String {
         let standardizedBase = baseURL.standardizedFileURL.path
         let standardizedTarget = absoluteURL.standardizedFileURL.path
 
@@ -202,15 +200,15 @@ final class FileStore {
         return relative
     }
 
-    func fileExists(atRelativePath relativePath: String) -> Bool {
-        fileManager.fileExists(atPath: url(forRelativePath: relativePath).path)
+    nonisolated func fileExists(atRelativePath relativePath: String) -> Bool {
+        FileManager.default.fileExists(atPath: url(forRelativePath: relativePath).path)
     }
 
-    func data(atRelativePath relativePath: String) throws -> Data {
+    nonisolated func data(atRelativePath relativePath: String) throws -> Data {
         try Data(contentsOf: url(forRelativePath: relativePath))
     }
 
-    func writeMedia(_ media: [PendingMedia], to momentID: UUID) throws -> [WrittenMedia] {
+    nonisolated func writeMedia(_ media: [PendingMedia], to momentID: UUID) throws -> [WrittenMedia] {
         try writeMedia(
             media,
             to: momentID,
@@ -220,7 +218,13 @@ final class FileStore {
         )
     }
 
-    func writeAdditionalMedia(
+    nonisolated func writeMediaOffMain(_ media: [PendingMedia], to momentID: UUID) async throws -> [WrittenMedia] {
+        try await Task.detached(priority: .userInitiated) { [self, media, momentID] in
+            try self.writeMedia(media, to: momentID)
+        }.value
+    }
+
+    nonisolated func writeAdditionalMedia(
         _ media: [PendingMedia],
         to momentID: UUID,
         startingSortIndex: Int,
@@ -235,16 +239,32 @@ final class FileStore {
         )
     }
 
-    func removeFilesIfExist(atRelativePaths relativePaths: [String]) throws {
+    nonisolated func writeAdditionalMediaOffMain(
+        _ media: [PendingMedia],
+        to momentID: UUID,
+        startingSortIndex: Int,
+        startingFileNumber: Int
+    ) async throws -> [WrittenMedia] {
+        try await Task.detached(priority: .userInitiated) { [self, media, momentID, startingSortIndex, startingFileNumber] in
+            try self.writeAdditionalMedia(
+                media,
+                to: momentID,
+                startingSortIndex: startingSortIndex,
+                startingFileNumber: startingFileNumber
+            )
+        }.value
+    }
+
+    nonisolated func removeFilesIfExist(atRelativePaths relativePaths: [String]) throws {
         for relativePath in relativePaths {
             let url = url(forRelativePath: relativePath)
-            if fileManager.fileExists(atPath: url.path) {
-                try fileManager.removeItem(at: url)
+            if FileManager.default.fileExists(atPath: url.path) {
+                try FileManager.default.removeItem(at: url)
             }
         }
     }
 
-    private func writeMedia(
+    private nonisolated func writeMedia(
         _ media: [PendingMedia],
         to momentID: UUID,
         startingSortIndex: Int,
@@ -291,8 +311,8 @@ final class FileStore {
             }
         } catch {
             if cleanupOnFailure {
-                for url in createdURLs where fileManager.fileExists(atPath: url.path) {
-                    try? fileManager.removeItem(at: url)
+                for url in createdURLs where FileManager.default.fileExists(atPath: url.path) {
+                    try? FileManager.default.removeItem(at: url)
                 }
             }
             throw error
@@ -301,11 +321,11 @@ final class FileStore {
         return written
     }
 
-    func generateThumbnail(
+    nonisolated func generateThumbnail(
         from fileURL: URL,
         type: MediaKind,
         output: URL,
-        maxPixelSize: Int = 200
+        maxPixelSize: Int = 720
     ) throws {
         switch type {
         case .image:
@@ -344,11 +364,42 @@ final class FileStore {
         }
     }
 
-    func orphanMomentDirectories(referencedMomentIDs: Set<UUID>) throws -> [URL] {
+    nonisolated func makeInMemoryThumbnailData(
+        from data: Data,
+        kind: MediaKind,
+        fileExtension: String,
+        maxPixelSize: Int = 400
+    ) async -> Data? {
+        await Task.detached(priority: .utility) { [self, data, kind, fileExtension, maxPixelSize] in
+            let tempRoot = FileManager.default.temporaryDirectory
+                .appendingPathComponent("TimeBankPreview-\(UUID().uuidString)", isDirectory: true)
+            let sourceURL = tempRoot.appendingPathComponent("source.\(normalizedExtension(fileExtension))")
+            let thumbnailURL = tempRoot.appendingPathComponent("thumb.jpg")
+
+            do {
+                try FileManager.default.createDirectory(at: tempRoot, withIntermediateDirectories: true)
+                defer { try? FileManager.default.removeItem(at: tempRoot) }
+
+                try data.write(to: sourceURL, options: .atomic)
+                try generateThumbnail(
+                    from: sourceURL,
+                    type: kind,
+                    output: thumbnailURL,
+                    maxPixelSize: maxPixelSize
+                )
+                return try Data(contentsOf: thumbnailURL)
+            } catch {
+                try? FileManager.default.removeItem(at: tempRoot)
+                return nil
+            }
+        }.value
+    }
+
+    nonisolated func orphanMomentDirectories(referencedMomentIDs: Set<UUID>) throws -> [URL] {
         try ensureBaseDirectories()
 
         let root = momentsRootURL()
-        let urls = try fileManager.contentsOfDirectory(
+        let urls = try FileManager.default.contentsOfDirectory(
             at: root,
             includingPropertiesForKeys: [.isDirectoryKey],
             options: [.skipsHiddenFiles]
@@ -361,33 +412,33 @@ final class FileStore {
     }
 
     @discardableResult
-    func removeOrphanMomentDirectories(referencedMomentIDs: Set<UUID>) throws -> [URL] {
+    nonisolated func removeOrphanMomentDirectories(referencedMomentIDs: Set<UUID>) throws -> [URL] {
         let orphans = try orphanMomentDirectories(referencedMomentIDs: referencedMomentIDs)
         for orphan in orphans {
-            try fileManager.removeItem(at: orphan)
+            try FileManager.default.removeItem(at: orphan)
         }
         return orphans
     }
 
-    private func persistOriginal(_ media: PendingMedia, to targetURL: URL) throws {
+    private nonisolated func persistOriginal(_ media: PendingMedia, to targetURL: URL) throws {
         switch media.source {
         case .data(let data):
             try data.write(to: targetURL, options: .atomic)
 
         case .fileURL(let sourceURL):
-            if fileManager.fileExists(atPath: targetURL.path) {
-                try fileManager.removeItem(at: targetURL)
+            if FileManager.default.fileExists(atPath: targetURL.path) {
+                try FileManager.default.removeItem(at: targetURL)
             }
-            try fileManager.copyItem(at: sourceURL, to: targetURL)
+            try FileManager.default.copyItem(at: sourceURL, to: targetURL)
         }
     }
 
-    private func fileSize(at url: URL) throws -> Int64 {
+    private nonisolated func fileSize(at url: URL) throws -> Int64 {
         let values = try url.resourceValues(forKeys: [.fileSizeKey])
         return Int64(values.fileSize ?? 0)
     }
 
-    private func resolvedExtension(for media: PendingMedia) -> String {
+    private nonisolated func resolvedExtension(for media: PendingMedia) -> String {
         let ext = media.preferredFileExtension?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if ext.isEmpty == false {
             return normalizedExtension(ext)
@@ -404,13 +455,13 @@ final class FileStore {
         }
     }
 
-    private func normalizedExtension(_ ext: String) -> String {
+    private nonisolated func normalizedExtension(_ ext: String) -> String {
         ext
             .trimmingCharacters(in: CharacterSet(charactersIn: "."))
             .lowercased()
     }
 
-    private func persistJPEG(cgImage: CGImage, to outputURL: URL) throws {
+    private nonisolated func persistJPEG(cgImage: CGImage, to outputURL: URL) throws {
         guard let destination = CGImageDestinationCreateWithURL(
             outputURL as CFURL,
             UTType.jpeg.identifier as CFString,
@@ -427,7 +478,7 @@ final class FileStore {
         }
     }
 
-    private func resolvedDurationSeconds(for media: PendingMedia, fileURL: URL) throws -> Int? {
+    private nonisolated func resolvedDurationSeconds(for media: PendingMedia, fileURL: URL) throws -> Int? {
         guard media.type == .video else { return nil }
         if let durationSeconds = media.durationSeconds {
             return durationSeconds
@@ -435,7 +486,7 @@ final class FileStore {
         return try videoDurationSeconds(at: fileURL)
     }
 
-    private func generateVideoThumbnail(
+    private nonisolated func generateVideoThumbnail(
         generator: AVAssetImageGenerator,
         requestedTime: CMTime
     ) throws -> CGImage {
@@ -462,7 +513,7 @@ final class FileStore {
         return try result.get()
     }
 
-    private func videoDurationSeconds(at fileURL: URL) throws -> Int? {
+    private nonisolated func videoDurationSeconds(at fileURL: URL) throws -> Int? {
         let duration: CMTime = try blockingLoad { [fileURL] in
             let options: [String: Any] = [AVURLAssetPreferPreciseDurationAndTimingKey: true]
             let asset = AVURLAsset(url: fileURL, options: options)
@@ -474,7 +525,7 @@ final class FileStore {
         return Int(seconds.rounded())
     }
 
-    private func blockingLoad<Value>(
+    private nonisolated func blockingLoad<Value>(
         priority: TaskPriority = .userInitiated,
         _ operation: @escaping @Sendable () async throws -> Value
     ) throws -> Value {
@@ -500,17 +551,19 @@ final class FileStore {
     }
 }
 
-private final class BlockingResultBox<Value>: @unchecked Sendable {
+extension FileStore: @unchecked Sendable {}
+
+private nonisolated final class BlockingResultBox<Value>: @unchecked Sendable {
     private let lock = NSLock()
     private var result: Result<Value, Error>?
 
-    func set(_ result: Result<Value, Error>) {
+    nonisolated func set(_ result: Result<Value, Error>) {
         lock.lock()
         self.result = result
         lock.unlock()
     }
 
-    func get() -> Result<Value, Error>? {
+    nonisolated func get() -> Result<Value, Error>? {
         lock.lock()
         defer { lock.unlock() }
         return result

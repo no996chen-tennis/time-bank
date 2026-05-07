@@ -3,44 +3,32 @@
 import Foundation
 
 enum DimensionDetailCopy {
-    static let calculationTitle = "计算方式"
+    static let calculationTitle = "时间公式"
     static let firstDepositCTA = "存入第一个"
     static let timelineEnd = "到这里就是最早的了"
-    static let depositAccessibilityLabel = "存入一个时刻"
+    static let depositAccessibilityLabel = "存入第一个"
 
     static func iconSystemName(for dimension: Dimension) -> String {
-        switch dimension.id {
-        case DimensionReservedID.parents.rawValue:
-            return "heart.fill"
-        case DimensionReservedID.kids.rawValue:
-            return "figure.2.and.child.holdinghands"
-        case DimensionReservedID.partner.rawValue:
-            return "heart.circle.fill"
-        case DimensionReservedID.sport.rawValue:
-            return "figure.run"
-        case DimensionReservedID.create.rawValue:
-            return "paintbrush.fill"
-        case DimensionReservedID.free.rawValue:
-            return "sun.max.fill"
-        default:
-            return dimension.iconKey
-        }
+        TimeBankIconography.dimensionIconSystemName(for: dimension)
     }
 
     static func headerSubtitleLines(
         for dimension: Dimension,
         profile: UserProfile,
-        dimensionsByID: [String: Dimension]
+        dimensionsByID: [String: Dimension],
+        scope: DimensionCompute.TimeBalanceScope = .lifetime
     ) -> [String] {
         let consumeHours = DimensionCompute.consumeHours(
             for: dimension,
             profile: profile,
-            dimensionsByID: dimensionsByID
+            dimensionsByID: dimensionsByID,
+            scope: scope
         )
         let subtitle = DimensionCompute.subtitleData(
             for: dimension,
             profile: profile,
-            dimensionsByID: dimensionsByID
+            dimensionsByID: dimensionsByID,
+            scope: scope
         )
 
         switch dimension.id {
@@ -54,9 +42,8 @@ enum DimensionDetailCopy {
 
         case DimensionReservedID.kids.rawValue:
             let weeklyHours = weeklyHours(from: subtitle)
-            let weeks = weeks(from: consumeHours, weeklyHours: weeklyHours)
             return [
-                "约还能陪伴 · 共 \(weeks) 周",
+                "约还能陪伴 · \(Formatter.hoursCompact(consumeHours))",
                 Formatter.weeklyHours(weeklyHours)
             ]
 
@@ -74,9 +61,8 @@ enum DimensionDetailCopy {
 
         case DimensionReservedID.create.rawValue:
             let weeklyHours = weeklyHours(from: subtitle)
-            let weeks = weeks(from: consumeHours, weeklyHours: weeklyHours)
             return [
-                "约还能创造 · 共 \(weeks) 周",
+                "约还能创造 · \(Formatter.hoursCompact(consumeHours))",
                 Formatter.weeklyHours(weeklyHours)
             ]
 
@@ -88,7 +74,12 @@ enum DimensionDetailCopy {
             ]
 
         default:
-            return []
+            guard dimension.kind == .custom else { return [] }
+            let params = dimension.decodeParams(CustomDimensionParams.self, default: CustomDimensionParams())
+            return [
+                "约还能\(dimension.name) · \(Formatter.hoursCompact(consumeHours))",
+                customFormulaSummary(params)
+            ]
         }
     }
 
@@ -105,7 +96,7 @@ enum DimensionDetailCopy {
         case DimensionReservedID.create.rawValue:
             return createInsight(profile: profile)
         case DimensionReservedID.free.rawValue:
-            return "一天 14 小时清醒，减去所有承诺，剩下的才是你真正的时间。"
+            return "一天 16 小时清醒，减去所有承诺，剩下的才是你真正的时间。"
         default:
             return nil
         }
@@ -114,12 +105,14 @@ enum DimensionDetailCopy {
     static func calculationSummary(
         for dimension: Dimension,
         profile: UserProfile,
-        dimensionsByID: [String: Dimension]
+        dimensionsByID: [String: Dimension],
+        scope: DimensionCompute.TimeBalanceScope = .lifetime
     ) -> String {
         let subtitle = DimensionCompute.subtitleData(
             for: dimension,
             profile: profile,
-            dimensionsByID: dimensionsByID
+            dimensionsByID: dimensionsByID,
+            scope: scope
         )
 
         switch dimension.id {
@@ -158,7 +151,9 @@ enum DimensionDetailCopy {
             return "每天清醒 \(Formatter.hoursReadable(params.awakeHoursPerDay)) · 减去其他承诺"
 
         default:
-            return ""
+            guard dimension.kind == .custom else { return "" }
+            let params = dimension.decodeParams(CustomDimensionParams.self, default: CustomDimensionParams())
+            return customFormulaSummary(params)
         }
     }
 
@@ -229,9 +224,15 @@ enum DimensionDetailCopy {
         return Formatter.percentOfAwake(percent)
     }
 
-    private static func weeks(from hours: Double, weeklyHours: Double) -> Int {
-        guard weeklyHours > 0 else { return 0 }
-        return max(0, Int((hours / weeklyHours).rounded()))
+    static func customFormulaSummary(_ params: CustomDimensionParams) -> String {
+        switch params.formula {
+        case .weeklyHours:
+            return Formatter.weeklyHours(params.weeklyHours)
+        case .dailyHours:
+            return Formatter.dailyHoursWith(params.dailyHours, action: "")
+        case .occurrenceBased:
+            return "每年约 \(max(0, params.annualOccurrences)) 次 · 每次 \(Formatter.hoursReadable(params.hoursPerOccurrence))"
+        }
     }
 
     private static func parentsInsight(profile: UserProfile) -> String? {

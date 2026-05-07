@@ -62,6 +62,8 @@ struct RelationshipEditorSheet: View {
                     content
                 }
                 .padding(TBSpace.s5)
+                .tbThemedSurface(.inset)
+                .padding(TBSpace.s5)
             }
             .background(Color.tbBg)
             .navigationTitle(title)

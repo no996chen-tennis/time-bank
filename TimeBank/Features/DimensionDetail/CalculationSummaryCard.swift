@@ -6,12 +6,14 @@ struct CalculationSummaryCard: View {
     let dimension: Dimension
     let profile: UserProfile
     let dimensionsByID: [String: Dimension]
+    let timeScope: DimensionCompute.TimeBalanceScope
 
     private var summary: String {
         DimensionDetailCopy.calculationSummary(
             for: dimension,
             profile: profile,
-            dimensionsByID: dimensionsByID
+            dimensionsByID: dimensionsByID,
+            scope: timeScope
         )
     }
 
@@ -38,9 +40,7 @@ struct CalculationSummaryCard: View {
         }
         .padding(TBSpace.s5)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.tbSurface)
-        .clipShape(RoundedRectangle(cornerRadius: TBRadius.lg))
-        .modifier(DimensionDetailSoftShadowModifier())
+        .tbThemedSurface()
     }
 }
 

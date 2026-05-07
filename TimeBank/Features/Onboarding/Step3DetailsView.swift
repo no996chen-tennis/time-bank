@@ -6,7 +6,6 @@ struct Step3DetailsView: View {
     @Binding var draft: OnboardingDraft
     @State private var frequencyUnit: FrequencyUnit
     @State private var frequencyValue: Int
-    @State private var frequencyText: String
 
     let onNext: () -> Void
     let onBack: () -> Void
@@ -21,7 +20,6 @@ struct Step3DetailsView: View {
         self._draft = draft
         self._frequencyUnit = State(initialValue: .perYear)
         self._frequencyValue = State(initialValue: visitsPerYear)
-        self._frequencyText = State(initialValue: "\(visitsPerYear)")
         self.onNext = onNext
         self.onBack = onBack
     }
@@ -63,9 +61,6 @@ struct Step3DetailsView: View {
         }
         .onChange(of: frequencyUnit) { oldUnit, newUnit in
             convertFrequencyValue(from: oldUnit, to: newUnit)
-        }
-        .onChange(of: frequencyText) { _, newValue in
-            updateFrequencyValue(from: newValue)
         }
     }
 
@@ -281,11 +276,15 @@ struct Step3DetailsView: View {
             }
 
             HStack(spacing: TBSpace.s2) {
-                TextField("次数", text: $frequencyText)
+                Picker("见面次数", selection: frequencyValueBinding) {
+                    ForEach(Array(frequencyRange), id: \.self) { count in
+                        Text("\(count) 次")
+                            .tag(count)
+                    }
+                }
+                .pickerStyle(.menu)
+                .tint(Color.tbPrimary)
                     .font(.tbBody)
-                    .foregroundStyle(Color.tbInk)
-                    .multilineTextAlignment(.trailing)
-                    .keyboardType(.numberPad)
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, TBSpace.s3)
                     .padding(.vertical, TBSpace.s2)
@@ -410,31 +409,28 @@ struct Step3DetailsView: View {
         setFrequencyValue(newUnit.value(fromVisitsPerYear: visitsPerYear))
     }
 
-    private func updateFrequencyValue(from value: String) {
-        let digits = value.filter { $0.isNumber }
-
-        if digits != value {
-            frequencyText = digits
-            return
-        }
-
-        guard let parsed = Int(digits) else {
-            setFrequencyValue(10_000)
-            return
-        }
-
-        setFrequencyValue(parsed)
+    private func setFrequencyValue(_ value: Int) {
+        let clampedValue = min(max(frequencyRange.lowerBound, value), frequencyRange.upperBound)
+        frequencyValue = clampedValue
+        syncParentsVisitsPerYear()
     }
 
-    private func setFrequencyValue(_ value: Int) {
-        let clampedValue = min(max(1, value), 10_000)
-        frequencyValue = clampedValue
+    private var frequencyValueBinding: Binding<Int> {
+        Binding(
+            get: { min(max(frequencyRange.lowerBound, frequencyValue), frequencyRange.upperBound) },
+            set: { setFrequencyValue($0) }
+        )
+    }
 
-        if frequencyText != "\(clampedValue)" {
-            frequencyText = "\(clampedValue)"
+    private var frequencyRange: ClosedRange<Int> {
+        switch frequencyUnit {
+        case .perWeek:
+            return 1...14
+        case .perMonth:
+            return 1...30
+        case .perYear:
+            return 1...365
         }
-
-        syncParentsVisitsPerYear()
     }
 
     private func syncParentsVisitsPerYear() {
