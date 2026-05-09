@@ -54,6 +54,11 @@
 		F13527842F99D3E500847E51 /* FileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527792F99D3E400847E51 /* FileStore.swift */; };
 		F13527852F99D3E500847E51 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13527722F99D3E400847E51 /* Settings.swift */; };
 		F2A000012FAA000100000001 /* DimensionParams.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A000002FAA000100000001 /* DimensionParams.swift */; };
+		F33000032FF5010100000001 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F33000012FF5010100000001 /* WidgetSnapshot.swift */; };
+		F33000042FF5010100000001 /* WidgetSnapshotWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F33000022FF5010100000001 /* WidgetSnapshotWriter.swift */; };
+		F33000052FF5010100000001 /* TimeBankWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = F33000082FF5010100000001 /* TimeBankWidget.swift */; };
+		F33000062FF5010100000001 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F33000012FF5010100000001 /* WidgetSnapshot.swift */; };
+		F33000072FF5010100000001 /* TimeBankWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F330000B2FF5010100000001 /* TimeBankWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,7 +76,28 @@
 			remoteGlobalIDString = F13D3F712F989EE4007D270B;
 			remoteInfo = TimeBank;
 		};
+		F33000162FF5010100000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F13D3F6A2F989EE4007D270B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F33000102FF5010100000001;
+			remoteInfo = TimeBankWidget;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F33000122FF5010100000001 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				F33000072FF5010100000001 /* TimeBankWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		F2A000022FAA010100000001 /* TimeBankApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeBankApp.swift; sourceTree = "<group>"; };
@@ -121,6 +147,13 @@
 		F13527792F99D3E400847E51 /* FileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileStore.swift; sourceTree = "<group>"; };
 		F135277A2F99D3E400847E51 /* Formatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
 		F13527872F99D3E400847E51 /* KeyboardDismiss.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardDismiss.swift; sourceTree = "<group>"; };
+		F33000012FF5010100000001 /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshot.swift; sourceTree = "<group>"; };
+		F33000022FF5010100000001 /* WidgetSnapshotWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshotWriter.swift; sourceTree = "<group>"; };
+		F33000082FF5010100000001 /* TimeBankWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeBankWidget.swift; sourceTree = "<group>"; };
+		F33000092FF5010100000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F330000A2FF5010100000001 /* TimeBankWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TimeBankWidget.entitlements; sourceTree = "<group>"; };
+		F330000B2FF5010100000001 /* TimeBankWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TimeBankWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F330000C2FF5010100000001 /* TimeBank.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TimeBank.entitlements; sourceTree = "<group>"; };
 		F13D3F722F989EE4007D270B /* TimeBank.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TimeBank.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F13D3F812F989EE5007D270B /* TimeBankTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TimeBankTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F13D3F8B2F989EE5007D270B /* TimeBankUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TimeBankUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -160,6 +193,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F13D3F882F989EE5007D270B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F33000142FF5010100000001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -332,6 +372,8 @@
 				F13527752F99D3E400847E51 /* DimensionCompute.swift */,
 				F13527762F99D3E400847E51 /* MomentStore.swift */,
 				F2F0000B2FD0010100000001 /* DimensionDemotionStore.swift */,
+				F33000012FF5010100000001 /* WidgetSnapshot.swift */,
+				F33000022FF5010100000001 /* WidgetSnapshotWriter.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -355,6 +397,8 @@
 				F13527742F99D3E400847E51 /* Models */,
 				F13527772F99D3E400847E51 /* Shared */,
 				F135277B2F99D3E400847E51 /* Utility */,
+				F330000D2FF5010100000001 /* TimeBankWidget */,
+				F330000C2FF5010100000001 /* TimeBank.entitlements */,
 				F13D3F742F989EE4007D270B /* TimeBank */,
 				F13D3F842F989EE5007D270B /* TimeBankTests */,
 				F13D3F8E2F989EE5007D270B /* TimeBankUITests */,
@@ -368,8 +412,19 @@
 				F13D3F722F989EE4007D270B /* TimeBank.app */,
 				F13D3F812F989EE5007D270B /* TimeBankTests.xctest */,
 				F13D3F8B2F989EE5007D270B /* TimeBankUITests.xctest */,
+				F330000B2FF5010100000001 /* TimeBankWidget.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		F330000D2FF5010100000001 /* TimeBankWidget */ = {
+			isa = PBXGroup;
+			children = (
+				F33000082FF5010100000001 /* TimeBankWidget.swift */,
+				F33000092FF5010100000001 /* Info.plist */,
+				F330000A2FF5010100000001 /* TimeBankWidget.entitlements */,
+			);
+			path = ../TimeBankWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -382,10 +437,12 @@
 				F13D3F6E2F989EE4007D270B /* Sources */,
 				F13D3F6F2F989EE4007D270B /* Frameworks */,
 				F13D3F702F989EE4007D270B /* Resources */,
+				F33000122FF5010100000001 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				F33000172FF5010100000001 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				F13D3F742F989EE4007D270B /* TimeBank */,
@@ -443,6 +500,25 @@
 			productReference = F13D3F8B2F989EE5007D270B /* TimeBankUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		F33000102FF5010100000001 /* TimeBankWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F330001A2FF5010100000001 /* Build configuration list for PBXNativeTarget "TimeBankWidget" */;
+			buildPhases = (
+				F33000132FF5010100000001 /* Sources */,
+				F33000142FF5010100000001 /* Frameworks */,
+				F33000152FF5010100000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TimeBankWidget;
+			packageProductDependencies = (
+			);
+			productName = TimeBankWidget;
+			productReference = F330000B2FF5010100000001 /* TimeBankWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -464,6 +540,9 @@
 						CreatedOnToolsVersion = 26.4.1;
 						TestTargetID = F13D3F712F989EE4007D270B;
 					};
+					F33000102FF5010100000001 = {
+						CreatedOnToolsVersion = 26.4.1;
+					};
 				};
 			};
 			buildConfigurationList = F13D3F6D2F989EE4007D270B /* Build configuration list for PBXProject "TimeBank" */;
@@ -483,6 +562,7 @@
 				F13D3F712F989EE4007D270B /* TimeBank */,
 				F13D3F802F989EE5007D270B /* TimeBankTests */,
 				F13D3F8A2F989EE5007D270B /* TimeBankUITests */,
+				F33000102FF5010100000001 /* TimeBankWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -503,6 +583,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F13D3F892F989EE5007D270B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F33000152FF5010100000001 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -563,6 +650,8 @@
 				F13527832F99D3E500847E51 /* UserProfile.swift in Sources */,
 				F13527842F99D3E500847E51 /* FileStore.swift in Sources */,
 				F13527852F99D3E500847E51 /* Settings.swift in Sources */,
+				F33000032FF5010100000001 /* WidgetSnapshot.swift in Sources */,
+				F33000042FF5010100000001 /* WidgetSnapshotWriter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -580,6 +669,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F33000132FF5010100000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F33000052FF5010100000001 /* TimeBankWidget.swift in Sources */,
+				F33000062FF5010100000001 /* WidgetSnapshot.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -592,6 +690,11 @@
 			isa = PBXTargetDependency;
 			target = F13D3F712F989EE4007D270B /* TimeBank */;
 			targetProxy = F13D3F8C2F989EE5007D270B /* PBXContainerItemProxy */;
+		};
+		F33000172FF5010100000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F33000102FF5010100000001 /* TimeBankWidget */;
+			targetProxy = F33000162FF5010100000001 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -722,6 +825,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = TimeBank.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = Y6G7WKL99D;
@@ -754,6 +858,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = TimeBank.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = Y6G7WKL99D;
@@ -865,6 +970,66 @@
 			};
 			name = Release;
 		};
+		F33000182FF5010100000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ../TimeBankWidget/TimeBankWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y6G7WKL99D;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ../TimeBankWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.adamchen.TimeBank.TimeBankWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F33000192FF5010100000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ../TimeBankWidget/TimeBankWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y6G7WKL99D;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ../TimeBankWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.adamchen.TimeBank.TimeBankWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -900,6 +1065,15 @@
 			buildConfigurations = (
 				F13D3F9C2F989EE5007D270B /* Debug */,
 				F13D3F9D2F989EE5007D270B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F330001A2FF5010100000001 /* Build configuration list for PBXNativeTarget "TimeBankWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F33000182FF5010100000001 /* Debug */,
+				F33000192FF5010100000001 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

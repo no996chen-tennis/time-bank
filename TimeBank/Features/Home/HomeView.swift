@@ -94,6 +94,10 @@ struct HomeView: View {
                 sharedMomentStore = MomentStore(modelContext: modelContext)
             }
         }
+        .onChange(of: widgetSnapshotQueryFingerprint) { _, _ in
+            guard let profile = profiles.first else { return }
+            refreshWidgetSnapshot(profile: profile)
+        }
     }
 
     private func homeContent(profile: UserProfile) -> some View {
@@ -167,6 +171,9 @@ struct HomeView: View {
             }
 
             tabBar
+        }
+        .task(id: widgetSnapshotFingerprint(profile: profile)) {
+            refreshWidgetSnapshot(profile: profile)
         }
     }
 
@@ -398,6 +405,36 @@ struct HomeView: View {
                 homeToastMessage = nil
             }
         }
+    }
+
+    private func refreshWidgetSnapshot(profile: UserProfile) {
+        do {
+            let settings = try Settings.fetch(in: modelContext)
+            try WidgetSnapshotWriter.writeSnapshot(
+                profile: profile,
+                dimensions: dimensions,
+                moments: moments,
+                settings: settings
+            )
+        } catch {
+            // Widget snapshot should never block the main app experience.
+        }
+    }
+
+    private func widgetSnapshotFingerprint(profile: UserProfile) -> String {
+        let profilePart = "\(profile.updatedAt.timeIntervalSince1970)"
+        let dimensionPart = dimensions
+            .map { "\($0.id):\($0.status.rawValue):\($0.mode.rawValue):\($0.sortIndex):\($0.updatedAt.timeIntervalSince1970)" }
+            .joined(separator: "|")
+        let momentPart = moments
+            .map { "\($0.id.uuidString):\($0.dimensionId):\($0.status.rawValue):\($0.updatedAt.timeIntervalSince1970)" }
+            .joined(separator: "|")
+        return "\(profilePart)#\(dimensionPart)#\(momentPart)"
+    }
+
+    private var widgetSnapshotQueryFingerprint: String {
+        guard let profile = profiles.first else { return "no-profile" }
+        return widgetSnapshotFingerprint(profile: profile)
     }
 }
 

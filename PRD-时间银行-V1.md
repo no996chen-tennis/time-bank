@@ -1,6 +1,6 @@
 # 时间银行 — 产品需求文档（PRD）
 
-> Version: 1.3.3 | Date: 2026-05-07 | Author: Adamchen
+> Version: 1.3.4 | Date: 2026-05-09 | Author: Adamchen
 >
 > **V1.3 主要变更（依据 ChatGPT 2026-04-22 review 定稿 + Adam 2026-04-22 设计方向决策）：**
 > - **V1 scope 明确收窄**（配合 12 周 timeline + 初学者工程可行性）
@@ -29,6 +29,11 @@
 > - Widget scope 扩展为锁屏 Rectangular + 桌面 Medium；桌面 Widget 增加「已存入 N 个瞬间」。
 > - 时间公式页必须展示该时间账户的扣减节奏；关系型账户改为连续/周期扣减口径，而不是只按年跳变。
 > - 媒体导入增加上传中反馈；视频封面改为高分辨率封面；图片/视频缩略图统一正方形规格。
+>
+> **V1.3.4 补丁（2026-05-09 · WidgetKit 实装与 UI 优化）：**
+> - 锁屏 Rectangular 固定为「今年余额 N 周」+ 1 个核心时间账户提示，避免小尺寸信息过密。
+> - 桌面 Medium 固定展示「今年余额 N 周」、3 个时间账户余额和底部「已存入 N 个瞬间」；不显示日期范围。
+> - Widget 采用主 App 写入 App Group `snapshot.widget.json`、Widget Extension 只读快照；主 App 在首页数据变化后刷新快照。
 >
 > **V1.2 主要变更：** 单位统一到小时（h）为主、"次/年/瞬间"为副；补充信息架构、Release Criteria、风险登记、空态清单、无障碍、i18n、Push/通知策略、Changelog。
 >
@@ -251,8 +256,8 @@ As a 用户, I want to 看到日常小事的"第 N 次"计数, so that 我能意
 As a 用户, I want to 不打开 App 就能在锁屏或桌面上看到时间提醒, so that 我在日常生活中被自然地提醒。
 
 **验收标准：**
-- 支持 iOS 锁屏 Rectangular Widget：展示「今年余额：X 周」+ 1-2 个核心时间账户。
-- 支持 iOS 桌面 Medium Widget：展示「今年余额：X 周」、3 个时间账户余额、`已存入 N 个瞬间`。
+- 支持 iOS 锁屏 Rectangular Widget：展示「今年余额 X 周」+ 1 个核心时间账户提示。
+- 支持 iOS 桌面 Medium Widget：展示「今年余额 X 周」、3 个时间账户余额、`已存入 N 个瞬间`。
 - Widget 内容以今年视角为默认口径，标题不写日期范围，而写「今年余额」。
 - Widget 文案温暖正向，不制造焦虑。
 - 用户可以在设置中选择 Widget 偏好展示哪些时间账户
@@ -848,7 +853,9 @@ App Sandbox / Documents / TimeBank /
   - SwiftData 数据库**不放 App Group**（避免 SwiftData 并发问题）
   - 主 App 每次关键数据变更后，**写一份 `snapshot.widget.json` 到 App Group 容器**
   - Widget 只读这份 snapshot，不直接读 SwiftData
+  - 主 App 在首页 profile / 时间账户 / moment 数据变化后刷新 snapshot；Widget timeline 不做重计算
   - Snapshot 字段：每个 visible 时间账户的 `{id, name, iconKey, colorKey, lifetimeConsumeHours, yearConsumeHours, storedHours, momentCount, lastMoment}` + `yearBalanceWeeks` + `storedMomentCountTotal` + `topText`（当前 Widget 文案池随机抽的一条）
+  - 展示优先级：优先使用 `Settings.widgetPreferredDimensions`，为空时按 `parents → kids → partner → sport → create → free` 取前三个；锁屏只取第一项，桌面 Medium 取前三项
 
 ## 8. Success Metrics
 
@@ -1145,6 +1152,7 @@ App Sandbox / Documents / TimeBank /
 
 | 版本 | 日期 | 主要变更 |
 |------|------|---------|
+| V1.3.4 | 2026-05-09 | WidgetKit 实装：锁屏 Rectangular 固定 1 个核心账户提示；桌面 Medium 固定 3 个账户 + 已存入瞬间；补 App Group snapshot 刷新与展示优先级 |
 | V1.3.3 | 2026-05-07 | 新增「今生 / 今年」时间窗口；Widget 扩展到锁屏 Rectangular + 桌面 Medium；时间公式页增加扣减节奏说明；媒体导入反馈、视频封面清晰度、媒体格尺寸、宋瓷主题装饰修正纳入验收 |
 | V1.3.2 | 2026-04-22 晚晚 | Claude Design UI 定稿：术语"维度 → 时间账户"；消耗层标签"还能存入 → 还能共度"；UI token 从 Claude Design 导入作为 Swift 源 |
 | V1.3.1 | 2026-04-22 晚 | Claude Design 首版 review 后：新增 `lifespan` 顶部时间账户（周为单位）+ 双层账户卡 + 3 Tab 导航；删除"管理"入口；补 §22 主页 layout 硬约束 |

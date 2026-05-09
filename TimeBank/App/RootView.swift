@@ -62,6 +62,9 @@ struct RootView: View {
             _ = try await store.commitPendingDeletes()
 
             let profile = try UserProfile.fetchSingleton(in: modelContext)
+            if profile != nil {
+                try? WidgetSnapshotWriter.writeSnapshot(modelContext: modelContext)
+            }
             launchState = profile == nil ? .needsOnboarding : .readyForHome
         } catch {
             launchState = .failed(error.localizedDescription)

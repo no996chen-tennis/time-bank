@@ -806,6 +806,83 @@ final class DataLayerTests: XCTestCase {
         XCTAssertEqual(create.sortIndex, 3)
     }
 
+    func testWidgetSnapshotUsesYearScopeAndStoredMomentTotal() throws {
+        let env = try TestEnvironment()
+        defer { env.cleanup() }
+
+        try TimeBank.Dimension.seedReservedDimensionsIfNeeded(in: env.context)
+        let calendar = Calendar(identifier: .gregorian)
+        let now = calendar.date(from: DateComponents(year: 2026, month: 5, day: 7, hour: 9)) ?? .now
+        let birthday = calendar.date(from: DateComponents(year: 1990, month: 4, day: 1)) ?? .now
+        let profile = UserProfile(
+            birthday: birthday,
+            gender: .undisclosed,
+            expectedLifespanYears: 85,
+            parents: ParentsInfo(
+                father: FamilyMember(birthYear: 1972),
+                mother: FamilyMember(birthYear: 1971),
+                visitsPerYear: 24,
+                hoursPerVisit: 6,
+                expectedLifespan: 82
+            ),
+            children: [ChildInfo(birthYear: 2018)],
+            partner: PartnerInfo(birthYear: 1991, hoursPerDay: 4),
+            soloEmphasis: false,
+            extras: []
+        )
+        env.context.insert(profile)
+
+        let parents = try XCTUnwrap(TimeBank.Dimension.fetch(by: DimensionReservedID.parents.rawValue, in: env.context))
+        let kids = try XCTUnwrap(TimeBank.Dimension.fetch(by: DimensionReservedID.kids.rawValue, in: env.context))
+        let partner = try XCTUnwrap(TimeBank.Dimension.fetch(by: DimensionReservedID.partner.rawValue, in: env.context))
+        parents.status = .visible
+        kids.status = .visible
+        partner.status = .visible
+
+        env.context.insert(Moment(
+            dimensionId: parents.id,
+            title: "晚饭后的散步",
+            happenedAt: now,
+            durationSeconds: 3_600,
+            status: .normal
+        ))
+        env.context.insert(Moment(
+            dimensionId: partner.id,
+            title: "周末早餐",
+            happenedAt: now.addingTimeInterval(-86_400),
+            durationSeconds: 7_200,
+            status: .normal
+        ))
+        env.context.insert(Moment(
+            dimensionId: kids.id,
+            title: "排队删除",
+            happenedAt: now,
+            durationSeconds: 7_200,
+            status: .pendingDelete
+        ))
+        let settings = Settings(widgetPreferredDimensions: [parents.id, kids.id, partner.id])
+        env.context.insert(settings)
+        try env.context.save()
+
+        let dimensions = try env.context.fetch(FetchDescriptor<TimeBank.Dimension>())
+        let moments = try env.context.fetch(FetchDescriptor<Moment>())
+        let snapshot = WidgetSnapshotWriter.makeSnapshot(
+            profile: profile,
+            dimensions: dimensions,
+            moments: moments,
+            settings: settings,
+            now: now
+        )
+
+        XCTAssertEqual(snapshot.yearBalanceWeeks, 34)
+        XCTAssertEqual(snapshot.storedMomentCountTotal, 2)
+        XCTAssertEqual(snapshot.dimensions.prefix(3).map(\.id), [parents.id, kids.id, partner.id])
+        XCTAssertEqual(snapshot.dimensions.first?.name, "父母")
+        XCTAssertEqual(snapshot.dimensions.first?.momentCount, 1)
+        XCTAssertEqual(snapshot.dimensions.first?.lastMoment?.title, "晚饭后的散步")
+        XCTAssertLessThan(snapshot.dimensions.first?.yearConsumeHours ?? .greatestFiniteMagnitude, snapshot.dimensions.first?.lifetimeConsumeHours ?? 0)
+    }
+
     func testAccountTabAggregateIncludesOtherWhileHomeTotalExcludesIt() throws {
         let env = try TestEnvironment()
         defer { env.cleanup() }

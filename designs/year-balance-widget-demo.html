@@ -704,6 +704,7 @@
       line-height: 1;
       font-weight: 520;
       letter-spacing: 0;
+      font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
     .widget-weeks span {
@@ -717,11 +718,22 @@
       background: rgba(255, 255, 255, 0.24);
     }
 
-    .lock-list {
+    .lock-copy {
       display: grid;
-      gap: 2px;
+      gap: 4px;
       font-size: 11px;
       line-height: 1.35;
+    }
+
+    .lock-copy strong {
+      font-size: 12px;
+      line-height: 1.25;
+      font-weight: 560;
+      letter-spacing: 0;
+    }
+
+    .lock-copy span {
+      color: rgba(255, 255, 255, 0.76);
     }
 
     .desktop-preview {
@@ -767,44 +779,72 @@
       line-height: 1;
       font-weight: 500;
       letter-spacing: 0;
+      font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
     .desktop-head em {
-      color: var(--ink-3);
+      color: var(--ink-2);
       font-size: 12px;
       font-style: normal;
-      white-space: nowrap;
-      padding-top: 4px;
+      line-height: 1.5;
+      max-width: 160px;
+      text-align: right;
     }
 
-    .desktop-rows {
+    .desktop-cards {
       display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
       padding-top: 12px;
     }
 
-    .desktop-row {
+    .desktop-account-card {
       display: grid;
-      grid-template-columns: 50px 58px 66px 1fr;
-      align-items: center;
-      gap: 7px;
+      gap: 5px;
+      min-width: 0;
+      min-height: 72px;
+      padding: 10px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.38);
+      border: 1px solid rgba(37, 31, 26, 0.08);
       font-size: 11px;
       color: var(--ink-2);
-      min-height: 22px;
     }
 
-    .desktop-row strong {
+    .desktop-account-card strong {
       color: var(--ink);
       font-weight: 530;
-      font-size: 12px;
+      font-size: 17px;
+      line-height: 1;
       letter-spacing: 0;
+      font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    .desktop-row span {
+    .desktop-account-card span {
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    .desktop-deposit {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 12px;
+      padding: 11px 12px;
+      border-radius: 18px;
+      background: rgba(37, 31, 26, 0.06);
+      color: var(--ink-2);
+      font-size: 12px;
+    }
+
+    .desktop-deposit strong {
+      color: var(--ink);
+      font-weight: 560;
+      white-space: nowrap;
+      font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
     .swatch {
@@ -1199,10 +1239,9 @@
                 <div class="widget-weeks"><strong>34</strong><span>周</span></div>
               </div>
               <div class="widget-divider"></div>
-              <div class="lock-list">
-                <span>父母 96h · 约 16 次</span>
-                <span>伴侣 956h · 每天约 4h</span>
-                <span>运动 171h · 每周约 5h</span>
+              <div class="lock-copy">
+                <strong>父母 96h · 约 16 次</strong>
+                <span>今年还有一些见面，可以慢慢过。</span>
               </div>
             </div>
           </div>
@@ -1220,46 +1259,30 @@
                   <span>今年余额</span>
                   <strong>34 周</strong>
                 </div>
-                <em>2026.05.07 - 12.31</em>
+                <em>把最重要的账户放在眼前。</em>
               </div>
 
-              <div class="desktop-rows">
-                <div class="desktop-row">
+              <div class="desktop-cards">
+                <div class="desktop-account-card">
                   <span><i class="swatch" style="background: var(--rose)"></i>父母</span>
                   <strong>96h</strong>
-                  <span>7 个瞬间</span>
                   <span>约 16 次</span>
                 </div>
-                <div class="desktop-row">
+                <div class="desktop-account-card">
                   <span><i class="swatch" style="background: var(--warm)"></i>孩子</span>
                   <strong>680h</strong>
-                  <span>3 个瞬间</span>
-                  <span>每周约 20h</span>
+                  <span>每周 20h</span>
                 </div>
-                <div class="desktop-row">
+                <div class="desktop-account-card">
                   <span><i class="swatch" style="background: var(--lavender)"></i>伴侣</span>
                   <strong>956h</strong>
-                  <span>2 个瞬间</span>
-                  <span>每天约 4h</span>
+                  <span>每天 4h</span>
                 </div>
-                <div class="desktop-row">
-                  <span><i class="swatch" style="background: var(--sage)"></i>运动</span>
-                  <strong>171h</strong>
-                  <span>2 个瞬间</span>
-                  <span>每周约 5h</span>
-                </div>
-                <div class="desktop-row">
-                  <span><i class="swatch" style="background: var(--sky)"></i>创造</span>
-                  <strong>1,366h</strong>
-                  <span>0 个瞬间</span>
-                  <span>每周约 40h</span>
-                </div>
-                <div class="desktop-row">
-                  <span><i class="swatch" style="background: var(--peach)"></i>自由</span>
-                  <strong>555h</strong>
-                  <span>0 个瞬间</span>
-                  <span>清醒时间约 15%</span>
-                </div>
+              </div>
+
+              <div class="desktop-deposit">
+                <span>已存入</span>
+                <strong>12 个瞬间</strong>
               </div>
             </div>
           </div>
