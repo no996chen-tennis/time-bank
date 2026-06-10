@@ -136,6 +136,12 @@ struct HomeView: View {
                     .opacity(isEditing ? 0.4 : 1)
                     .allowsHitTesting(isEditing == false)
 
+                    todayMemorySection(
+                        moments: normalMoments,
+                        dimensionsByID: dimensionsByID,
+                        isEditing: isEditing
+                    )
+
                     dimensionSectionHeader(count: visibleDimensions.count)
                         .padding(.top, TBSpace.s1)
 
@@ -195,6 +201,32 @@ struct HomeView: View {
                 }
             )
             tabBar
+        }
+    }
+
+    /// 今日回忆卡（盲盒）：hero 下第一张。有记忆→点进详情；0 条记忆→冷启动邀请，点击新建。
+    @ViewBuilder
+    private func todayMemorySection(
+        moments: [Moment],
+        dimensionsByID: [String: Dimension],
+        isEditing: Bool
+    ) -> some View {
+        if let selection = TodayMemory.pick(from: moments, dimensionsByID: dimensionsByID) {
+            NavigationLink {
+                MomentDetailView(momentID: selection.momentID)
+            } label: {
+                TodayMemoryCardView(selection: selection)
+            }
+            .buttonStyle(.plain)
+            .opacity(isEditing ? 0.4 : 1)
+            .allowsHitTesting(isEditing == false)
+        } else if isEditing == false {
+            Button {
+                momentEditorRoute = .newMoment
+            } label: {
+                TodayMemoryInviteView()
+            }
+            .buttonStyle(.plain)
         }
     }
 

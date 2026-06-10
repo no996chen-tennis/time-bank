@@ -18,6 +18,8 @@ struct MomentDetailView: View {
     @State private var momentEditorRoute: MomentEditorRoute?
     @State private var showDimensionPicker = false
     @State private var showDeleteAlert = false
+    @State private var isEditingReply = false
+    @State private var replyDraft = ""
 
     @Query private var dimensions: [Dimension]
     @Query private var moments: [Moment]
@@ -134,6 +136,8 @@ struct MomentDetailView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .tbThemedSurface()
 
+                replySection(for: moment)
+
                 bottomActions(for: moment)
             }
             .padding(.horizontal, TBSpace.s5)
@@ -220,6 +224,102 @@ struct MomentDetailView: View {
             .background(dimension.map { DimensionPalette.soft(for: $0) } ?? Color.tbBg2)
             .clipShape(Capsule())
             .accessibilityLabel(text)
+    }
+
+    // MARK: - 「现在的我想说」回信（老内容产生新内容 = 再投入，闭环⑤）
+    @ViewBuilder
+    private func replySection(for moment: Moment) -> some View {
+        let existingReply = moment.reply?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        VStack(alignment: .leading, spacing: TBSpace.s3) {
+            HStack(spacing: TBSpace.s2) {
+                Image(systemName: "text.bubble")
+                    .font(.tbLabel)
+                    .foregroundStyle(Color.tbInk3)
+                Text("现在的我想说")
+                    .font(.tbHeadS)
+                    .foregroundStyle(Color.tbInk)
+            }
+
+            if isEditingReply {
+                TextEditor(text: $replyDraft)
+                    .font(.tbBody)
+                    .foregroundStyle(Color.tbInk)
+                    .frame(minHeight: 96)
+                    .scrollContentBackground(.hidden)
+                    .padding(TBSpace.s2)
+                    .background(Color.tbBg2)
+                    .clipShape(RoundedRectangle(cornerRadius: TBRadius.md, style: .continuous))
+
+                HStack(spacing: TBSpace.s3) {
+                    Spacer()
+                    Button("取消") {
+                        isEditingReply = false
+                    }
+                    .font(.tbLabel)
+                    .foregroundStyle(Color.tbInk2)
+
+                    Button("存下这句") {
+                        saveReply(for: moment)
+                    }
+                    .font(.tbLabel)
+                    .foregroundStyle(Color.tbPrimary)
+                }
+            } else if let reply = existingReply, reply.isEmpty == false {
+                Text(reply)
+                    .font(.tbBody)
+                    .foregroundStyle(Color.tbInk2)
+                    .lineSpacing(TBSpace.s1)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                HStack {
+                    if let repliedAt = moment.repliedAt {
+                        Text("\(Formatter.absoluteDate(repliedAt)) 的你写下")
+                            .font(.tbLabel)
+                            .foregroundStyle(Color.tbInk3)
+                    }
+                    Spacer()
+                    Button("改一改") {
+                        startEditingReply(for: moment)
+                    }
+                    .font(.tbLabel)
+                    .foregroundStyle(Color.tbInk2)
+                }
+            } else {
+                Button {
+                    startEditingReply(for: moment)
+                } label: {
+                    HStack(spacing: TBSpace.s2) {
+                        Text("想对当时的自己说点什么吗？")
+                            .font(.tbBodySm)
+                            .foregroundStyle(Color.tbInk3)
+                        Spacer()
+                        Image(systemName: "square.and.pencil")
+                            .font(.tbLabel)
+                            .foregroundStyle(Color.tbInk3)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(TBSpace.s5)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .tbThemedSurface()
+    }
+
+    private func startEditingReply(for moment: Moment) {
+        replyDraft = moment.reply ?? ""
+        isEditingReply = true
+    }
+
+    private func saveReply(for moment: Moment) {
+        let trimmed = replyDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        moment.reply = trimmed.isEmpty ? nil : trimmed
+        moment.repliedAt = trimmed.isEmpty ? nil : .now
+        moment.updatedAt = .now
+        try? modelContext.save()
+        try? WidgetSnapshotWriter.writeSnapshot(modelContext: modelContext)
+        isEditingReply = false
     }
 
     private func bottomActions(for moment: Moment) -> some View {
