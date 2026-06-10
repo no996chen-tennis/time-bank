@@ -21,6 +21,7 @@ struct AccountTabView: View {
                     if aggregate.totalMoments == 0 {
                         emptyState
                     } else {
+                        starEntryCard
                         distributionSection
                         allMomentsSection
                         annualSection
@@ -80,6 +81,47 @@ struct AccountTabView: View {
         .tbThemedSurface()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("已存入 \(Int(aggregate.totalHours.rounded())) 小时，跨 \(aggregate.dimensionCount) 个时间账户，\(Formatter.momentsCount(aggregate.totalMoments))")
+    }
+
+    /// 星空入口卡 → 全屏星空账本（闭环③）。
+    private var starEntryCard: some View {
+        NavigationLink {
+            StarFieldView(dimensions: dimensions, moments: moments)
+        } label: {
+            HStack(spacing: TBSpace.s3) {
+                ZStack {
+                    Circle()
+                        .fill(LinearGradient(
+                            colors: [Color(red: 0.10, green: 0.13, blue: 0.16), Color(red: 0.07, green: 0.06, blue: 0.10)],
+                            startPoint: .top, endPoint: .bottom
+                        ))
+                    Image(systemName: "sparkles")
+                        .font(.tbBody)
+                        .foregroundStyle(.white.opacity(0.92))
+                }
+                .frame(width: 44, height: 44)
+
+                VStack(alignment: .leading, spacing: TBSpace.s1) {
+                    Text("星空账本")
+                        .font(.tbHeadS)
+                        .foregroundStyle(Color.tbInk)
+                    Text("你已点亮 \(aggregate.totalMoments) 颗星")
+                        .font(.tbBodySm)
+                        .foregroundStyle(Color.tbInk2)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.tbLabel)
+                    .foregroundStyle(Color.tbInk3)
+            }
+            .padding(TBSpace.s5)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .tbThemedSurface()
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("星空账本，你已点亮 \(aggregate.totalMoments) 颗星")
     }
 
     private var distributionSection: some View {
