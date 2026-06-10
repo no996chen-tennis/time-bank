@@ -97,7 +97,7 @@ struct TodayMemoryInviteView: View {
                 Text("今日回忆")
                     .font(.tbLabel)
                     .foregroundStyle(Color.tbInk3)
-                Text("存入第一个瞬间，这里会长出回忆。")
+                Text("过去 24 小时有什么值得存下来的？")
                     .font(.tbBodySm)
                     .foregroundStyle(Color.tbInk2)
                     .lineLimit(2)

@@ -118,7 +118,7 @@ struct PostcardView: View {
                     .padding(.vertical, TBSpace.s1)
 
                 HStack {
-                    Text("寄自 · \(dimension?.name ?? "时间银行")")
+                    Text("寄自 · \(dimension?.name ?? "过去的你")")
                         .font(.tbLabel)
                         .foregroundStyle(color)
                     Spacer()

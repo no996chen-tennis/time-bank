@@ -8,7 +8,7 @@ import WidgetKit
 // 真正的 Moment 由 App 回到前台时 drain 队列建立（见 MomentStore.drainQuickDepositQueue）。
 struct QuickDepositIntent: AppIntent {
     static var title: LocalizedStringResource = "存入此刻"
-    static var description = IntentDescription("把此刻轻轻存进时间银行，不用打开 App。")
+    static var description = IntentDescription("把此刻存下来，不用打开 App。")
     static var openAppWhenRun: Bool = false
 
     func perform() async throws -> some IntentResult {
@@ -70,8 +70,8 @@ private enum WT {
 private enum WidgetCopy {
     /// 余额一句话面（不绑定用户数据）。
     static let balanceLines = [
-        "今年余额，慢慢使用。",
-        "这几周，也可以被好好存下。",
+        "被感受过的时间，永远属于你。",
+        "今天的光，刚好落在今天。",
         "被你留下来的一小段，不会再走了。",
         "不必记得所有，留下一两件就好。",
         "一些时间适合什么都不做。"
@@ -79,8 +79,8 @@ private enum WidgetCopy {
 
     /// 冷启动（0 条记忆）邀请面。
     static let invitationLines = [
-        "过去 24 小时，有什么值得存下来的？",
-        "存入第一个瞬间，这里会长出回忆。",
+        "过去 24 小时有什么值得存下来的？",
+        "最近的哪一天，你想再经历一次？",
         "今天也算。",
         "现在这一刻，以后会是「过去」。"
     ]
@@ -271,7 +271,7 @@ struct TimeBankWidget: Widget {
             TimeBankWidgetView(entry: entry)
         }
         .configurationDisplayName("时间银行")
-        .description("看看今年还剩多少周、今天存了没，以及一颗星的回忆。")
+        .description("今年还剩多少周、今天存了没，和一段被留下的时间。")
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular])
     }
 }

@@ -114,7 +114,6 @@ enum PostcardNotificationScheduler {
             if timestamps.count >= weeklyCap { break }
 
             let content = UNMutableNotificationContent()
-            content.title = "时间银行"
             content.body = "你存的那个瞬间，冲洗好了。"
             content.userInfo = ["momentID": candidate.id.uuidString]
 

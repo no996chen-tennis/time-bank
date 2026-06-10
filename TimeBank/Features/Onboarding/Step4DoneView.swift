@@ -62,7 +62,7 @@ struct Step4DoneView: View {
 
     private var notificationCopy: some View {
         VStack(alignment: .leading, spacing: TBSpace.s3) {
-            Text("每天早上轻轻提醒你一次 —— 不催，不推销。")
+            Text("每天早上轻轻提醒一次。不催。")
                 .font(.tbHeadS)
                 .foregroundStyle(Color.tbInk)
 

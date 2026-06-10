@@ -111,7 +111,7 @@ struct LitCalendarView: View {
                 }
             }
 
-            Text("断了也没关系，空着的那周我们替你留着。")
+            Text("空着的那一周，这里替你留着。")
                 .font(.tbLabel)
                 .foregroundStyle(Color.tbInk3)
         }

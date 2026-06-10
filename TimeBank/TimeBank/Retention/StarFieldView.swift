@@ -37,7 +37,7 @@ struct StarFieldView: View {
             Text("你已点亮 \(model.litCount) 颗星")
                 .font(.tbHeadM)
                 .foregroundStyle(Color.tbInk)
-            Text("每一段被你认真留下的时间，都是夜空里的一颗星。")
+            Text("被你留下的每一段时间，都在这里亮着。")
                 .font(.tbBodySm)
                 .foregroundStyle(Color.tbInk2)
         }
