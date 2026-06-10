@@ -22,11 +22,13 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.18), value: selectedIconSetRawValue)
         .timeBankKeyboardDismissBehavior()
         .task {
+            PostcardCenter.shared.register()
             await bootstrapIfNeeded()
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active, case .readyForHome = launchState else { return }
             drainQuickDepositsOnForeground()
+            refreshPostcardNotifications()
         }
     }
 
@@ -38,6 +40,16 @@ struct RootView: View {
         if count > 0 {
             try? WidgetSnapshotWriter.writeSnapshot(modelContext: modelContext)
         }
+    }
+
+    /// 扫描"冲洗好"的瞬间，按红线排明信片本地通知。
+    @MainActor
+    private func refreshPostcardNotifications() {
+        let moments = (try? modelContext.fetch(FetchDescriptor<Moment>())) ?? []
+        let todayDeposited = moments.contains {
+            $0.status == .normal && Calendar.current.isDateInToday($0.createdAt)
+        }
+        PostcardNotificationScheduler.refresh(moments: moments, todayDeposited: todayDeposited)
     }
 
     @ViewBuilder
@@ -80,6 +92,7 @@ struct RootView: View {
             let profile = try UserProfile.fetchSingleton(in: modelContext)
             if profile != nil {
                 try? WidgetSnapshotWriter.writeSnapshot(modelContext: modelContext)
+                refreshPostcardNotifications()
             }
             launchState = profile == nil ? .needsOnboarding : .readyForHome
         } catch {

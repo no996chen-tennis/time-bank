@@ -14,6 +14,7 @@ struct HomeView: View {
     @Query private var moments: [Moment]
 
     @StateObject private var undoToastController = UndoToastController()
+    @ObservedObject private var postcardCenter = PostcardCenter.shared
     @State private var selectedTab: HomeTab = .home
     @State private var momentEditorRoute: MomentEditorRoute?
     @State private var dimensionEditorRoute: DimensionEditorRoute?
@@ -67,6 +68,11 @@ struct HomeView: View {
                 }
             } message: {
                 Text(dimensionDeleteRequest?.message ?? "")
+            }
+            .sheet(item: postcardRouteBinding) { route in
+                NavigationStack {
+                    PostcardView(momentID: route.id)
+                }
             }
         }
         .overlay(alignment: .bottom) {
@@ -213,7 +219,11 @@ struct HomeView: View {
     ) -> some View {
         if let selection = TodayMemory.pick(from: moments, dimensionsByID: dimensionsByID) {
             NavigationLink {
-                MomentDetailView(momentID: selection.momentID)
+                if selection.isPostcard {
+                    PostcardView(momentID: selection.momentID)
+                } else {
+                    MomentDetailView(momentID: selection.momentID)
+                }
             } label: {
                 TodayMemoryCardView(selection: selection)
             }
@@ -342,6 +352,14 @@ struct HomeView: View {
 
     private var visibleAccountDimensions: [Dimension] {
         CustomDimensionAccount.visibleAccountDimensions(from: dimensions)
+    }
+
+    /// 明信片通知点开后的 sheet 路由。
+    private var postcardRouteBinding: Binding<IdentifiableMomentID?> {
+        Binding(
+            get: { postcardCenter.requestedMomentID.map { IdentifiableMomentID(id: $0) } },
+            set: { newValue in if newValue == nil { postcardCenter.clear() } }
+        )
     }
 
     /// 今生 = 已度过的人生比例；今年 = 今年已过去的比例。用于 hero 卡进度条。
