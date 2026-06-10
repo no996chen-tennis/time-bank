@@ -30,6 +30,10 @@ struct RootView: View {
             drainQuickDepositsOnForeground()
             refreshPostcardNotifications()
         }
+        .onChange(of: selectedThemeRawValue) { _, _ in
+            // widget 进程读不到 UserDefaults 的主题，切主题后重写快照让 widget 跟随换肤。
+            try? WidgetSnapshotWriter.writeSnapshot(modelContext: modelContext)
+        }
     }
 
     /// 从 widget 一键存入返回前台时，把队列里的"此刻"落库并刷新 widget。

@@ -94,7 +94,8 @@ enum WidgetSnapshotWriter {
                 moments: normalMoments,
                 dimensionsByID: dimensionsByID,
                 now: now
-            )
+            ),
+            themeKind: TimeBankThemeKind.persisted.rawValue
         )
     }
 

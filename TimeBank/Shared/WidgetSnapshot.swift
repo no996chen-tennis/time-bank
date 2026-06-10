@@ -10,6 +10,9 @@ struct TimeBankWidgetSnapshot: Codable, Equatable, Sendable {
     var todayDeposited: Bool
     /// widget 轮换用的记忆池（"一颗星的回忆 / 冲洗好的明信片"两个面共用）。
     var memories: [TimeBankWidgetMemory]
+    /// App 内用户选的主题 rawValue（widget 进程读不到 App 的 UserDefaults，经快照传递）。
+    /// nil / 未知值时 widget 回落默认主题 magazineApartamento。
+    var themeKind: String?
 
     init(
         generatedAt: Date,
@@ -18,7 +21,8 @@ struct TimeBankWidgetSnapshot: Codable, Equatable, Sendable {
         topText: String,
         dimensions: [TimeBankWidgetDimensionSnapshot],
         todayDeposited: Bool = false,
-        memories: [TimeBankWidgetMemory] = []
+        memories: [TimeBankWidgetMemory] = [],
+        themeKind: String? = nil
     ) {
         self.generatedAt = generatedAt
         self.yearBalanceWeeks = yearBalanceWeeks
@@ -27,6 +31,7 @@ struct TimeBankWidgetSnapshot: Codable, Equatable, Sendable {
         self.dimensions = dimensions
         self.todayDeposited = todayDeposited
         self.memories = memories
+        self.themeKind = themeKind
     }
 
     // 向后兼容：旧快照 JSON 没有 todayDeposited / memories，缺失时给默认值，
@@ -40,6 +45,7 @@ struct TimeBankWidgetSnapshot: Codable, Equatable, Sendable {
         dimensions = try c.decode([TimeBankWidgetDimensionSnapshot].self, forKey: .dimensions)
         todayDeposited = try c.decodeIfPresent(Bool.self, forKey: .todayDeposited) ?? false
         memories = try c.decodeIfPresent([TimeBankWidgetMemory].self, forKey: .memories) ?? []
+        themeKind = try c.decodeIfPresent(String.self, forKey: .themeKind)
     }
 
     static let sample = TimeBankWidgetSnapshot(
