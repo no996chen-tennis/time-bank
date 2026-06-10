@@ -1,5 +1,7 @@
 import Foundation
+import ImageIO
 import SwiftData
+import UniformTypeIdentifiers
 import WidgetKit
 
 enum WidgetSnapshotWriter {
@@ -106,7 +108,7 @@ enum WidgetSnapshotWriter {
         let today = calendar.startOfDay(for: now)
         let todayComponents = calendar.dateComponents([.month, .day], from: now)
 
-        let candidates: [TimeBankWidgetMemory] = moments.compactMap { moment in
+        let candidates: [(memory: TimeBankWidgetMemory, moment: Moment)] = moments.compactMap { moment in
             guard let title = moment.title?.trimmingCharacters(in: .whitespacesAndNewlines),
                   title.isEmpty == false
             else {
@@ -124,22 +126,93 @@ enum WidgetSnapshotWriter {
             let createdDaysAgo = calendar.dateComponents([.day], from: createdDay, to: today).day ?? 0
             let developed = (2...4).contains(createdDaysAgo)
 
-            return TimeBankWidgetMemory(
+            let memory = TimeBankWidgetMemory(
                 title: title,
                 daysAgo: daysAgo,
                 colorKey: dimensionsByID[moment.dimensionId]?.colorKey ?? "rose",
                 isAnniversary: isAnniversary,
                 developed: developed
             )
+            return (memory, moment)
         }
 
         let sorted = candidates.sorted { lhs, rhs in
-            if lhs.isAnniversary != rhs.isAnniversary { return lhs.isAnniversary }
-            if lhs.developed != rhs.developed { return lhs.developed }
-            return lhs.daysAgo < rhs.daysAgo
+            if lhs.memory.isAnniversary != rhs.memory.isAnniversary { return lhs.memory.isAnniversary }
+            if lhs.memory.developed != rhs.memory.developed { return lhs.memory.developed }
+            return lhs.memory.daysAgo < rhs.memory.daysAgo
         }
 
-        return Array(sorted.prefix(6))
+        return attachThumbs(to: Array(sorted.prefix(6)))
+    }
+
+    /// 把入选记忆的缩略图导出到 App Group 共享目录（widget 进程读不到 App 沙盒里的媒体）。
+    /// 任何一步失败都静默降级为无图——缩略图绝不能阻塞快照写入。
+    private static func attachThumbs(
+        to entries: [(memory: TimeBankWidgetMemory, moment: Moment)]
+    ) -> [TimeBankWidgetMemory] {
+        guard let dir = TimeBankWidgetSnapshotStore.thumbsDirectoryURL() else {
+            return entries.map(\.memory)
+        }
+
+        let fileStore = FileStore()
+        var keptNames = Set<String>()
+        let result = entries.map { entry -> TimeBankWidgetMemory in
+            var memory = entry.memory
+            if let name = exportThumb(for: entry.moment, fileStore: fileStore, into: dir) {
+                memory.thumbFile = name
+                keptNames.insert(name)
+            }
+            return memory
+        }
+
+        // 清掉不再被任何记忆引用的旧图，目录体积恒定在 ≤6 张小图
+        if let files = try? FileManager.default.contentsOfDirectory(atPath: dir.path) {
+            for file in files where keptNames.contains(file) == false {
+                try? FileManager.default.removeItem(at: dir.appendingPathComponent(file))
+            }
+        }
+
+        return result
+    }
+
+    private static func exportThumb(for moment: Moment, fileStore: FileStore, into dir: URL) -> String? {
+        let sortedMedia = moment.mediaItems.sorted { $0.sortIndex < $1.sortIndex }
+        guard let item = sortedMedia.first(where: { $0.thumbnailPath != nil || $0.mediaKind == .image }) else {
+            return nil
+        }
+
+        let name = moment.id.uuidString + ".jpg"
+        let destination = dir.appendingPathComponent(name)
+        if FileManager.default.fileExists(atPath: destination.path) {
+            return name
+        }
+
+        let relativePath = item.thumbnailPath ?? item.relativePath
+        let sourceURL = fileStore.url(forRelativePath: relativePath)
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: 360
+        ]
+        guard let source = CGImageSourceCreateWithURL(sourceURL as CFURL, nil),
+              let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary),
+              let destinationRef = CGImageDestinationCreateWithURL(
+                  destination as CFURL,
+                  UTType.jpeg.identifier as CFString,
+                  1,
+                  nil
+              )
+        else {
+            return nil
+        }
+
+        CGImageDestinationAddImage(
+            destinationRef,
+            thumbnail,
+            [kCGImageDestinationLossyCompressionQuality: 0.72] as CFDictionary
+        )
+        guard CGImageDestinationFinalize(destinationRef) else { return nil }
+        return name
     }
 
     private static func makeDimensionSnapshot(

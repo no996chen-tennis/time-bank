@@ -104,6 +104,9 @@ struct TimeBankWidgetMemory: Codable, Equatable, Sendable {
     var isAnniversary: Bool
     /// createdAt 落在 2-4 天前 = 刚"冲洗好"，可走明信片面。
     var developed: Bool
+    /// App Group widget-thumbs/ 目录下的缩略图文件名（widget 进程读不到 App 沙盒媒体，
+    /// 由 WidgetSnapshotWriter 导出小图到共享容器）。nil = 无图，widget 显示账户色点。
+    var thumbFile: String? = nil
 }
 
 struct TimeBankWidgetDimensionSnapshot: Codable, Identifiable, Equatable, Sendable {
@@ -156,6 +159,16 @@ enum TimeBankWidgetSnapshotStore {
 
     static func snapshotURL(fileManager: FileManager = .default) -> URL {
         writableSnapshotURL(fileManager: fileManager)
+    }
+
+    /// widget 缩略图目录（App Group 下，App 写、widget 读）。无 App Group 时返回 nil，调用方静默降级。
+    static func thumbsDirectoryURL(fileManager: FileManager = .default) -> URL? {
+        guard let groupURL = fileManager.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) else {
+            return nil
+        }
+        let dir = groupURL.appendingPathComponent("widget-thumbs", isDirectory: true)
+        try? fileManager.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
     }
 
     private static func writableSnapshotURL(fileManager: FileManager) -> URL {

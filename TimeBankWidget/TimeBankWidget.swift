@@ -1,5 +1,6 @@
 import AppIntents
 import SwiftUI
+import UIKit
 import WidgetKit
 
 // MARK: - 一键存入（iOS 17 交互式 widget · 不打开 App）
@@ -114,6 +115,7 @@ private struct FaceContent {
     var line: String
     var accentColorKey: String?
     var isMemory: Bool
+    var thumbFile: String? = nil
 }
 
 private func faceContent(face: WidgetFace, snapshot: TimeBankWidgetSnapshot, date: Date) -> FaceContent {
@@ -134,7 +136,8 @@ private func faceContent(face: WidgetFace, snapshot: TimeBankWidgetSnapshot, dat
             kicker: m.isAnniversary ? "那年今日" : daysAgoLabel(m.daysAgo),
             line: m.title,
             accentColorKey: m.colorKey,
-            isMemory: true
+            isMemory: true,
+            thumbFile: m.thumbFile
         )
     case .postcard(let i):
         guard snapshot.memories.indices.contains(i) else {
@@ -145,7 +148,8 @@ private func faceContent(face: WidgetFace, snapshot: TimeBankWidgetSnapshot, dat
             kicker: "刚冲洗好",
             line: m.title,
             accentColorKey: m.colorKey,
-            isMemory: true
+            isMemory: true,
+            thumbFile: m.thumbFile
         )
     case .balanceLine(let i):
         return FaceContent(
@@ -443,28 +447,47 @@ private struct HomeScreenMediumWidgetView: View {
     }
 }
 
-// MARK: - 轮换面块（kicker + 主行，记忆面带账户色圆点）
+// MARK: - 轮换面块（kicker + 主行，记忆面带账户色圆点 + 缩略图）
 private struct FaceBlock: View {
     let content: FaceContent
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            if content.kicker.isEmpty == false {
-                HStack(spacing: 4) {
-                    if let key = content.accentColorKey {
-                        Circle().fill(WT.color(key)).frame(width: 6, height: 6)
-                    }
-                    Text(content.kicker)
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(content.accentColorKey.map(WT.color) ?? WT.ink2)
-                }
+        HStack(alignment: .center, spacing: 7) {
+            if let image = thumbImage {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 36, height: 36)
+                    .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
             }
-            Text(content.line)
-                .font(.system(size: content.isMemory ? 13 : 12, weight: content.isMemory ? .semibold : .medium))
-                .foregroundStyle(content.isMemory ? WT.ink : WT.ink2)
-                .lineLimit(2)
-                .minimumScaleFactor(0.8)
+
+            VStack(alignment: .leading, spacing: 3) {
+                if content.kicker.isEmpty == false {
+                    HStack(spacing: 4) {
+                        if let key = content.accentColorKey, thumbImage == nil {
+                            Circle().fill(WT.color(key)).frame(width: 6, height: 6)
+                        }
+                        Text(content.kicker)
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(content.accentColorKey.map(WT.color) ?? WT.ink2)
+                    }
+                }
+                Text(content.line)
+                    .font(.system(size: content.isMemory ? 13 : 12, weight: content.isMemory ? .semibold : .medium))
+                    .foregroundStyle(content.isMemory ? WT.ink : WT.ink2)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+            }
         }
+    }
+
+    private var thumbImage: UIImage? {
+        guard let name = content.thumbFile,
+              let dir = TimeBankWidgetSnapshotStore.thumbsDirectoryURL()
+        else {
+            return nil
+        }
+        return UIImage(contentsOfFile: dir.appendingPathComponent(name).path)
     }
 }
 
