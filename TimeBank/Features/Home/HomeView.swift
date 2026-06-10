@@ -26,6 +26,7 @@ struct HomeView: View {
     @State private var homeToastMessage: String?
     @State private var homeToastDismissTask: Task<Void, Never>?
     @State private var timeScope: DimensionCompute.TimeBalanceScope = .lifetime
+    @State private var pendingMilestone: Int?
 
     var body: some View {
         NavigationStack {
@@ -73,6 +74,16 @@ struct HomeView: View {
                 NavigationStack {
                     PostcardView(momentID: route.id)
                 }
+            }
+            .sheet(item: milestoneRouteBinding) { route in
+                MilestoneCelebrationView(
+                    milestone: route.id,
+                    moments: moments.filter { $0.status == .normal }
+                ) {
+                    MilestoneTracker.markCelebrated(route.id)
+                    pendingMilestone = nil
+                }
+                .interactiveDismissDisabled()
             }
         }
         .overlay(alignment: .bottom) {
@@ -187,6 +198,9 @@ struct HomeView: View {
         }
         .task(id: widgetSnapshotFingerprint(profile: profile)) {
             refreshWidgetSnapshot(profile: profile)
+            if pendingMilestone == nil {
+                pendingMilestone = MilestoneTracker.pending(totalMoments: normalMoments.count)
+            }
         }
     }
 
@@ -362,6 +376,14 @@ struct HomeView: View {
         )
     }
 
+    /// 里程碑庆典 sheet 路由。
+    private var milestoneRouteBinding: Binding<MilestoneRoute?> {
+        Binding(
+            get: { pendingMilestone.map { MilestoneRoute(id: $0) } },
+            set: { newValue in if newValue == nil { pendingMilestone = nil } }
+        )
+    }
+
     /// 今生 = 已度过的人生比例；今年 = 今年已过去的比例。用于 hero 卡进度条。
     private func elapsedProgress(profile: UserProfile) -> Double {
         switch timeScope {
@@ -509,6 +531,10 @@ struct HomeView: View {
         guard let profile = profiles.first else { return "no-profile" }
         return widgetSnapshotFingerprint(profile: profile)
     }
+}
+
+private struct MilestoneRoute: Identifiable {
+    let id: Int
 }
 
 private struct HomeDimensionDeleteRequest {

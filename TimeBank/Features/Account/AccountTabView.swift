@@ -22,6 +22,7 @@ struct AccountTabView: View {
                         emptyState
                     } else {
                         starEntryCard
+                        calendarEntryCard
                         distributionSection
                         allMomentsSection
                         annualSection
@@ -122,6 +123,45 @@ struct AccountTabView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("星空账本，你已点亮 \(aggregate.totalMoments) 颗星")
+    }
+
+    /// 点亮日历入口卡 → 连续奖励页（只奖不罚）。
+    private var calendarEntryCard: some View {
+        let weekNumber = StreakModel.build(moments: moments).weekNumber
+        return NavigationLink {
+            LitCalendarView(moments: moments)
+        } label: {
+            HStack(spacing: TBSpace.s3) {
+                ZStack {
+                    Circle().fill(Color.tbPrimary.opacity(0.12))
+                    Image(systemName: "calendar")
+                        .font(.tbBody)
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(Color.tbPrimary)
+                }
+                .frame(width: 44, height: 44)
+
+                VStack(alignment: .leading, spacing: TBSpace.s1) {
+                    Text("点亮日历")
+                        .font(.tbHeadS)
+                        .foregroundStyle(Color.tbInk)
+                    Text("陪伴你的第 \(weekNumber) 周")
+                        .font(.tbBodySm)
+                        .foregroundStyle(Color.tbInk2)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.tbLabel)
+                    .foregroundStyle(Color.tbInk3)
+            }
+            .padding(TBSpace.s5)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .tbThemedSurface()
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("点亮日历，陪伴你的第 \(weekNumber) 周")
     }
 
     private var distributionSection: some View {
