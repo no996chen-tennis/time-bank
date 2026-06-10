@@ -77,6 +77,17 @@ struct StreakModel {
         let day = Calendar(identifier: .gregorian).startOfDay(for: date)
         return litDays.contains(day)
     }
+
+    /// 连续奖励档位（设计 §4.2 全套）。按累计存入宽松计——自动补灯让链条永不断，
+    /// 所以档位只升不降、断签不回收（只奖不罚红线）：
+    /// 0 = 还没有；1 = ≥3 次（星空 shimmer 增强）；2 = ≥7 次（「七次之后」纪念明信片入池）；
+    /// 3 = ≥21 次（流星 + 星座辉光）。
+    static func rewardTier(totalMoments: Int) -> Int {
+        if totalMoments >= 21 { return 3 }
+        if totalMoments >= 7 { return 2 }
+        if totalMoments >= 3 { return 1 }
+        return 0
+    }
 }
 
 /// 里程碑：第 10 / 50 / 100 个瞬间（累计，永不归零）。每个阈值只庆祝一次。

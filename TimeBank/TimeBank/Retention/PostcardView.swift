@@ -18,6 +18,27 @@ struct PostcardView: View {
 
     private var moment: Moment? { moments.first { $0.id == momentID } }
 
+    /// 连续奖励第 2 档（≥7 次存入）解锁「七次之后」纪念皮肤（设计 §4.2）。
+    /// 解锁后按瞬间 id 稳定命中约三分之一——是偶尔收到的礼物，不是任务进度。
+    private var isCelebratorySkin: Bool {
+        let normalCount = moments.filter { $0.status == .normal }.count
+        guard StreakModel.rewardTier(totalMoments: normalCount) >= 2 else { return false }
+        return stableSkinSeed(momentID) % 3 == 0
+    }
+
+    private var celebratoryGold: Color {
+        DimensionPalette.color(forColorKey: "warm")
+    }
+
+    private func stableSkinSeed(_ id: UUID) -> UInt64 {
+        var hash: UInt64 = 1_469_598_103_934_665_603
+        for byte in id.uuidString.utf8 {
+            hash ^= UInt64(byte)
+            hash = hash &* 1_099_511_628_211
+        }
+        return hash
+    }
+
     var body: some View {
         Group {
             if let moment {
@@ -91,7 +112,7 @@ struct PostcardView: View {
 
                 HStack(alignment: .top, spacing: TBSpace.s2) {
                     postmark(date: moment.happenedAt)
-                    stamp(dimension: dimension, color: color)
+                    stamp(dimension: dimension, color: isCelebratorySkin ? celebratoryGold : color)
                 }
                 .padding(TBSpace.s3)
             }
@@ -134,23 +155,32 @@ struct PostcardView: View {
         .clipShape(RoundedRectangle(cornerRadius: TBRadius.lg, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: TBRadius.lg, style: .continuous)
-                .stroke(Color.tbInk.opacity(0.12), lineWidth: 1)
+                .stroke(
+                    isCelebratorySkin ? celebratoryGold.opacity(0.5) : Color.tbInk.opacity(0.12),
+                    lineWidth: isCelebratorySkin ? 1.4 : 1
+                )
         }
         .shadow(color: Color.tbInk.opacity(0.14), radius: 18, x: 0, y: 8)
     }
 
-    /// 邮戳：虚线圆 + 日期。
+    /// 邮戳：虚线圆 + 日期。纪念皮肤多一行「七次之后」。
     private func postmark(date: Date) -> some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 1) {
             Text(Formatter.absoluteDate(date))
                 .font(.system(size: 9, weight: .semibold, design: .rounded))
                 .foregroundStyle(Color.tbInk.opacity(0.7))
+
+            if isCelebratorySkin {
+                Text("七次之后")
+                    .font(.system(size: 7, weight: .semibold))
+                    .foregroundStyle(celebratoryGold)
+            }
         }
         .frame(width: 58, height: 58)
         .background(Color.tbSurface.opacity(0.82), in: Circle())
         .overlay {
             Circle().strokeBorder(style: StrokeStyle(lineWidth: 1.2, dash: [3, 2]))
-                .foregroundStyle(Color.tbInk.opacity(0.45))
+                .foregroundStyle(isCelebratorySkin ? celebratoryGold.opacity(0.7) : Color.tbInk.opacity(0.45))
         }
         .rotationEffect(.degrees(-8))
     }

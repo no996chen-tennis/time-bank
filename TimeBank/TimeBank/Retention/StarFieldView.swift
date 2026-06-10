@@ -74,19 +74,21 @@ struct StarFieldView: View {
                 let point = CGPoint(x: star.x * size.width, y: star.y * size.height)
                 if index == 0 { path.move(to: point) } else { path.addLine(to: point) }
             }
-            context.stroke(path, with: .color(.white.opacity(0.10)), lineWidth: 0.8)
+            // 第 3 档起星座连线整体辉光（设计 §4.2「星座整体辉光」）
+            context.stroke(path, with: .color(.white.opacity(model.rewardTier >= 3 ? 0.20 : 0.10)), lineWidth: 0.8)
         }
 
-        // 流星：连续存入活跃（近 7 天 ≥3 笔）时偶尔划过一道
-        if model.recentStreak >= 3 {
+        // 流星：连续奖励第 3 档（≥21 次存入）解锁，偶尔划过一道
+        if model.rewardTier >= 3 {
             drawShootingStar(context: context, size: size, time: time)
         }
 
-        // 星：发光圆 + 亮核，twinkle 调制透明度
+        // 星：发光圆 + 亮核，twinkle 调制透明度（第 1 档 ≥3 次起呼吸增强一档）
+        let twinkleAmplitude = model.rewardTier >= 1 ? 0.36 : 0.28
         for constellation in model.constellations {
             for star in constellation.stars {
                 let center = CGPoint(x: star.x * size.width, y: star.y * size.height)
-                let twinkle = 0.72 + 0.28 * sin(time * star.twinkleSpeed + star.phase)
+                let twinkle = (1.0 - twinkleAmplitude) + twinkleAmplitude * sin(time * star.twinkleSpeed + star.phase)
                 let alpha = min(1.0, star.brightness * twinkle)
                 let core = star.radius
 
@@ -191,7 +193,7 @@ struct StarFieldModel {
 
     let constellations: [Constellation]
     let litCount: Int
-    let recentStreak: Int
+    let rewardTier: Int
 
     static func build(dimensions: [Dimension], moments: [Moment], now: Date = .now) -> StarFieldModel {
         let dimById = Dictionary(uniqueKeysWithValues: dimensions.map { ($0.id, $0) })
@@ -242,14 +244,13 @@ struct StarFieldModel {
             ))
         }
 
-        // 近 7 天存入笔数（连续活跃的轻量度量，喂流星特效；不惩罚、不显示断签）
-        let weekAgo = now.addingTimeInterval(-7 * 86_400)
-        let recent = normal.filter { $0.createdAt >= weekAgo }.count
+        // 连续奖励档位（设计 §4.2：3 次 shimmer / 7 次纪念明信片 / 21 次流星辉光；累计宽松计，只奖不罚）
+        let tier = StreakModel.rewardTier(totalMoments: normal.count)
 
         return StarFieldModel(
             constellations: constellations,
             litCount: normal.count,
-            recentStreak: recent
+            rewardTier: tier
         )
     }
 
