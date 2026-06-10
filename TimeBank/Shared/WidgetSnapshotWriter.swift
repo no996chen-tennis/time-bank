@@ -86,8 +86,60 @@ enum WidgetSnapshotWriter {
                 moments: normalMoments
             ),
             topText: topText(for: settings?.widgetTone ?? .warm),
-            dimensions: dimensionSnapshots
+            dimensions: dimensionSnapshots,
+            todayDeposited: normalMoments.contains { Calendar.current.isDateInToday($0.createdAt) },
+            memories: widgetMemories(
+                moments: normalMoments,
+                dimensionsByID: dimensionsByID,
+                now: now
+            )
         )
+    }
+
+    /// 为 widget 轮换面挑选记忆池：周年（那年今日）优先 → 刚冲洗优先 → 最近优先，取前 6。
+    private static func widgetMemories(
+        moments: [Moment],
+        dimensionsByID: [String: Dimension],
+        now: Date
+    ) -> [TimeBankWidgetMemory] {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: now)
+        let todayComponents = calendar.dateComponents([.month, .day], from: now)
+
+        let candidates: [TimeBankWidgetMemory] = moments.compactMap { moment in
+            guard let title = moment.title?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  title.isEmpty == false
+            else {
+                return nil
+            }
+
+            let happenedDay = calendar.startOfDay(for: moment.happenedAt)
+            let daysAgo = max(0, calendar.dateComponents([.day], from: happenedDay, to: today).day ?? 0)
+            let happenedComponents = calendar.dateComponents([.month, .day], from: moment.happenedAt)
+            let isAnniversary = daysAgo > 0
+                && happenedComponents.month == todayComponents.month
+                && happenedComponents.day == todayComponents.day
+
+            let createdDay = calendar.startOfDay(for: moment.createdAt)
+            let createdDaysAgo = calendar.dateComponents([.day], from: createdDay, to: today).day ?? 0
+            let developed = (2...4).contains(createdDaysAgo)
+
+            return TimeBankWidgetMemory(
+                title: title,
+                daysAgo: daysAgo,
+                colorKey: dimensionsByID[moment.dimensionId]?.colorKey ?? "rose",
+                isAnniversary: isAnniversary,
+                developed: developed
+            )
+        }
+
+        let sorted = candidates.sorted { lhs, rhs in
+            if lhs.isAnniversary != rhs.isAnniversary { return lhs.isAnniversary }
+            if lhs.developed != rhs.developed { return lhs.developed }
+            return lhs.daysAgo < rhs.daysAgo
+        }
+
+        return Array(sorted.prefix(6))
     }
 
     private static func makeDimensionSnapshot(
