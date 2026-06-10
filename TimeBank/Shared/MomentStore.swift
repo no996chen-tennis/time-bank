@@ -121,6 +121,54 @@ final class MomentStore {
         return inserted
     }
 
+    /// 把 widget 一键存入写进 App Group 队列的请求落库成真 Moment（标题"此刻"、时长 0、首个可写账户）。
+    /// 幂等：按 id 去重，重复 drain 不会建重复瞬间。返回新建数量。
+    @discardableResult
+    func drainQuickDepositQueue() throws -> Int {
+        let requests = QuickDepositQueueStore.loadAll()
+        guard requests.isEmpty == false else { return 0 }
+        guard let dimensionId = firstWritableAccountID() else { return 0 }
+
+        let existingIDs = Set(try fetchAllMoments().map(\.id))
+        var processed = Set<UUID>()
+
+        for request in requests {
+            processed.insert(request.id)
+            guard existingIDs.contains(request.id) == false else { continue }
+            let moment = Moment(
+                id: request.id,
+                dimensionId: dimensionId,
+                title: request.title,
+                note: "",
+                happenedAt: request.happenedAt,
+                durationSeconds: 0,
+                status: .normal,
+                createdAt: request.happenedAt,
+                updatedAt: .now
+            )
+            modelContext.insert(moment)
+        }
+
+        try modelContext.save()
+        QuickDepositQueueStore.remove(ids: processed)
+        return processed.count
+    }
+
+    /// 一键存入落库目标：首个可见的可写账户（builtin/custom · visible · normal），按 sortIndex。
+    private func firstWritableAccountID() -> String? {
+        let dimensions = (try? modelContext.fetch(FetchDescriptor<Dimension>())) ?? []
+        return dimensions
+            .filter { dimension in
+                (dimension.kind == .builtin || dimension.kind == .custom)
+                    && dimension.status == .visible
+                    && dimension.mode == .normal
+                    && dimension.name.hasPrefix("__") == false
+            }
+            .sorted { $0.sortIndex < $1.sortIndex }
+            .first?
+            .id
+    }
+
     @discardableResult
     func save(moment request: SaveRequest) async throws -> Moment {
         // 白名单校验：dimensionId 必须存在 + kind ∈ {.builtin, .custom}

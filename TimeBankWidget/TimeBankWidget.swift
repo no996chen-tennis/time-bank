@@ -1,5 +1,28 @@
+import AppIntents
 import SwiftUI
 import WidgetKit
+
+// MARK: - 一键存入（iOS 17 交互式 widget · 不打开 App）
+//
+// 把"此刻"写进 App Group 队列 + 乐观翻转快照"今日已存入" + reload，让 widget 即时变 ✦。
+// 真正的 Moment 由 App 回到前台时 drain 队列建立（见 MomentStore.drainQuickDepositQueue）。
+struct QuickDepositIntent: AppIntent {
+    static var title: LocalizedStringResource = "存入此刻"
+    static var description = IntentDescription("把此刻轻轻存进时间银行，不用打开 App。")
+    static var openAppWhenRun: Bool = false
+
+    func perform() async throws -> some IntentResult {
+        let request = QuickDepositRequest(id: UUID(), happenedAt: Date(), title: "此刻")
+        QuickDepositQueueStore.append(request)
+
+        if var snapshot = TimeBankWidgetSnapshotStore.load() {
+            snapshot.todayDeposited = true
+            try? TimeBankWidgetSnapshotStore.write(snapshot)
+        }
+        WidgetCenter.shared.reloadAllTimelines()
+        return .result()
+    }
+}
 
 // MARK: - 设计 token（widget 进程内的单一配色来源）
 //
@@ -389,12 +412,25 @@ private struct HomeScreenMediumWidgetView: View {
             }
 
             HStack(spacing: 8) {
-                Image(systemName: snapshot.todayDeposited ? "checkmark.seal.fill" : "tray.and.arrow.down")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(snapshot.todayDeposited ? WT.gold : WT.ink)
-                Text(snapshot.todayDeposited ? "今天已存入" : "已存入")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
+                if snapshot.todayDeposited {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(WT.gold)
+                    Text("今天已存入")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.secondary)
+                } else {
+                    Button(intent: QuickDepositIntent()) {
+                        HStack(spacing: 5) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 14, weight: .semibold))
+                            Text("存入此刻")
+                                .font(.system(size: 12, weight: .semibold))
+                        }
+                        .foregroundStyle(WT.primary)
+                    }
+                    .buttonStyle(.plain)
+                }
                 Spacer(minLength: 8)
                 Text("\(snapshot.storedMomentCountTotal) 个瞬间")
                     .font(.system(size: 14, weight: .semibold, design: .rounded))

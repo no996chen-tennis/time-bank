@@ -7,6 +7,7 @@ struct RootView: View {
     @Environment(\.modelContext) private var modelContext
     @AppStorage(TimeBankThemeKind.storageKey) private var selectedThemeRawValue = TimeBankThemeKind.magazineApartamento.rawValue
     @AppStorage(TimeBankIconSetKind.storageKey) private var selectedIconSetRawValue = TimeBankIconSetKind.nativeFilled.rawValue
+    @Environment(\.scenePhase) private var scenePhase
     @State private var launchState: LaunchState = .bootstrapping
 
     var body: some View {
@@ -22,6 +23,20 @@ struct RootView: View {
         .timeBankKeyboardDismissBehavior()
         .task {
             await bootstrapIfNeeded()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active, case .readyForHome = launchState else { return }
+            drainQuickDepositsOnForeground()
+        }
+    }
+
+    /// 从 widget 一键存入返回前台时，把队列里的"此刻"落库并刷新 widget。
+    @MainActor
+    private func drainQuickDepositsOnForeground() {
+        let store = MomentStore(modelContext: modelContext)
+        let count = (try? store.drainQuickDepositQueue()) ?? 0
+        if count > 0 {
+            try? WidgetSnapshotWriter.writeSnapshot(modelContext: modelContext)
         }
     }
 
@@ -60,6 +75,7 @@ struct RootView: View {
             let store = MomentStore(modelContext: modelContext)
             _ = try store.bootstrapReservedData()
             _ = try await store.commitPendingDeletes()
+            _ = try? store.drainQuickDepositQueue()
 
             let profile = try UserProfile.fetchSingleton(in: modelContext)
             if profile != nil {

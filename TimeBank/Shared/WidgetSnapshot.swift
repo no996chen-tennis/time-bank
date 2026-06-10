@@ -201,3 +201,72 @@ enum TimeBankWidgetSnapshotStore {
         return decoder
     }
 }
+
+// MARK: - 一键存入队列（widget App Intent 写，App 启动/前台 drain）
+//
+// SwiftData store 不在 App Group（不迁移以保历史数据），所以 widget 无法直写库。
+// widget 的一键存入把请求 append 到 App Group 的 JSON 队列（持久化、不丢），
+// 翻转快照"今日已存入"做即时反馈；App 回到前台时 drain 队列、建真 Moment。
+struct QuickDepositRequest: Codable, Equatable, Sendable {
+    var id: UUID
+    var happenedAt: Date
+    var title: String
+}
+
+enum QuickDepositQueueStore {
+    static let fileName = "quickdeposit.queue.json"
+
+    static func loadAll(fileManager: FileManager = .default) -> [QuickDepositRequest] {
+        guard let data = try? Data(contentsOf: queueURL(fileManager: fileManager)) else { return [] }
+        return (try? decoder.decode([QuickDepositRequest].self, from: data)) ?? []
+    }
+
+    static func append(_ request: QuickDepositRequest, fileManager: FileManager = .default) {
+        var all = loadAll(fileManager: fileManager)
+        all.append(request)
+        write(all, fileManager: fileManager)
+    }
+
+    /// drain 后按 id 移除已处理的请求；保留 drain 期间新 append 进来的（避免竞态丢失）。
+    static func remove(ids: Set<UUID>, fileManager: FileManager = .default) {
+        let remaining = loadAll(fileManager: fileManager).filter { ids.contains($0.id) == false }
+        write(remaining, fileManager: fileManager)
+    }
+
+    private static func write(_ requests: [QuickDepositRequest], fileManager: FileManager) {
+        let url = queueURL(fileManager: fileManager)
+        try? fileManager.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        if let data = try? encoder.encode(requests) {
+            try? data.write(to: url, options: [.atomic])
+        }
+    }
+
+    private static func queueURL(fileManager: FileManager) -> URL {
+        if let groupURL = fileManager.containerURL(
+            forSecurityApplicationGroupIdentifier: TimeBankWidgetSnapshotStore.appGroupID
+        ) {
+            return groupURL.appendingPathComponent(fileName)
+        }
+        let base = (try? fileManager.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )) ?? fileManager.temporaryDirectory
+        return base
+            .appendingPathComponent("TimeBank", isDirectory: true)
+            .appendingPathComponent(fileName)
+    }
+
+    private static var encoder: JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return encoder
+    }
+
+    private static var decoder: JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
+    }
+}
