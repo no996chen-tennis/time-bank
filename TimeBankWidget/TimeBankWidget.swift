@@ -157,9 +157,10 @@ private enum WidgetCopy {
         "现在这一刻，以后会是「过去」。"
     ]
 
-    /// 今日存入状态（外显主标签，蔚来"未签到"模式：一眼看到状态）。
+    /// 今日存入状态（外显，蔚来"未签到"模式）。"还空着"= 账本这一页在等你，
+    /// 比"未存入"多一层想把它填上的张力，且是观察式不是审判式。
     static func statusLabel(deposited: Bool) -> String {
-        deposited ? "今天已存入 ✦" : "今日未存入"
+        deposited ? "今天已存入 ✦" : "今天还空着"
     }
 
     /// 状态下的温柔一句（随一天推移变化，timeline 预排，零刷新成本）。
@@ -369,31 +370,14 @@ private struct TimeBankWidgetView: View {
     }
 }
 
-// MARK: - 状态 + 按钮（蔚来"未签到"模式的核心组件）
+// MARK: - 状态即按钮（蔚来"未签到"模式：状态和动作合一）
 
-/// 今日状态行：色点 + "今日未存入 / 今天已存入 ✦"。
-private struct TodayStatusLabel: View {
-    let deposited: Bool
-    let wt: WT
-    var size: CGFloat = 13
-
-    var body: some View {
-        HStack(spacing: 5) {
-            Circle()
-                .fill(deposited ? wt.gold : wt.accent)
-                .frame(width: 6, height: 6)
-            Text(WidgetCopy.statusLabel(deposited: deposited))
-                .font(.system(size: size, weight: .semibold))
-                .foregroundStyle(deposited ? wt.gold : wt.accent)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        }
-    }
-}
-
-/// 「存入此刻」实心按钮（App Intent，不打开 App）。
+/// 「今天还空着 / 存入此刻」按钮（App Intent，不打开 App）。
+/// 未存入 = 实心强调色 + "今天还空着"（状态即 CTA）；已存入 = 安静的次级"存入此刻"（还能再存）。
 private struct DepositButton: View {
     let wt: WT
+    var title = "存入此刻"
+    var prominent = true
     var fillsWidth = false
 
     var body: some View {
@@ -401,14 +385,19 @@ private struct DepositButton: View {
             HStack(spacing: 4) {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 12, weight: .semibold))
-                Text("存入此刻")
+                Text(title)
                     .font(.system(size: 12, weight: .semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
-            .foregroundStyle(wt.surface)
+            .foregroundStyle(prominent ? wt.surface : wt.ink2)
             .padding(.horizontal, 12)
             .padding(.vertical, 7)
             .frame(maxWidth: fillsWidth ? .infinity : nil)
-            .background(wt.accent, in: RoundedRectangle(cornerRadius: wt.controlRadius, style: .continuous))
+            .background(
+                prominent ? AnyShapeStyle(wt.accent) : AnyShapeStyle(wt.chipFill),
+                in: RoundedRectangle(cornerRadius: wt.controlRadius, style: .continuous)
+            )
         }
         .buttonStyle(.plain)
     }
@@ -473,9 +462,19 @@ private struct HomeScreenSmallWidgetView: View {
 
             Spacer(minLength: 5)
 
-            TodayStatusLabel(deposited: snapshot.todayDeposited, wt: wt, size: 15)
+            if snapshot.todayDeposited {
+                Text("今天已存入 ✦")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(wt.gold)
+            } else {
+                Text(WidgetCopy.statusLine(date: entry.date, deposited: false))
+                    .font(.system(size: 12.5, weight: .semibold))
+                    .foregroundStyle(wt.ink)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
+            }
 
-            Text(snapshot.todayDeposited ? content.line : WidgetCopy.statusLine(date: entry.date, deposited: false))
+            Text(content.line)
                 .font(.system(size: 10.5, weight: .regular))
                 .foregroundStyle(wt.ink2)
                 .lineLimit(2)
@@ -484,13 +483,12 @@ private struct HomeScreenSmallWidgetView: View {
 
             Spacer(minLength: 6)
 
-            if snapshot.todayDeposited {
-                Text("\(snapshot.storedMomentCountTotal) 个瞬间 · 都还在")
-                    .font(.system(size: 10.5, weight: .medium))
-                    .foregroundStyle(wt.ink2)
-            } else {
-                DepositButton(wt: wt, fillsWidth: true)
-            }
+            DepositButton(
+                wt: wt,
+                title: snapshot.todayDeposited ? "存入此刻" : "今天还空着",
+                prominent: snapshot.todayDeposited == false,
+                fillsWidth: true
+            )
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -526,14 +524,17 @@ private struct HomeScreenMediumWidgetView: View {
 
                 Spacer(minLength: 6)
 
-                VStack(alignment: .trailing, spacing: 6) {
-                    TodayStatusLabel(deposited: snapshot.todayDeposited, wt: wt)
+                VStack(alignment: .trailing, spacing: 5) {
                     if snapshot.todayDeposited {
-                        Text("\(snapshot.storedMomentCountTotal) 个瞬间 · 都还在")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(wt.ink2)
+                        Text("今天已存入 ✦")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(wt.gold)
+                        DepositButton(wt: wt, prominent: false)
                     } else {
-                        DepositButton(wt: wt)
+                        DepositButton(wt: wt, title: "今天还空着", prominent: true)
+                        Text("\(snapshot.storedMomentCountTotal) 个瞬间在等你回看")
+                            .font(.system(size: 10, weight: .regular))
+                            .foregroundStyle(wt.ink2)
                     }
                 }
             }
