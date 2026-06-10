@@ -798,6 +798,9 @@ extension Font {
     /// Display S · 32pt
     static var tbDisplayS: Font { TimeBankTheme.current.typography.display(size: 32) }
 
+    /// 账户卡数字 · 22pt · 用 display 字体（衬线主题下为衬线数字）
+    static var tbNumM: Font { TimeBankTheme.current.typography.display(size: 22) }
+
     /// 大标题 · 26pt Medium
     static var tbHeadL: Font { TimeBankTheme.current.typography.heading(size: 26) }
     /// 中标题 · 20pt Medium

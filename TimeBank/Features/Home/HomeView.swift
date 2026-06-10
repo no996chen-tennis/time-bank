@@ -128,6 +128,7 @@ struct HomeView: View {
                         projection: projection,
                         totalAccount: totalAccount,
                         scope: timeScope,
+                        elapsedProgress: elapsedProgress(profile: profile),
                         onDepositsTap: {
                             selectedTab = .account
                         }
@@ -309,6 +310,28 @@ struct HomeView: View {
 
     private var visibleAccountDimensions: [Dimension] {
         CustomDimensionAccount.visibleAccountDimensions(from: dimensions)
+    }
+
+    /// 今生 = 已度过的人生比例；今年 = 今年已过去的比例。用于 hero 卡进度条。
+    private func elapsedProgress(profile: UserProfile) -> Double {
+        switch timeScope {
+        case .lifetime:
+            let age = DimensionCompute.ageYears(birthday: profile.birthday)
+            let expected = Double(profile.expectedLifespanYears)
+            guard expected > 0 else { return 0 }
+            return min(1, max(0, age / expected))
+
+        case .year:
+            let calendar = Calendar.current
+            let now = Date.now
+            guard
+                let yearStart = calendar.date(from: calendar.dateComponents([.year], from: now)),
+                let yearEnd = calendar.date(byAdding: .year, value: 1, to: yearStart)
+            else { return 0 }
+            let total = yearEnd.timeIntervalSince(yearStart)
+            guard total > 0 else { return 0 }
+            return min(1, max(0, now.timeIntervalSince(yearStart) / total))
+        }
     }
 
     private func displayDimensions(from visibleDimensions: [Dimension]) -> [Dimension] {
