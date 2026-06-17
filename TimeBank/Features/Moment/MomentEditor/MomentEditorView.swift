@@ -47,6 +47,7 @@ struct MomentEditorView: View {
     @State private var didPrefillEditDraft = false
     @State private var draggingMediaID: UUID?
     @State private var importedTempURLs: [URL] = []
+    @State private var showDatePicker = false
 
     init(route: MomentEditorRoute) {
         self.route = route
@@ -95,6 +96,9 @@ struct MomentEditorView: View {
             .sheet(item: $playableVideo, onDismiss: cleanupPlayableVideo) { video in
                 MomentEditorSystemVideoPlayerView(url: video.url)
                     .ignoresSafeArea()
+            }
+            .sheet(isPresented: $showDatePicker) {
+                datePickerSheet
             }
             .alert("还没存呢。先这样吗？", isPresented: $showDiscardAlert) {
                 Button("继续编辑", role: .cancel) {}
@@ -156,16 +160,29 @@ struct MomentEditorView: View {
 
                 Divider().overlay(Color.tbHair)
 
-                DatePicker(
-                    "发生在",
-                    selection: $draft.happenedAt,
-                    displayedComponents: [.date]
-                )
-                .font(.tbBody)
-                .foregroundStyle(Color.tbInk)
-                .tint(Color.tbPrimary)
-                .environment(\.locale, Locale(identifier: "zh_Hans_CN"))
-                .frame(minHeight: 36)
+                // 发生在：用主题字体显示日期（不用系统灰色胶囊），点击在 sheet 里选。
+                Button {
+                    showDatePicker = true
+                } label: {
+                    HStack(spacing: TBSpace.s3) {
+                        Text("发生在")
+                            .font(.tbBody)
+                            .foregroundStyle(Color.tbInk)
+
+                        Spacer(minLength: TBSpace.s3)
+
+                        Text(Formatter.absoluteDate(draft.happenedAt))
+                            .font(.tbBody)
+                            .foregroundStyle(Color.tbPrimary)
+
+                        Image(systemName: "chevron.right")
+                            .font(.tbLabel)
+                            .foregroundStyle(Color.tbInk3)
+                    }
+                    .frame(minHeight: 36)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
 
                 Divider().overlay(Color.tbHair)
 
@@ -176,7 +193,7 @@ struct MomentEditorView: View {
 
                     Spacer(minLength: TBSpace.s3)
 
-                    TextField("不计", text: durationBinding)
+                    TextField("", text: durationBinding)
                         .keyboardType(.decimalPad)
                         .multilineTextAlignment(.trailing)
                         .font(.tbBody)
@@ -190,6 +207,31 @@ struct MomentEditorView: View {
                 .frame(minHeight: 36)
             }
         }
+    }
+
+    private var datePickerSheet: some View {
+        NavigationStack {
+            DatePicker(
+                "发生在",
+                selection: $draft.happenedAt,
+                displayedComponents: [.date]
+            )
+            .datePickerStyle(.graphical)
+            .tint(Color.tbPrimary)
+            .environment(\.locale, Locale(identifier: "zh_Hans_CN"))
+            .padding(.horizontal, TBSpace.s4)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .background(Color.tbBg)
+            .navigationTitle("发生在")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成") { showDatePicker = false }
+                        .foregroundStyle(Color.tbPrimary)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 
     // 只保留「一句话概括」。它本身可写长：用 vertical-axis TextField，按内容增高。

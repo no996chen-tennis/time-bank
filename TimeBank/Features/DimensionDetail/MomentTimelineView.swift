@@ -521,27 +521,27 @@ private struct MomentCardView: View {
 
     @ViewBuilder
     private var photoArea: some View {
-        // 用正方形 GeometryReader 给翻页 TabView 一个确定高度。
+        // 用正方形 GeometryReader 给拼图/翻页 TabView 一个确定边长，格子尺寸全部据此显式计算。
         Color.clear
             .aspectRatio(1, contentMode: .fit)
             .overlay {
                 GeometryReader { geo in
-                    let side = geo.size.width
+                    let side = min(geo.size.width, geo.size.height)
                     Group {
                         if sortedMedia.isEmpty {
                             emptyPhotoPlaceholder
                         } else if pages.count <= 1 {
-                            PhotoQuadGrid(items: pages.first ?? [], fileStore: fileStore)
+                            PhotoCollage(items: pages.first ?? [], side: side, fileStore: fileStore)
                         } else {
                             TabView {
                                 ForEach(Array(pages.enumerated()), id: \.offset) { _, page in
-                                    PhotoQuadGrid(items: page, fileStore: fileStore)
+                                    PhotoCollage(items: page, side: side, fileStore: fileStore)
                                 }
                             }
                             .tabViewStyle(.page(indexDisplayMode: .automatic))
-                            .frame(width: side, height: side)
                         }
                     }
+                    .frame(width: side, height: side)
                 }
             }
             .overlay(alignment: .topTrailing) {
@@ -568,63 +568,76 @@ private struct MomentCardView: View {
     }
 }
 
-// 一页里最多 4 张照片，2×2 等分填满正方形；不足 4 张时空位留浅底。
-private struct PhotoQuadGrid: View {
+// 自适应照片拼图：按张数排版，格子尺寸全部从边长 side 显式算出（不靠图片比例撑），永不留空格子。
+// 1 张铺满；2 张左右等分；3 张左大右两叠；4 张 2×2。每页最多 4 张（超出由外层 TabView 翻页）。
+private struct PhotoCollage: View {
     let items: [MediaItem]
+    let side: CGFloat
     let fileStore: FileStore
 
+    private let gap: CGFloat = 1.5
+
+    private var half: CGFloat { (side - gap) / 2 }
+
     var body: some View {
-        VStack(spacing: 1.5) {
-            row(0)
-            row(2)
+        switch items.count {
+        case 0:
+            Color.tbBg2.opacity(0.5).frame(width: side, height: side)
+        case 1:
+            cell(items[0], width: side, height: side)
+        case 2:
+            HStack(spacing: gap) {
+                cell(items[0], width: half, height: side)
+                cell(items[1], width: half, height: side)
+            }
+        case 3:
+            HStack(spacing: gap) {
+                cell(items[0], width: half, height: side)
+                VStack(spacing: gap) {
+                    cell(items[1], width: half, height: half)
+                    cell(items[2], width: half, height: half)
+                }
+            }
+        default:
+            VStack(spacing: gap) {
+                HStack(spacing: gap) {
+                    cell(items[0], width: half, height: half)
+                    cell(items[1], width: half, height: half)
+                }
+                HStack(spacing: gap) {
+                    cell(items[2], width: half, height: half)
+                    cell(items[3], width: half, height: half)
+                }
+            }
         }
     }
 
-    private func row(_ start: Int) -> some View {
-        HStack(spacing: 1.5) {
-            cell(start)
-            cell(start + 1)
+    private func cell(_ media: MediaItem, width: CGFloat, height: CGFloat) -> some View {
+        AsyncThumbnailImageView(
+            source: .file(
+                relativePath: media.thumbnailPath ?? media.relativePath,
+                fileStore: fileStore
+            )
+        ) {
+            ZStack {
+                Color.tbBg2
+                Image(systemName: "photo")
+                    .font(.tbBodySm)
+                    .foregroundStyle(Color.tbInk3)
+            }
         }
-    }
-
-    @ViewBuilder
-    private func cell(_ index: Int) -> some View {
-        if index < items.count {
-            let media = items[index]
-            Color.clear
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .overlay {
-                    AsyncThumbnailImageView(
-                        source: .file(
-                            relativePath: media.thumbnailPath ?? media.relativePath,
-                            fileStore: fileStore
-                        )
-                    ) {
-                        ZStack {
-                            Color.tbBg2
-                            Image(systemName: "photo")
-                                .font(.tbBodySm)
-                                .foregroundStyle(Color.tbInk3)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .clipped()
-                }
-                .overlay(alignment: .bottomLeading) {
-                    if media.mediaKind == .video {
-                        Image(systemName: "play.fill")
-                            .font(.system(size: 9, weight: .semibold))
-                            .foregroundStyle(Color.tbSurface)
-                            .padding(3)
-                            .background(Color.tbInk.opacity(0.6))
-                            .clipShape(Circle())
-                            .padding(3)
-                    }
-                }
-                .clipped()
-        } else {
-            Color.tbBg2.opacity(0.5)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(width: width, height: height)
+        .clipped()
+        .overlay(alignment: .bottomLeading) {
+            if media.mediaKind == .video {
+                Image(systemName: "play.fill")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(Color.tbSurface)
+                    .padding(3)
+                    .background(Color.tbInk.opacity(0.6))
+                    .clipShape(Circle())
+                    .padding(3)
+            }
         }
     }
 }
