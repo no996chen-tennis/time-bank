@@ -84,9 +84,15 @@ struct MomentTimelineView: View {
                     }
                 }
 
-                VStack(spacing: TBSpace.s3) {
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible(), spacing: TBSpace.s3),
+                        GridItem(.flexible(), spacing: TBSpace.s3)
+                    ],
+                    spacing: TBSpace.s3
+                ) {
                     ForEach(Array(visibleMoments.enumerated()), id: \.element.id) { index, moment in
-                        timelineRow(moment: moment, index: index)
+                        momentCard(moment: moment, index: index)
                     }
                 }
 
@@ -202,19 +208,17 @@ struct MomentTimelineView: View {
     }
 
     @ViewBuilder
-    private func timelineRow(moment: Moment, index: Int) -> some View {
+    private func momentCard(moment: Moment, index: Int) -> some View {
         if isSelectionMode {
             Button {
                 toggleSelection(for: moment)
             } label: {
-                HStack(spacing: TBSpace.s3) {
-                    MomentSelectionIndicator(isSelected: selectedMomentIDs.contains(moment.id))
-
-                    MomentTimelineRowView(
-                        moment: moment,
-                        fileStore: fileStore
-                    )
-                }
+                MomentCardView(moment: moment, fileStore: fileStore)
+                    .overlay(alignment: .topLeading) {
+                        MomentSelectionIndicator(isSelected: selectedMomentIDs.contains(moment.id))
+                            .padding(TBSpace.s2)
+                    }
+                    .opacity(selectedMomentIDs.contains(moment.id) ? 1 : 0.7)
             }
             .buttonStyle(.plain)
             .onAppear {
@@ -224,26 +228,9 @@ struct MomentTimelineView: View {
             NavigationLink {
                 MomentDetailView(momentID: moment.id)
             } label: {
-                MomentTimelineRowView(
-                    moment: moment,
-                    fileStore: fileStore
-                )
+                MomentCardView(moment: moment, fileStore: fileStore)
             }
             .buttonStyle(.plain)
-            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                Button(role: .destructive) {
-                    deleteCandidate = moment
-                } label: {
-                    Label("删除", systemImage: "trash")
-                }
-
-                Button {
-                    momentEditorRoute = .edit(moment)
-                } label: {
-                    Label("编辑", systemImage: "pencil")
-                }
-                .tint(Color.tbInk3)
-            }
             .onLongPressGesture(minimumDuration: 0.5) {
                 enterSelectionMode(selecting: moment)
             }
@@ -476,7 +463,8 @@ private struct MomentTimelineBatchActionButtonStyle: ButtonStyle {
     }
 }
 
-private struct MomentTimelineRowView: View {
+// 卡片：顶部 2×2 照片网格（>4 张横滑翻页），底部标题 + 元信息。一眼看到那天拍了哪些。
+private struct MomentCardView: View {
     let moment: Moment
     let fileStore: FileStore
 
@@ -486,6 +474,12 @@ private struct MomentTimelineRowView: View {
                 return lhs.createdAt < rhs.createdAt
             }
             return lhs.sortIndex < rhs.sortIndex
+        }
+    }
+
+    private var pages: [[MediaItem]] {
+        stride(from: 0, to: sortedMedia.count, by: 4).map {
+            Array(sortedMedia[$0..<min($0 + 4, sortedMedia.count)])
         }
     }
 
@@ -501,100 +495,137 @@ private struct MomentTimelineRowView: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: TBSpace.s3) {
-            MomentThumbnailView(
-                mediaItems: sortedMedia,
-                fileStore: fileStore
-            )
+        VStack(alignment: .leading, spacing: 0) {
+            photoArea
 
-            VStack(alignment: .leading, spacing: TBSpace.s1) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(DimensionDetailCopy.timelineTitle(for: moment))
                     .font(.tbBodySm)
                     .foregroundStyle(Color.tbInk)
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text(metaText)
                     .font(.tbLabel)
                     .foregroundStyle(Color.tbInk2)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.82)
-
-                if let note = DimensionDetailCopy.timelineNote(for: moment) {
-                    Text(note)
-                        .font(.tbLabel)
-                        .foregroundStyle(Color.tbInk3)
-                        .lineLimit(1)
-                }
+                    .minimumScaleFactor(0.8)
             }
-
-            Spacer(minLength: 0)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(TBSpace.s3)
         }
         .contentShape(Rectangle())
-        .padding(TBSpace.s3)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .tbThemedSurface(.row)
+        .tbThemedSurface(.card)
+    }
+
+    @ViewBuilder
+    private var photoArea: some View {
+        // 用正方形 GeometryReader 给翻页 TabView 一个确定高度。
+        Color.clear
+            .aspectRatio(1, contentMode: .fit)
+            .overlay {
+                GeometryReader { geo in
+                    let side = geo.size.width
+                    Group {
+                        if sortedMedia.isEmpty {
+                            emptyPhotoPlaceholder
+                        } else if pages.count <= 1 {
+                            PhotoQuadGrid(items: pages.first ?? [], fileStore: fileStore)
+                        } else {
+                            TabView {
+                                ForEach(Array(pages.enumerated()), id: \.offset) { _, page in
+                                    PhotoQuadGrid(items: page, fileStore: fileStore)
+                                }
+                            }
+                            .tabViewStyle(.page(indexDisplayMode: .automatic))
+                            .frame(width: side, height: side)
+                        }
+                    }
+                }
+            }
+            .overlay(alignment: .topTrailing) {
+                if sortedMedia.count > 1 {
+                    Text("\(sortedMedia.count)")
+                        .font(.tbLabel)
+                        .foregroundStyle(Color.tbSurface)
+                        .padding(.horizontal, TBSpace.s2)
+                        .padding(.vertical, 2)
+                        .background(Color.tbInk.opacity(0.6))
+                        .clipShape(Capsule())
+                        .padding(TBSpace.s2)
+                }
+            }
+    }
+
+    private var emptyPhotoPlaceholder: some View {
+        ZStack {
+            DimensionPalette.color(forColorKey: "warm").opacity(0.12)
+            Image(systemName: "text.alignleft")
+                .font(.tbHeadM)
+                .foregroundStyle(Color.tbInk3)
+        }
     }
 }
 
-private struct MomentThumbnailView: View {
-    let mediaItems: [MediaItem]
+// 一页里最多 4 张照片，2×2 等分填满正方形；不足 4 张时空位留浅底。
+private struct PhotoQuadGrid: View {
+    let items: [MediaItem]
     let fileStore: FileStore
 
-    private var firstMedia: MediaItem? {
-        mediaItems.first
+    var body: some View {
+        VStack(spacing: 1.5) {
+            row(0)
+            row(2)
+        }
     }
 
-    var body: some View {
-        ZStack(alignment: .topTrailing) {
-            thumbnail
-                .frame(width: 64, height: 64)
-                .clipShape(RoundedRectangle(cornerRadius: TBRadius.sm))
-
-            if mediaItems.count > 1 {
-                Text("\(mediaItems.count)")
-                    .font(.tbLabel)
-                    .foregroundStyle(Color.tbSurface)
-                    .padding(.horizontal, TBSpace.s2)
-                    .padding(.vertical, TBSpace.s1)
-                    .background(Color.tbInk.opacity(0.62))
-                    .clipShape(Capsule())
-                    .padding(TBSpace.s1)
-            }
-        }
-        .overlay(alignment: .bottomLeading) {
-            if firstMedia?.mediaKind == .video {
-                Image(systemName: "play.fill")
-                    .font(.tbLabel)
-                    .foregroundStyle(Color.tbSurface)
-                    .padding(TBSpace.s1)
-                    .background(Color.tbInk.opacity(0.62))
-                    .clipShape(Circle())
-                    .padding(TBSpace.s1)
-            }
+    private func row(_ start: Int) -> some View {
+        HStack(spacing: 1.5) {
+            cell(start)
+            cell(start + 1)
         }
     }
 
     @ViewBuilder
-    private var thumbnail: some View {
-        AsyncThumbnailImageView(
-            source: thumbnailSource
-        ) {
-            ZStack {
-                Color.tbBg2
-
-                Image(systemName: "photo")
-                    .font(.tbHeadS)
-                    .foregroundStyle(Color.tbInk3)
-            }
+    private func cell(_ index: Int) -> some View {
+        if index < items.count {
+            let media = items[index]
+            Color.clear
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .overlay {
+                    AsyncThumbnailImageView(
+                        source: .file(
+                            relativePath: media.thumbnailPath ?? media.relativePath,
+                            fileStore: fileStore
+                        )
+                    ) {
+                        ZStack {
+                            Color.tbBg2
+                            Image(systemName: "photo")
+                                .font(.tbBodySm)
+                                .foregroundStyle(Color.tbInk3)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
+                }
+                .overlay(alignment: .bottomLeading) {
+                    if media.mediaKind == .video {
+                        Image(systemName: "play.fill")
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundStyle(Color.tbSurface)
+                            .padding(3)
+                            .background(Color.tbInk.opacity(0.6))
+                            .clipShape(Circle())
+                            .padding(3)
+                    }
+                }
+                .clipped()
+        } else {
+            Color.tbBg2.opacity(0.5)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-    }
-
-    private var thumbnailSource: ThumbnailImageSource? {
-        guard let firstMedia else { return nil }
-        return .file(
-            relativePath: firstMedia.thumbnailPath ?? firstMedia.relativePath,
-            fileStore: fileStore
-        )
     }
 }
 
