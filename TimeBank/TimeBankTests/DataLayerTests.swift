@@ -198,13 +198,17 @@ final class DataLayerTests: XCTestCase {
             title: "晨跑",
             note: "天气很好",
             happenedAt: Date(timeIntervalSince1970: 1_713_000_000),
-            durationMinutesText: "45",
+            durationHoursText: "0.75",
             mediaItems: [.image(data: makeJPEGData())]
         )
-        draft.durationMinutesText = "45分钟"
+        // 持续时间以小时为单位；非数字字符被清洗，且只保留第一个小数点，"1.5时" → "1.5"。
+        draft.durationHoursText = "1.5时"
+        XCTAssertEqual(draft.sanitizedDurationHoursText, "1.5")
+        // 第二个小数点被丢弃："1.5.5" → "1.55"
+        XCTAssertEqual(MomentEditorDraft(durationHoursText: "1.5.5").sanitizedDurationHoursText, "1.55")
 
         let request = try XCTUnwrap(draft.makeSaveRequest(id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!))
-        XCTAssertEqual(request.durationSeconds, 45 * 60)
+        XCTAssertEqual(request.durationSeconds, Int(1.5 * 3600))
 
         let savedMoment = try await store.save(moment: request)
         let fetched = try XCTUnwrap(try store.fetchAllMoments().first)
@@ -213,7 +217,7 @@ final class DataLayerTests: XCTestCase {
         XCTAssertEqual(fetched.dimensionId, DimensionReservedID.sport.rawValue)
         XCTAssertEqual(fetched.title, "晨跑")
         XCTAssertEqual(fetched.note, "天气很好")
-        XCTAssertEqual(fetched.durationSeconds, 45 * 60)
+        XCTAssertEqual(fetched.durationSeconds, Int(1.5 * 3600))
         XCTAssertEqual(fetched.mediaItems.count, 1)
     }
 

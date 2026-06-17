@@ -3,24 +3,17 @@ import SwiftUI
 import UIKit
 import WidgetKit
 
-// MARK: - 一键存入（iOS 17 交互式 widget · 不打开 App）
+// MARK: - 存入此刻（打开 App 进入存入编辑器）
 //
-// 把"此刻"写进 App Group 队列 + 乐观翻转快照"今日已存入" + reload，让 widget 即时变 ✦。
-// 真正的 Moment 由 App 回到前台时 drain 队列建立（见 MomentStore.drainQuickDepositQueue）。
+// 按下后打开 App，置位"待打开存入页"标志；RootView 回到前台消费一次，弹出新存入编辑器
+// （用户在编辑器里自己选账户、写内容、加图）。不在 widget 里静默落库——存入是用户主动完成的动作。
 struct QuickDepositIntent: AppIntent {
     static var title: LocalizedStringResource = "存入此刻"
-    static var description = IntentDescription("把此刻存下来，不用打开 App。")
-    static var openAppWhenRun: Bool = false
+    static var description = IntentDescription("打开时间银行，存下此刻。")
+    static var openAppWhenRun: Bool = true
 
     func perform() async throws -> some IntentResult {
-        let request = QuickDepositRequest(id: UUID(), happenedAt: Date(), title: "此刻")
-        QuickDepositQueueStore.append(request)
-
-        if var snapshot = TimeBankWidgetSnapshotStore.load() {
-            snapshot.todayDeposited = true
-            try? TimeBankWidgetSnapshotStore.write(snapshot)
-        }
-        WidgetCenter.shared.reloadAllTimelines()
+        QuickDepositOpenFlag.set()
         return .result()
     }
 }
@@ -138,25 +131,81 @@ private struct WT {
     )
 }
 
-// MARK: - 文案池（与时间账户无关的通用句，来自 文案系统.md 今日觉知池 · 观察式）
+// MARK: - 时间金句库（名著 / 哲人 / 诗词，55 条 · 反焦虑 tone）
+//
+// 每次点亮屏幕轮换一条，配出处。来源经筛选，剔除催促/励志/guilt 类（"岁月不待人""一寸光阴"等）。
+struct WTQuote {
+    let text: String
+    let source: String
+}
+
+private enum TimeQuotes {
+    static let all: [WTQuote] = [
+        // 当下 · 此刻即永恒
+        WTQuote(text: "我们都是时间的旅人，途经此刻，便不算白来。", source: "佚名"),
+        WTQuote(text: "当下即是永恒，此刻便是全部。", source: "佚名"),
+        WTQuote(text: "被感受过的时间，永远属于你。", source: "佚名"),
+        WTQuote(text: "对未来真正的慷慨，是把一切献给现在。", source: "加缪"),
+        WTQuote(text: "每个人只能活在当下，所能失去的，也只有当下。", source: "奥勒留《沉思录》"),
+        WTQuote(text: "人所拥有的，只是此刻正在度过的生活。", source: "奥勒留《沉思录》"),
+        WTQuote(text: "当下，是我们唯一可以生活的地方。", source: "奥勒留《沉思录》"),
+        WTQuote(text: "趁你还活着，还有能力，要好好地活着。", source: "奥勒留《沉思录》"),
+        WTQuote(text: "过去的已过去，未来还未来，让此刻变得美好就好。", source: "佚名"),
+        WTQuote(text: "好好照顾自己，温柔地过好当下的每一天。", source: "佚名"),
+        // 时间流逝 · 温柔的觉察
+        WTQuote(text: "时间无需通知我们，就可以改变一切。", source: "余华"),
+        WTQuote(text: "死亡不是失去生命，而是走出了时间。", source: "余华"),
+        WTQuote(text: "人生天地之间，若白驹过隙，忽然而已。", source: "庄子"),
+        WTQuote(text: "向之所欣，俯仰之间，已为陈迹。", source: "王羲之《兰亭集序》"),
+        WTQuote(text: "逝者如斯夫，不舍昼夜。", source: "《论语》"),
+        WTQuote(text: "时间是一条由过去、现在与永恒织成的经线。", source: "博尔赫斯"),
+        WTQuote(text: "在时间之中，我们终将窥见真正的自己。", source: "博尔赫斯"),
+        WTQuote(text: "时间是变化的财富，时钟只模仿了变化。", source: "泰戈尔《飞鸟集》"),
+        WTQuote(text: "我们从未真正拥有一整个星期，因为下一周未必会来。", source: "《四千周》"),
+        WTQuote(text: "接纳时间的有限，反而活得更从容。", source: "《四千周》"),
+        // 慢 · 从前的日色
+        WTQuote(text: "从前的日色变得慢，车，马，邮件都慢。", source: "木心《从前慢》"),
+        WTQuote(text: "从前的慢，是一种朴素的精致，一种生命的哲学。", source: "佚名"),
+        WTQuote(text: "唯有我们觉醒之际，天才会破晓。", source: "梭罗《瓦尔登湖》"),
+        WTQuote(text: "黎明，是一天里最值得纪念的时辰。", source: "梭罗《瓦尔登湖》"),
+        WTQuote(text: "驻足于过去与未来的交汇处，我便从此刻开始生活。", source: "梭罗《瓦尔登湖》"),
+        WTQuote(text: "我步入丛林，只为汲取生命里所有的精华。", source: "梭罗《瓦尔登湖》"),
+        WTQuote(text: "太阳，不过是一颗清晨的星。", source: "梭罗《瓦尔登湖》"),
+        WTQuote(text: "也无风雨也无晴。", source: "苏轼《定风波》"),
+        WTQuote(text: "人间烟火气，最抚凡人心。", source: "佚名"),
+        WTQuote(text: "且将新火试新茶，诗酒趁年华。", source: "苏轼《望江南》"),
+        // 记忆 · 眷恋
+        WTQuote(text: "生命只是一连串孤立的片刻，靠回忆，许多意义才浮现。", source: "普鲁斯特"),
+        WTQuote(text: "那些逝去的时光，其实仍在那儿，随时准备再生。", source: "普鲁斯特"),
+        WTQuote(text: "回忆动人之处，在于可以重新选择。", source: "余华"),
+        WTQuote(text: "我什么也没忘，只是有些事，只适合收藏。", source: "史铁生"),
+        WTQuote(text: "记得生命里那些明亮温暖的日子，带着期许度过余生。", source: "杨绛"),
+        WTQuote(text: "停留在记忆里不易磨灭的，是那一道含着光和热的金边。", source: "杨绛"),
+        WTQuote(text: "有些事不能说，也不能想，却又不能忘。", source: "史铁生"),
+        WTQuote(text: "唯有被你认真感受过的瞬间，才真正发生过。", source: "佚名"),
+        WTQuote(text: "时光会把我们带远，但带不走被记住的温度。", source: "佚名"),
+        WTQuote(text: "把日子过成可以回头看的样子。", source: "佚名"),
+        // 陪伴 · 相聚
+        WTQuote(text: "一生只够爱一个人。", source: "木心《从前慢》"),
+        WTQuote(text: "我们都以为来日方长，其实人生是减法，见一面少一面。", source: "网络"),
+        WTQuote(text: "真正的拥有，是此刻紧握的温度。", source: "佚名"),
+        WTQuote(text: "相聚不言过往，离别不问归期。", source: "佚名"),
+        WTQuote(text: "把每一次离别，都看作重逢时加倍的欢喜。", source: "佚名"),
+        WTQuote(text: "落地为兄弟，何必骨肉亲。", source: "陶渊明"),
+        WTQuote(text: "得欢当作乐，斗酒聚比邻。", source: "陶渊明"),
+        WTQuote(text: "海内存知己，天涯若比邻。", source: "王勃"),
+        WTQuote(text: "我珍惜人生中每一次相识，天地间每一份温暖。", source: "佚名"),
+        WTQuote(text: "此刻与你同在，便是时间最温柔的馈赠。", source: "佚名"),
+        // 向死而生 · 温柔版
+        WTQuote(text: "向死而生，方知生之可贵。", source: "海德格尔"),
+        WTQuote(text: "知道生命有期限，才更想认真过好这一天。", source: "佚名"),
+        WTQuote(text: "安时而处顺，哀乐不能入也。", source: "庄子"),
+        WTQuote(text: "归根结底，太阳还是温暖着我们的身骨。", source: "加缪"),
+        WTQuote(text: "生命就是不断超越自身局限，从中感受幸福。", source: "史铁生")
+    ]
+}
+
 private enum WidgetCopy {
-    /// 余额一句话面（不绑定用户数据）。
-    static let balanceLines = [
-        "被感受过的时间，永远属于你。",
-        "今天的光，刚好落在今天。",
-        "被你留下来的一小段，不会再走了。",
-        "不必记得所有，留下一两件就好。",
-        "一些时间适合什么都不做。"
-    ]
-
-    /// 冷启动（0 条记忆）邀请面。
-    static let invitationLines = [
-        "过去 24 小时有什么值得存下来的？",
-        "最近的哪一天，你想再经历一次？",
-        "今天也算。",
-        "现在这一刻，以后会是「过去」。"
-    ]
-
     /// 今日存入状态（外显，蔚来"未签到"模式）。"还空着"= 账本这一页在等你，
     /// 比"未存入"多一层想把它填上的张力，且是观察式不是审判式。
     static func statusLabel(deposited: Bool) -> String {
@@ -177,12 +226,11 @@ private enum WidgetCopy {
     }
 }
 
-// MARK: - 轮换面（状态已常驻外显，轮换面只负责"内容"：记忆 / 明信片 / 觉知句）
+// MARK: - 轮换面（状态已常驻外显，轮换面只负责"内容"：记忆 / 明信片 / 金句）
 private enum WidgetFace: Equatable {
-    case memory(Int)       // index into snapshot.memories
-    case postcard(Int)     // index into developed memories
-    case balanceLine(Int)  // index into WidgetCopy.balanceLines
-    case invitation(Int)   // 冷启动 index into WidgetCopy.invitationLines
+    case memory(Int)   // index into snapshot.memories
+    case postcard(Int) // index into developed memories
+    case quote(Int)    // index into TimeQuotes.all
 }
 
 /// 渲染一个面所需的最小内容。
@@ -190,7 +238,8 @@ private struct FaceContent {
     var kicker: String
     var line: String
     var accentColorKey: String?
-    var isMemory: Bool
+    /// 主行用深墨（记忆 / 金句），否则次级灰。
+    var prominent: Bool
     var thumbFile: String? = nil
 }
 
@@ -198,41 +247,35 @@ private func faceContent(face: WidgetFace, snapshot: TimeBankWidgetSnapshot) -> 
     switch face {
     case .memory(let i):
         guard snapshot.memories.indices.contains(i) else {
-            return faceContent(face: .balanceLine(0), snapshot: snapshot)
+            return faceContent(face: .quote(i), snapshot: snapshot)
         }
         let m = snapshot.memories[i]
         return FaceContent(
             kicker: m.isAnniversary ? "那年今日" : daysAgoLabel(m.daysAgo),
             line: m.title,
             accentColorKey: m.colorKey,
-            isMemory: true,
+            prominent: true,
             thumbFile: m.thumbFile
         )
     case .postcard(let i):
         guard snapshot.memories.indices.contains(i) else {
-            return faceContent(face: .balanceLine(0), snapshot: snapshot)
+            return faceContent(face: .quote(i), snapshot: snapshot)
         }
         let m = snapshot.memories[i]
         return FaceContent(
             kicker: "刚冲洗好",
             line: m.title,
             accentColorKey: m.colorKey,
-            isMemory: true,
+            prominent: true,
             thumbFile: m.thumbFile
         )
-    case .balanceLine(let i):
+    case .quote(let i):
+        let quote = TimeQuotes.all[((i % TimeQuotes.all.count) + TimeQuotes.all.count) % TimeQuotes.all.count]
         return FaceContent(
-            kicker: "",
-            line: WidgetCopy.balanceLines[i % WidgetCopy.balanceLines.count],
+            kicker: "—— \(quote.source)",
+            line: quote.text,
             accentColorKey: nil,
-            isMemory: false
-        )
-    case .invitation(let i):
-        return FaceContent(
-            kicker: "",
-            line: WidgetCopy.invitationLines[i % WidgetCopy.invitationLines.count],
-            accentColorKey: nil,
-            isMemory: false
+            prominent: true
         )
     }
 }
@@ -244,11 +287,12 @@ private func daysAgoLabel(_ days: Int) -> String {
     return "\(days) 天前"
 }
 
-/// 确定性挑面：冷启动用邀请池；否则记忆 / 明信片 / 觉知句轮换（每 30 分钟换一面）。
-private func pickFace(index i: Int, snapshot: TimeBankWidgetSnapshot) -> WidgetFace {
+/// 确定性挑面：无记忆时纯金句轮换；有记忆时记忆 / 明信片 / 金句交替（每 30 分钟换一面）。
+/// daySeed 让不同日子从不同金句起步，避免每天看到同一序列。
+private func pickFace(index i: Int, daySeed: Int, snapshot: TimeBankWidgetSnapshot) -> WidgetFace {
     let cold = snapshot.storedMomentCountTotal == 0 || snapshot.memories.isEmpty
     if cold {
-        return .invitation(i)
+        return .quote(i + daySeed)
     }
 
     let developed = snapshot.memories.enumerated().filter { $0.element.developed }.map { $0.offset }
@@ -258,10 +302,10 @@ private func pickFace(index i: Int, snapshot: TimeBankWidgetSnapshot) -> WidgetF
     case 0:
         return .memory(i % memCount)
     case 1:
-        if developed.isEmpty { return .balanceLine(i) }
+        if developed.isEmpty { return .quote(i + daySeed) }
         return .postcard(developed[(i / 3) % developed.count])
     default:
-        return .balanceLine(i)
+        return .quote(i + daySeed)
     }
 }
 
@@ -271,7 +315,7 @@ struct TimeBankWidgetEntry: TimelineEntry {
     let snapshot: TimeBankWidgetSnapshot
     fileprivate let face: WidgetFace
 
-    fileprivate init(date: Date, snapshot: TimeBankWidgetSnapshot, face: WidgetFace = .balanceLine(0)) {
+    fileprivate init(date: Date, snapshot: TimeBankWidgetSnapshot, face: WidgetFace = .quote(0)) {
         self.date = date
         self.snapshot = snapshot
         self.face = face
@@ -285,19 +329,21 @@ struct TimeBankWidgetProvider: TimelineProvider {
 
     func getSnapshot(in context: Context, completion: @escaping (TimeBankWidgetEntry) -> Void) {
         let snapshot = loadSnapshot()
-        completion(TimeBankWidgetEntry(date: .now, snapshot: snapshot, face: pickFace(index: 0, snapshot: snapshot)))
+        let daySeed = Calendar.current.ordinality(of: .day, in: .era, for: Date()) ?? 0
+        completion(TimeBankWidgetEntry(date: .now, snapshot: snapshot, face: pickFace(index: 0, daySeed: daySeed, snapshot: snapshot)))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<TimeBankWidgetEntry>) -> Void) {
         let snapshot = loadSnapshot()
         let now = Date()
         let calendar = Calendar.current
+        let daySeed = calendar.ordinality(of: .day, in: .era, for: now) ?? 0
 
         // 预排 48 条 entry（每 30 分钟一条，覆盖未来 ~24h）。系统按时间自动切换，零刷新预算成本。
         var entries: [TimeBankWidgetEntry] = []
         for i in 0..<48 {
             let date = calendar.date(byAdding: .minute, value: i * 30, to: now) ?? now
-            let face = pickFace(index: i, snapshot: snapshot)
+            let face = pickFace(index: i, daySeed: daySeed, snapshot: snapshot)
             entries.append(TimeBankWidgetEntry(date: date, snapshot: snapshot, face: face))
         }
 
@@ -552,38 +598,59 @@ private struct HomeScreenMediumWidgetView: View {
     }
 }
 
-// MARK: - 轮换面行（单行：缩略图/色点 + kicker + 内容）
+// MARK: - 轮换面行（记忆：缩略图/色点 + 标题单行；金句：两行引文 + 出处）
 private struct FaceLine: View {
     let content: FaceContent
     let wt: WT
 
+    /// 金句面没有缩略图也没有账户色点。
+    private var isQuote: Bool {
+        content.thumbFile == nil && content.accentColorKey == nil
+    }
+
     var body: some View {
-        HStack(spacing: 6) {
-            if let image = thumbImage {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 20, height: 20)
-                    .clipShape(RoundedRectangle(cornerRadius: max(4, wt.radius * 0.4), style: .continuous))
-            } else if let key = content.accentColorKey {
-                Circle().fill(wt.color(key)).frame(width: 6, height: 6)
-            }
-
-            if content.kicker.isEmpty == false {
+        if isQuote {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(content.line)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(wt.ink)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+                    .fixedSize(horizontal: false, vertical: true)
                 Text(content.kicker)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(content.accentColorKey.map(wt.color) ?? wt.ink2)
+                    .font(.system(size: 10, weight: .regular))
+                    .foregroundStyle(wt.ink2)
                     .lineLimit(1)
-                    .fixedSize()
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            HStack(spacing: 6) {
+                if let image = thumbImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 20, height: 20)
+                        .clipShape(RoundedRectangle(cornerRadius: max(4, wt.radius * 0.4), style: .continuous))
+                } else if let key = content.accentColorKey {
+                    Circle().fill(wt.color(key)).frame(width: 6, height: 6)
+                }
 
-            Text(content.line)
-                .font(.system(size: 12, weight: content.isMemory ? .semibold : .regular))
-                .foregroundStyle(content.isMemory ? wt.ink : wt.ink2)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
+                if content.kicker.isEmpty == false {
+                    Text(content.kicker)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(content.accentColorKey.map(wt.color) ?? wt.ink2)
+                        .lineLimit(1)
+                        .fixedSize()
+                }
 
-            Spacer(minLength: 0)
+                Text(content.line)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(wt.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+
+                Spacer(minLength: 0)
+            }
         }
     }
 
@@ -654,7 +721,7 @@ private func hoursShort(_ hours: Double) -> String {
     TimeBankWidget()
 } timeline: {
     TimeBankWidgetEntry(date: .now, snapshot: .sample, face: .memory(0))
-    TimeBankWidgetEntry(date: .now, snapshot: .sample, face: .balanceLine(0))
+    TimeBankWidgetEntry(date: .now, snapshot: .sample, face: .quote(0))
 }
 
 #Preview(as: .accessoryRectangular) {

@@ -41,7 +41,7 @@ struct MomentEditorDraft {
     var title: String
     var note: String
     var happenedAt: Date
-    var durationMinutesText: String
+    var durationHoursText: String
     var mediaItems: [MomentEditorMediaItem]
     var baseline: MomentEditorDraftSnapshot?
 
@@ -50,7 +50,7 @@ struct MomentEditorDraft {
         title: String = "",
         note: String = "",
         happenedAt: Date = .now,
-        durationMinutesText: String = "",
+        durationHoursText: String = "",
         mediaItems: [MomentEditorMediaItem] = [],
         baseline: MomentEditorDraftSnapshot? = nil
     ) {
@@ -58,7 +58,7 @@ struct MomentEditorDraft {
         self.title = title
         self.note = note
         self.happenedAt = happenedAt
-        self.durationMinutesText = durationMinutesText
+        self.durationHoursText = durationHoursText
         self.mediaItems = mediaItems
         self.baseline = baseline
     }
@@ -80,7 +80,7 @@ struct MomentEditorDraft {
 
         return trimmed(title).isEmpty == false
             || trimmed(note).isEmpty == false
-            || sanitizedDurationMinutesText.isEmpty == false
+            || sanitizedDurationHoursText.isEmpty == false
             || mediaItems.isEmpty == false
     }
 
@@ -95,15 +95,26 @@ struct MomentEditorDraft {
         hasContent ? nil : "请先添加照片、标题或笔记"
     }
 
-    var sanitizedDurationMinutesText: String {
-        durationMinutesText.filter(\.isNumber)
+    /// 只保留数字和一个小数点（"2"、"0.5"、"1.5"）。
+    var sanitizedDurationHoursText: String {
+        var seenDot = false
+        var result = ""
+        for char in durationHoursText {
+            if char.isNumber {
+                result.append(char)
+            } else if char == "." && seenDot == false {
+                seenDot = true
+                result.append(char)
+            }
+        }
+        return result
     }
 
     var durationSeconds: Int? {
-        guard let minutes = Int(sanitizedDurationMinutesText), minutes > 0 else {
+        guard let hours = Double(sanitizedDurationHoursText), hours > 0 else {
             return nil
         }
-        return minutes * 60
+        return Int((hours * 3600.0).rounded())
     }
 
     func makeSaveRequest(id: UUID = UUID()) -> MomentStore.SaveRequest? {
@@ -142,7 +153,7 @@ struct MomentEditorDraft {
             title: trimmed(title),
             note: trimmed(note),
             happenedAt: happenedAt,
-            durationMinutesText: sanitizedDurationMinutesText,
+            durationHoursText: sanitizedDurationHoursText,
             media: mediaItems.map(\.snapshot)
         )
     }
@@ -156,13 +167,13 @@ struct MomentEditorDraft {
             return lhs.sortIndex < rhs.sortIndex
         }
         let title = moment.title ?? ""
-        let durationText = moment.durationSeconds.map { "\($0 / 60)" } ?? ""
+        let durationText = Self.hoursText(fromSeconds: moment.durationSeconds)
         var draft = MomentEditorDraft(
             selectedDimensionID: moment.dimensionId,
             title: title,
             note: moment.note,
             happenedAt: moment.happenedAt,
-            durationMinutesText: durationText,
+            durationHoursText: durationText,
             mediaItems: sortedMedia.map(MomentEditorMediaItem.existing(media:))
         )
         draft.baseline = draft.snapshot
@@ -172,6 +183,20 @@ struct MomentEditorDraft {
     private func trimmed(_ value: String) -> String {
         value.trimmingCharacters(in: .whitespacesAndNewlines)
     }
+
+    /// 秒 → 小时输入框文案。整数小时显示"2"，半小时显示"0.5"，最多一位小数。
+    static func hoursText(fromSeconds seconds: Int?) -> String {
+        guard let seconds, seconds > 0 else { return "" }
+        let hours = Double(seconds) / 3600.0
+        if hours == hours.rounded() {
+            return String(Int(hours))
+        }
+        let oneDecimal = (hours * 10).rounded() / 10
+        if oneDecimal == oneDecimal.rounded() {
+            return String(Int(oneDecimal))
+        }
+        return String(oneDecimal)
+    }
 }
 
 struct MomentEditorDraftSnapshot: Equatable {
@@ -179,7 +204,7 @@ struct MomentEditorDraftSnapshot: Equatable {
     var title: String
     var note: String
     var happenedAt: Date
-    var durationMinutesText: String
+    var durationHoursText: String
     var media: [MomentEditorMediaSnapshot]
 }
 

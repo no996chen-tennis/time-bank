@@ -133,6 +133,34 @@ struct TimeBankWidgetLastMoment: Codable, Equatable, Sendable {
     var happenedAt: Date
 }
 
+/// widget「存入此刻」按钮按下时置位；App 回到前台消费一次，弹出新存入编辑器。
+/// 用 App Group 里的一个标志文件跨进程传递（与 snapshot.json 同机制，比 UserDefaults(suiteName:) 更可靠、可测）。
+enum QuickDepositOpenFlag {
+    static let fileName = "pending-open-deposit.flag"
+
+    private static func flagURL(fileManager: FileManager = .default) -> URL? {
+        fileManager
+            .containerURL(forSecurityApplicationGroupIdentifier: TimeBankWidgetSnapshotStore.appGroupID)?
+            .appendingPathComponent(fileName)
+    }
+
+    static func set(fileManager: FileManager = .default) {
+        guard let url = flagURL(fileManager: fileManager) else { return }
+        try? Data([1]).write(to: url, options: .atomic)
+    }
+
+    /// 存在标志文件即视为有一次待处理请求；读到后删除（消费一次）。
+    static func consume(fileManager: FileManager = .default) -> Bool {
+        guard let url = flagURL(fileManager: fileManager),
+              fileManager.fileExists(atPath: url.path)
+        else {
+            return false
+        }
+        try? fileManager.removeItem(at: url)
+        return true
+    }
+}
+
 enum TimeBankWidgetSnapshotStore {
     static let appGroupID = "group.com.adamchen.timebank"
     static let fileName = "snapshot.widget.json"

@@ -37,8 +37,7 @@ struct MomentEditorView: View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: TBSpace.s5) {
-                    dimensionSection
-                    timeSection
+                    detailsSection
                     textSection
                     mediaSection
                 }
@@ -111,28 +110,31 @@ struct MomentEditorView: View {
         }
     }
 
-    private var dimensionSection: some View {
+    // 合并「存入 / 发生在 / 持续」为一张紧凑卡，每行 label 左、值右，消除右侧空白。
+    private var detailsSection: some View {
         editorCard {
-            VStack(alignment: .leading, spacing: TBSpace.s3) {
-                Text("存入")
-                    .font(.tbLabel)
-                    .foregroundStyle(Color.tbInk3)
+            VStack(spacing: 0) {
+                HStack(spacing: TBSpace.s3) {
+                    Text("存入")
+                        .font(.tbBody)
+                        .foregroundStyle(Color.tbInk)
 
-                Picker("存入", selection: selectedDimensionBinding) {
-                    ForEach(availableDimensions, id: \.id) { dimension in
-                        Text(dimension.name)
-                            .tag(dimension.id)
+                    Spacer(minLength: TBSpace.s3)
+
+                    Picker("存入", selection: selectedDimensionBinding) {
+                        ForEach(availableDimensions, id: \.id) { dimension in
+                            Text(dimension.name)
+                                .tag(dimension.id)
+                        }
                     }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                    .tint(Color.tbPrimary)
                 }
-                .pickerStyle(.menu)
-                .tint(Color.tbPrimary)
-            }
-        }
-    }
+                .frame(minHeight: 36)
 
-    private var timeSection: some View {
-        editorCard {
-            VStack(alignment: .leading, spacing: TBSpace.s4) {
+                Divider().overlay(Color.tbHair)
+
                 DatePicker(
                     "发生在",
                     selection: $draft.happenedAt,
@@ -142,9 +144,9 @@ struct MomentEditorView: View {
                 .foregroundStyle(Color.tbInk)
                 .tint(Color.tbPrimary)
                 .environment(\.locale, Locale(identifier: "zh_Hans_CN"))
+                .frame(minHeight: 36)
 
-                Divider()
-                    .overlay(Color.tbHair)
+                Divider().overlay(Color.tbHair)
 
                 HStack(spacing: TBSpace.s3) {
                     Text("持续")
@@ -153,56 +155,34 @@ struct MomentEditorView: View {
 
                     Spacer(minLength: TBSpace.s3)
 
-                    TextField("不计（也是一种）", text: durationBinding)
-                        .keyboardType(.numberPad)
+                    TextField("不计", text: durationBinding)
+                        .keyboardType(.decimalPad)
                         .multilineTextAlignment(.trailing)
                         .font(.tbBody)
                         .foregroundStyle(Color.tbInk)
+                        .frame(maxWidth: 90)
 
-                    if draft.sanitizedDurationMinutesText.isEmpty == false {
-                        Text("分钟")
-                            .font(.tbBodySm)
-                            .foregroundStyle(Color.tbInk3)
-                    }
+                    Text("小时")
+                        .font(.tbBodySm)
+                        .foregroundStyle(Color.tbInk3)
                 }
+                .frame(minHeight: 36)
             }
         }
     }
 
+    // 只保留「一句话概括」。它本身可写长：用 vertical-axis TextField，按内容增高。
     private var textSection: some View {
         editorCard {
-            VStack(alignment: .leading, spacing: TBSpace.s4) {
-                labeledTextField(
-                    title: "回忆",
-                    placeholder: "一句话概括",
-                    text: $draft.title
-                )
+            VStack(alignment: .leading, spacing: TBSpace.s2) {
+                Text("回忆")
+                    .font(.tbLabel)
+                    .foregroundStyle(Color.tbInk3)
 
-                Divider()
-                    .overlay(Color.tbHair)
-
-                VStack(alignment: .leading, spacing: TBSpace.s2) {
-                    Text("想说点什么")
-                        .font(.tbLabel)
-                        .foregroundStyle(Color.tbInk3)
-
-                    ZStack(alignment: .topLeading) {
-                        if draft.note.isEmpty {
-                            Text("过了几年，你会想看到什么？")
-                                .font(.tbBody)
-                                .foregroundStyle(Color.tbInk3)
-                                .padding(.top, TBSpace.s2)
-                                .padding(.horizontal, TBSpace.s1)
-                        }
-
-                        TextEditor(text: $draft.note)
-                            .font(.tbBody)
-                            .foregroundStyle(Color.tbInk)
-                            .scrollContentBackground(.hidden)
-                            .frame(minHeight: 120)
-                            .padding(.horizontal, -TBSpace.s1)
-                    }
-                }
+                TextField("一句话概括，也可以多写几句", text: $draft.title, axis: .vertical)
+                    .font(.tbBody)
+                    .foregroundStyle(Color.tbInk)
+                    .lineLimit(1...8)
             }
         }
     }
@@ -275,15 +255,15 @@ struct MomentEditorView: View {
         .accessibilityLabel(remainingMediaSlots <= 0 ? "最多 9 张了" : "选照片或视频")
     }
 
+    // 固定 3 列等宽方形格子，避免 .adaptive + 内层图片真实比例导致的大小不一。
     private var mediaGrid: some View {
         LazyVGrid(
-            columns: [GridItem(.adaptive(minimum: 82), spacing: TBSpace.s3)],
+            columns: Array(repeating: GridItem(.flexible(), spacing: TBSpace.s3), count: 3),
             alignment: .leading,
             spacing: TBSpace.s3
         ) {
             ForEach(draft.mediaItems) { item in
                 mediaTile(item)
-                    .frame(maxWidth: .infinity)
                     .onDrag {
                         draggingMediaID = item.id
                         return NSItemProvider(object: item.id.uuidString as NSString)
@@ -349,10 +329,13 @@ struct MomentEditorView: View {
     @ViewBuilder
     private func mediaTile(_ item: MomentEditorMediaItem) -> some View {
         ZStack(alignment: .topTrailing) {
-            mediaPreview(item)
+            // Color.clear 撑出正方形，图片以 overlay 填充并裁切——格子尺寸恒定，与图片真实比例无关。
+            Color.clear
                 .aspectRatio(1, contentMode: .fit)
+                .overlay {
+                    mediaPreview(item)
+                }
                 .clipShape(RoundedRectangle(cornerRadius: TBRadius.md, style: .continuous))
-                .frame(maxWidth: .infinity)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     playVideoIfPossible(item)
@@ -415,7 +398,7 @@ struct MomentEditorView: View {
                             .foregroundStyle(Color.tbInk3)
                     }
             }
-                .aspectRatio(1, contentMode: .fill)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipped()
         } else if let previewData = item.previewThumbnailData {
             AsyncThumbnailImageView(
@@ -431,7 +414,7 @@ struct MomentEditorView: View {
                             .tint(Color.tbPrimary)
                     }
             }
-                .aspectRatio(1, contentMode: .fill)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipped()
         } else if item.kind == .image,
                   let data = item.data {
@@ -449,7 +432,7 @@ struct MomentEditorView: View {
                             .foregroundStyle(Color.tbInk3)
                     }
             }
-                .aspectRatio(1, contentMode: .fill)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipped()
         } else {
             Rectangle()
@@ -458,22 +441,6 @@ struct MomentEditorView: View {
                     ProgressView()
                         .tint(Color.tbPrimary)
                 }
-        }
-    }
-
-    private func labeledTextField(
-        title: String,
-        placeholder: String,
-        text: Binding<String>
-    ) -> some View {
-        VStack(alignment: .leading, spacing: TBSpace.s2) {
-            Text(title)
-                .font(.tbLabel)
-                .foregroundStyle(Color.tbInk3)
-
-            TextField(placeholder, text: text)
-                .font(.tbBody)
-                .foregroundStyle(Color.tbInk)
         }
     }
 
@@ -514,8 +481,18 @@ struct MomentEditorView: View {
 
     private var durationBinding: Binding<String> {
         Binding(
-            get: { draft.durationMinutesText },
-            set: { draft.durationMinutesText = $0.filter(\.isNumber) }
+            get: { draft.durationHoursText },
+            set: { newValue in
+                var seenDot = false
+                draft.durationHoursText = newValue.reduce(into: "") { result, char in
+                    if char.isNumber {
+                        result.append(char)
+                    } else if char == "." && seenDot == false {
+                        seenDot = true
+                        result.append(char)
+                    }
+                }
+            }
         )
     }
 

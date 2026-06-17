@@ -69,12 +69,20 @@ struct MomentTimelineView: View {
                     selectionHeader
                 }
 
-                Text(DimensionDetailCopy.depositedSectionHeader(
-                    momentCount: storedMomentCount,
-                    storedHours: storedHours
-                ))
-                .font(.tbHeadS)
-                .foregroundStyle(Color.tbInk)
+                HStack(alignment: .firstTextBaseline, spacing: TBSpace.s3) {
+                    Text(DimensionDetailCopy.depositedSectionHeader(
+                        momentCount: storedMomentCount,
+                        storedHours: storedHours
+                    ))
+                    .font(.tbHeadS)
+                    .foregroundStyle(Color.tbInk)
+
+                    Spacer(minLength: TBSpace.s2)
+
+                    if isSelectionMode == false {
+                        depositButton(title: "存入", compact: true)
+                    }
+                }
 
                 VStack(spacing: TBSpace.s3) {
                     ForEach(Array(visibleMoments.enumerated()), id: \.element.id) { index, moment in
@@ -98,9 +106,6 @@ struct MomentTimelineView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.top, TBSpace.s2)
                 }
-
-                depositButton(title: "继续存入")
-                    .padding(.top, TBSpace.s2)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -275,12 +280,19 @@ struct MomentTimelineView: View {
         .tbThemedSurface()
     }
 
-    private func depositButton(title: String) -> some View {
-        Button(title) {
+    private func depositButton(title: String, compact: Bool = false) -> some View {
+        Button {
             guard canDeposit else { return }
             momentEditorRoute = .dimension(dimension)
+        } label: {
+            if compact {
+                Label(title, systemImage: "plus")
+                    .labelStyle(.titleAndIcon)
+            } else {
+                Text(title)
+            }
         }
-        .buttonStyle(DimensionDetailDepositButtonStyle())
+        .buttonStyle(DimensionDetailDepositButtonStyle(compact: compact))
         .disabled(canDeposit == false)
         .opacity(canDeposit ? 1 : 0.45)
         .accessibilityLabel(canDeposit
@@ -587,12 +599,14 @@ private struct MomentThumbnailView: View {
 }
 
 private struct DimensionDetailDepositButtonStyle: ButtonStyle {
+    var compact = false
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.tbBody)
+            .font(compact ? .tbBodySm : .tbBody)
             .foregroundStyle(Color.tbSurface)
-            .frame(minHeight: 44)
-            .padding(.horizontal, TBSpace.s5)
+            .frame(minHeight: compact ? 34 : 44)
+            .padding(.horizontal, compact ? TBSpace.s4 : TBSpace.s5)
             .background(Color.tbPrimary.opacity(configuration.isPressed ? 0.72 : 1))
             .clipShape(RoundedRectangle(cornerRadius: actionRadius, style: .continuous))
     }

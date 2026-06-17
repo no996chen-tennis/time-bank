@@ -9,6 +9,7 @@ struct RootView: View {
     @AppStorage(TimeBankIconSetKind.storageKey) private var selectedIconSetRawValue = TimeBankIconSetKind.nativeFilled.rawValue
     @Environment(\.scenePhase) private var scenePhase
     @State private var launchState: LaunchState = .bootstrapping
+    @State private var showQuickDeposit = false
 
     var body: some View {
         ZStack {
@@ -27,23 +28,23 @@ struct RootView: View {
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active, case .readyForHome = launchState else { return }
-            drainQuickDepositsOnForeground()
+            consumeQuickDepositOpenFlag()
             refreshPostcardNotifications()
         }
         .onChange(of: selectedThemeRawValue) { _, _ in
             // widget 进程读不到 UserDefaults 的主题，切主题后重写快照让 widget 跟随换肤。
             try? WidgetSnapshotWriter.writeSnapshot(modelContext: modelContext)
         }
+        .sheet(isPresented: $showQuickDeposit) {
+            MomentEditorView(route: .newMoment)
+        }
     }
 
-    /// 从 widget 一键存入返回前台时，把队列里的"此刻"落库并刷新 widget。
+    /// 从 widget「存入此刻」打开时，弹出新存入编辑器（用户自己选账户、写内容）。
     @MainActor
-    private func drainQuickDepositsOnForeground() {
-        let store = MomentStore(modelContext: modelContext)
-        let count = (try? store.drainQuickDepositQueue()) ?? 0
-        if count > 0 {
-            try? WidgetSnapshotWriter.writeSnapshot(modelContext: modelContext)
-        }
+    private func consumeQuickDepositOpenFlag() {
+        guard QuickDepositOpenFlag.consume() else { return }
+        showQuickDeposit = true
     }
 
     /// 扫描"冲洗好"的瞬间，按红线排明信片本地通知。
@@ -99,6 +100,11 @@ struct RootView: View {
                 refreshPostcardNotifications()
             }
             launchState = profile == nil ? .needsOnboarding : .readyForHome
+            // 冷启动时 scenePhase 的 .active 早于 readyForHome，那次 onChange 会被 guard 挡掉；
+            // 这里在 bootstrap 落定后补消费一次 widget 的"打开存入页"标志。
+            if case .readyForHome = launchState {
+                consumeQuickDepositOpenFlag()
+            }
         } catch {
             launchState = .failed(error.localizedDescription)
         }
