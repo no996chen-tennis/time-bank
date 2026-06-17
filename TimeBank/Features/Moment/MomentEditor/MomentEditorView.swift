@@ -1,10 +1,29 @@
 // TimeBank/Features/Moment/MomentEditor/MomentEditorView.swift
 
 import AVKit
+import CoreTransferable
 import PhotosUI
 import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
+
+/// 把相册视频导入成临时文件 URL（系统给的临时文件即将被回收，先拷到我们自己的临时目录）。
+/// 关键：避免 loadTransferable(type: Data.self) 把整段视频读进内存——这是存视频卡顿的根因。
+private struct PickedVideoFile: Transferable {
+    let url: URL
+
+    static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(contentType: .movie) { video in
+            SentTransferredFile(video.url)
+        } importing: { received in
+            let ext = received.file.pathExtension.isEmpty ? "mov" : received.file.pathExtension
+            let destination = FileManager.default.temporaryDirectory
+                .appendingPathComponent("TimeBankImport-\(UUID().uuidString).\(ext)")
+            try FileManager.default.copyItem(at: received.file, to: destination)
+            return PickedVideoFile(url: destination)
+        }
+    }
+}
 
 struct MomentEditorView: View {
     @Environment(\.dismiss) private var dismiss
@@ -27,6 +46,7 @@ struct MomentEditorView: View {
     @State private var slowSaveTask: Task<Void, Never>?
     @State private var didPrefillEditDraft = false
     @State private var draggingMediaID: UUID?
+    @State private var importedTempURLs: [URL] = []
 
     init(route: MomentEditorRoute) {
         self.route = route
@@ -105,6 +125,7 @@ struct MomentEditorView: View {
             }
             .onDisappear {
                 slowSaveTask?.cancel()
+                cleanupImportedTempFiles()
             }
             .timeBankKeyboardDismissBehavior()
         }
@@ -583,17 +604,23 @@ struct MomentEditorView: View {
             for item in items {
                 let kind = mediaKind(for: item)
                 do {
-                    guard let data = try await item.loadTransferable(type: Data.self) else {
-                        loadedItems.append(.failed(kind: kind))
-                        continue
-                    }
-
-                    let fileExtension = preferredFileExtension(for: item, kind: kind)
                     switch kind {
                     case .image:
+                        guard let data = try await item.loadTransferable(type: Data.self) else {
+                            loadedItems.append(.failed(kind: .image))
+                            continue
+                        }
+                        let fileExtension = preferredFileExtension(for: item, kind: .image)
                         loadedItems.append(.image(data: data, fileExtension: fileExtension))
+
                     case .video:
-                        loadedItems.append(.video(data: data, fileExtension: fileExtension))
+                        // 视频以文件 URL 导入，不整段读进内存（存视频卡顿的根因修复）。
+                        guard let picked = try await item.loadTransferable(type: PickedVideoFile.self) else {
+                            loadedItems.append(.failed(kind: .video))
+                            continue
+                        }
+                        importedTempURLs.append(picked.url)
+                        loadedItems.append(.video(fileURL: picked.url))
                     }
                 } catch {
                     loadedItems.append(.failed(kind: kind))
@@ -613,14 +640,23 @@ struct MomentEditorView: View {
 
     private func generatePreviewThumbnails(for items: [MomentEditorMediaItem]) {
         for item in items where item.isFailed == false && item.thumbnailPath == nil {
-            guard let data = item.data else { continue }
-
             Task { @MainActor in
-                let previewData = await fileStore.makeInMemoryThumbnailData(
-                    from: data,
-                    kind: item.kind,
-                    fileExtension: item.preferredFileExtension
-                )
+                let previewData: Data?
+                if let fileURL = item.fileURL {
+                    // 视频/文件 URL：封面直接从文件首帧生成（秒显）。
+                    previewData = await fileStore.makeInMemoryThumbnailData(
+                        fromMediaURL: fileURL,
+                        kind: item.kind
+                    )
+                } else if let data = item.data {
+                    previewData = await fileStore.makeInMemoryThumbnailData(
+                        from: data,
+                        kind: item.kind,
+                        fileExtension: item.preferredFileExtension
+                    )
+                } else {
+                    previewData = nil
+                }
 
                 guard let previewData,
                       let index = draft.mediaItems.firstIndex(where: { $0.id == item.id }) else {
@@ -664,6 +700,12 @@ struct MomentEditorView: View {
             return
         }
 
+        // 以文件 URL 导入的视频：直接播放该临时文件，无需写临时副本。
+        if let fileURL = item.fileURL {
+            playableVideo = MomentEditorPlayableVideo(url: fileURL)
+            return
+        }
+
         guard let data = item.data else { return }
         Task { @MainActor in
             guard let playable = await makeTemporaryPlayableVideo(
@@ -700,6 +742,13 @@ struct MomentEditorView: View {
                 return nil
             }
         }.value
+    }
+
+    private func cleanupImportedTempFiles() {
+        for url in importedTempURLs {
+            try? FileManager.default.removeItem(at: url)
+        }
+        importedTempURLs = []
     }
 
     private func cleanupPlayableVideo() {

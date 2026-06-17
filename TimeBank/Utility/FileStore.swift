@@ -395,6 +395,29 @@ final class FileStore {
         }.value
     }
 
+    /// 从已落地的媒体文件 URL 生成内存缩略图（视频取首帧）。用于"封面秒显"——
+    /// 视频以文件 URL 导入（不整段读进内存），缩略图直接从该文件生成。
+    nonisolated func makeInMemoryThumbnailData(
+        fromMediaURL url: URL,
+        kind: MediaKind,
+        maxPixelSize: Int = 400
+    ) async -> Data? {
+        await Task.detached(priority: .utility) { [self, url, kind, maxPixelSize] in
+            let tempRoot = FileManager.default.temporaryDirectory
+                .appendingPathComponent("TimeBankPreview-\(UUID().uuidString)", isDirectory: true)
+            let thumbnailURL = tempRoot.appendingPathComponent("thumb.jpg")
+            do {
+                try FileManager.default.createDirectory(at: tempRoot, withIntermediateDirectories: true)
+                defer { try? FileManager.default.removeItem(at: tempRoot) }
+                try generateThumbnail(from: url, type: kind, output: thumbnailURL, maxPixelSize: maxPixelSize)
+                return try Data(contentsOf: thumbnailURL)
+            } catch {
+                try? FileManager.default.removeItem(at: tempRoot)
+                return nil
+            }
+        }.value
+    }
+
     nonisolated func orphanMomentDirectories(referencedMomentIDs: Set<UUID>) throws -> [URL] {
         try ensureBaseDirectories()
 

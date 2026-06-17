@@ -220,6 +220,8 @@ struct MomentEditorMediaItem: Identifiable, Equatable {
     var existingMediaID: UUID?
     var kind: MediaKind
     var data: Data?
+    /// 已落地到临时目录的源文件（视频走此路径，避免整段读进内存）。
+    var fileURL: URL?
     var preferredFileExtension: String
     var originalFilename: String?
     var isFailed: Bool
@@ -232,6 +234,7 @@ struct MomentEditorMediaItem: Identifiable, Equatable {
         existingMediaID: UUID? = nil,
         kind: MediaKind,
         data: Data?,
+        fileURL: URL? = nil,
         preferredFileExtension: String,
         originalFilename: String? = nil,
         isFailed: Bool = false,
@@ -243,6 +246,7 @@ struct MomentEditorMediaItem: Identifiable, Equatable {
         self.existingMediaID = existingMediaID
         self.kind = kind
         self.data = data
+        self.fileURL = fileURL
         self.preferredFileExtension = preferredFileExtension
         self.originalFilename = originalFilename
         self.isFailed = isFailed
@@ -252,12 +256,23 @@ struct MomentEditorMediaItem: Identifiable, Equatable {
     }
 
     var isSaveable: Bool {
-        isFailed == false && (existingMediaID != nil || data != nil)
+        isFailed == false && (existingMediaID != nil || data != nil || fileURL != nil)
     }
 
     var pendingMedia: FileStore.PendingMedia? {
-        guard let data, isFailed == false else { return nil }
+        guard isFailed == false else { return nil }
 
+        // 优先用文件 URL（视频直存，不经内存）。
+        if let fileURL {
+            switch kind {
+            case .image:
+                return .image(fileURL: fileURL)
+            case .video:
+                return .video(fileURL: fileURL)
+            }
+        }
+
+        guard let data else { return nil }
         switch kind {
         case .image:
             return .image(
@@ -330,6 +345,20 @@ struct MomentEditorMediaItem: Identifiable, Equatable {
             data: data,
             preferredFileExtension: fileExtension,
             originalFilename: originalFilename
+        )
+    }
+
+    /// 视频以临时文件 URL 导入（不整段读进内存）；缩略图随后从该文件生成。
+    static func video(
+        fileURL: URL,
+        originalFilename: String? = nil
+    ) -> MomentEditorMediaItem {
+        MomentEditorMediaItem(
+            kind: .video,
+            data: nil,
+            fileURL: fileURL,
+            preferredFileExtension: fileURL.pathExtension.isEmpty ? "mov" : fileURL.pathExtension,
+            originalFilename: originalFilename ?? fileURL.lastPathComponent
         )
     }
 
