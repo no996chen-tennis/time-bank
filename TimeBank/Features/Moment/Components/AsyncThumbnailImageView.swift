@@ -2,6 +2,7 @@
 
 import Foundation
 import AVFoundation
+import ImageIO
 import SwiftUI
 import UIKit
 
@@ -55,6 +56,8 @@ final class ThumbnailImageCache {
 
 enum ThumbnailImageSource {
     case file(relativePath: String, fileStore: FileStore)
+    /// 从原图按需降采样到 maxPixelSize（卡片用，比 200px 小缩略图清晰，又比原图省内存）。
+    case fileDownsampled(relativePath: String, fileStore: FileStore, maxPixelSize: Int)
     case videoFile(relativePath: String, fileStore: FileStore, maxPixelSize: Int)
     case data(key: String, data: Data)
 
@@ -62,6 +65,8 @@ enum ThumbnailImageSource {
         switch self {
         case .file(let relativePath, let fileStore):
             return "file:\(fileStore.baseURL.path):\(relativePath)"
+        case .fileDownsampled(let relativePath, let fileStore, let maxPixelSize):
+            return "file-ds:\(fileStore.baseURL.path):\(relativePath):\(maxPixelSize)"
         case .videoFile(let relativePath, let fileStore, let maxPixelSize):
             return "video-file:\(fileStore.baseURL.path):\(relativePath):\(maxPixelSize)"
         case .data(let key, _):
@@ -82,6 +87,27 @@ enum ThumbnailImageSource {
                 return nil
             }
             return UIImage(data: data)
+
+        case .fileDownsampled(let relativePath, let fileStore, let maxPixelSize):
+            let url = fileStore.url(forRelativePath: relativePath)
+            return await Task.detached(priority: .utility) {
+                guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else {
+                    return nil
+                }
+                let options: [CFString: Any] = [
+                    kCGImageSourceCreateThumbnailFromImageAlways: true,
+                    kCGImageSourceCreateThumbnailWithTransform: true,
+                    kCGImageSourceThumbnailMaxPixelSize: max(1, maxPixelSize)
+                ]
+                guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+                    // 原图降采样失败时回退到读全图，至少不空白。
+                    if let data = try? Data(contentsOf: url) {
+                        return UIImage(data: data)
+                    }
+                    return nil
+                }
+                return UIImage(cgImage: cgImage)
+            }.value
 
         case .videoFile(let relativePath, let fileStore, let maxPixelSize):
             let url = fileStore.url(forRelativePath: relativePath)

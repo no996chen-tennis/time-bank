@@ -571,6 +571,7 @@ private struct MomentCardView: View {
 // 自适应照片拼图：按张数排版，格子尺寸全部从边长 side 显式算出（不靠图片比例撑），永不留空格子。
 // 1 张铺满；2 张左右等分；3 张左大右两叠；4 张 2×2。每页最多 4 张（超出由外层 TabView 翻页）。
 private struct PhotoCollage: View {
+    @Environment(\.displayScale) private var displayScale
     let items: [MediaItem]
     let side: CGFloat
     let fileStore: FileStore
@@ -613,12 +614,9 @@ private struct PhotoCollage: View {
     }
 
     private func cell(_ media: MediaItem, width: CGFloat, height: CGFloat) -> some View {
-        AsyncThumbnailImageView(
-            source: .file(
-                relativePath: media.thumbnailPath ?? media.relativePath,
-                fileStore: fileStore
-            )
-        ) {
+        // 按格子实际像素从原图降采样，避免用 200px 小缩略图放大导致的模糊。
+        let targetPixels = max(200, Int((max(width, height) * displayScale).rounded()))
+        return AsyncThumbnailImageView(source: cellSource(for: media, maxPixelSize: targetPixels)) {
             ZStack {
                 Color.tbBg2
                 Image(systemName: "photo")
@@ -639,6 +637,14 @@ private struct PhotoCollage: View {
                     .padding(3)
             }
         }
+    }
+
+    private func cellSource(for media: MediaItem, maxPixelSize: Int) -> ThumbnailImageSource {
+        if media.mediaKind == .video {
+            // 视频从原始文件按需取一帧到 maxPixelSize，比 200px 缩略图清晰。
+            return .videoFile(relativePath: media.relativePath, fileStore: fileStore, maxPixelSize: maxPixelSize)
+        }
+        return .fileDownsampled(relativePath: media.relativePath, fileStore: fileStore, maxPixelSize: maxPixelSize)
     }
 }
 
