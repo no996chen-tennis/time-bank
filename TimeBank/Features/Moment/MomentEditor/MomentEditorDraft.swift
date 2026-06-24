@@ -262,13 +262,13 @@ struct MomentEditorMediaItem: Identifiable, Equatable {
     var pendingMedia: FileStore.PendingMedia? {
         guard isFailed == false else { return nil }
 
-        // 优先用文件 URL（视频直存，不经内存）。
+        // 优先用文件 URL（视频直存，不经内存）。导入的临时文件落库时移动而非拷贝（保存瞬间完成）。
         if let fileURL {
             switch kind {
             case .image:
                 return .image(fileURL: fileURL)
             case .video:
-                return .video(fileURL: fileURL)
+                return .video(movableFileURL: fileURL)
             }
         }
 

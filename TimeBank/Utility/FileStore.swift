@@ -55,19 +55,23 @@ final class FileStore {
         let preferredFileExtension: String?
         let originalFilename: String?
         let durationSeconds: Int?
+        /// 源文件是我们自己导入的临时文件，落库时可直接移动（瞬间）而非整段拷贝——视频用，避免保存卡顿。
+        let movableSource: Bool
 
         init(
             source: MediaSource,
             type: MediaKind,
             preferredFileExtension: String? = nil,
             originalFilename: String? = nil,
-            durationSeconds: Int? = nil
+            durationSeconds: Int? = nil,
+            movableSource: Bool = false
         ) {
             self.source = source
             self.type = type
             self.preferredFileExtension = preferredFileExtension
             self.originalFilename = originalFilename
             self.durationSeconds = durationSeconds
+            self.movableSource = movableSource
         }
 
         static func image(
@@ -116,6 +120,18 @@ final class FileStore {
                 preferredFileExtension: fileURL.pathExtension,
                 originalFilename: fileURL.lastPathComponent,
                 durationSeconds: durationSeconds
+            )
+        }
+
+        /// 视频：源是我们自己的导入临时文件，落库时移动而非拷贝（保存瞬间完成）。
+        static func video(movableFileURL: URL, durationSeconds: Int? = nil) -> PendingMedia {
+            PendingMedia(
+                source: .fileURL(movableFileURL),
+                type: .video,
+                preferredFileExtension: movableFileURL.pathExtension,
+                originalFilename: movableFileURL.lastPathComponent,
+                durationSeconds: durationSeconds,
+                movableSource: true
             )
         }
     }
@@ -451,6 +467,15 @@ final class FileStore {
         case .fileURL(let sourceURL):
             if FileManager.default.fileExists(atPath: targetURL.path) {
                 try FileManager.default.removeItem(at: targetURL)
+            }
+            // 自有临时文件直接移动（同卷=改名，瞬间完成），省掉整段视频的二次拷贝。
+            if media.movableSource {
+                do {
+                    try FileManager.default.moveItem(at: sourceURL, to: targetURL)
+                    return
+                } catch {
+                    // 跨卷等移动失败 → 退回拷贝，保证不丢。
+                }
             }
             try FileManager.default.copyItem(at: sourceURL, to: targetURL)
         }

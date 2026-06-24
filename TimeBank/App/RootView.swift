@@ -10,6 +10,7 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var launchState: LaunchState = .bootstrapping
     @State private var showQuickDeposit = false
+    @State private var isPollingDepositFlag = false
 
     var body: some View {
         ZStack {
@@ -41,10 +42,22 @@ struct RootView: View {
     }
 
     /// 从 widget「存入此刻」打开时，弹出新存入编辑器（用户自己选账户、写内容）。
+    /// widget 的 AppIntent.perform() 可能在 App 激活之后才写入标志，所以激活后轮询 ~2 秒兜住时序竞态。
     @MainActor
     private func consumeQuickDepositOpenFlag() {
-        guard QuickDepositOpenFlag.consume() else { return }
-        showQuickDeposit = true
+        guard isPollingDepositFlag == false else { return }
+        isPollingDepositFlag = true
+        Task { @MainActor in
+            defer { isPollingDepositFlag = false }
+            for _ in 0..<12 {
+                if showQuickDeposit { return }
+                if QuickDepositOpenFlag.consume() {
+                    showQuickDeposit = true
+                    return
+                }
+                try? await Task.sleep(nanoseconds: 180_000_000)
+            }
+        }
     }
 
     /// 扫描"冲洗好"的瞬间，按红线排明信片本地通知。
