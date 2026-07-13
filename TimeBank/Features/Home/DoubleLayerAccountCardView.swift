@@ -36,36 +36,19 @@ struct DoubleLayerAccountCardView: View {
                 }
                 .foregroundStyle(heroInkSoft)
 
-                HStack(alignment: .firstTextBaseline, spacing: TBSpace.s2) {
-                    Text(weeksNumberText)
-                        .font(.tbDisplayM)
-                        .foregroundStyle(heroInk)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                        .contentTransition(.numericText())
+                // 两个对等大数字：左 = 今年/今生余额 N 周；右 = 今天还剩 约 X 小时（秒级跳动）
+                HStack(alignment: .top, spacing: TBSpace.s4) {
+                    balanceMetric
 
-                    Text("周")
-                        .font(.tbHeadM)
-                        .foregroundStyle(heroInkSoft)
+                    Rectangle()
+                        .fill(heroInk.opacity(0.16))
+                        .frame(width: 1)
+                        .frame(maxHeight: .infinity)
+                        .padding(.vertical, 2)
+
+                    todayRemainingMetric
                 }
-
-                VStack(alignment: .leading, spacing: TBSpace.s2) {
-                    progressStrip
-
-                    HStack {
-                        Text(yearsText)
-                            .font(.tbBodySm)
-                            .foregroundStyle(heroInkSoft)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-
-                        Spacer()
-
-                        Text(elapsedCaption)
-                            .font(.tbLabel)
-                            .foregroundStyle(heroInkSoft.opacity(0.85))
-                    }
-                }
+                .fixedSize(horizontal: false, vertical: true)
             }
             .padding(TBSpace.s5)
 
@@ -114,22 +97,72 @@ struct DoubleLayerAccountCardView: View {
         )
     }
 
-    /// 人生进度条：已度过（亮色） vs 余下（暗色轨道）
-    private var progressStrip: some View {
-        GeometryReader { proxy in
-            let clamped = min(1, max(0, elapsedProgress))
+    // MARK: - 两个对等大数字
 
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(heroInk.opacity(0.18))
+    /// 左：今年/今生 时间余额（周）
+    private var balanceMetric: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(scope == .year ? "今年还剩" : "今生还剩")
+                .font(.tbLabel)
+                .tracking(1)
+                .foregroundStyle(heroInkSoft)
 
-                Capsule()
-                    .fill(heroAccent)
-                    .frame(width: max(6, proxy.size.width * clamped))
+            HStack(alignment: .firstTextBaseline, spacing: TBSpace.s1) {
+                Text(weeksNumberText)
+                    .font(.tbDisplayM)
+                    .foregroundStyle(heroInk)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+                    .contentTransition(.numericText())
+
+                Text("周")
+                    .font(.tbHeadM)
+                    .foregroundStyle(heroInkSoft)
             }
         }
-        .frame(height: 5)
-        .accessibilityHidden(true)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// 右：今天还剩（秒级跳动，经 DimensionCompute.disposableRemainingText 现算）
+    private var todayRemainingMetric: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("今天还剩")
+                .font(.tbLabel)
+                .tracking(1)
+                .foregroundStyle(heroInkSoft)
+
+            TimelineView(.periodic(from: .now, by: 1)) { ctx in
+                let parts = todayRemainingParts(now: ctx.date)
+                HStack(alignment: .firstTextBaseline, spacing: TBSpace.s1) {
+                    Text(parts.number)
+                        .font(.tbDisplayM)
+                        .foregroundStyle(heroInk)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.72)
+                        .contentTransition(.numericText())
+
+                    Text(parts.unit)
+                        .font(.tbHeadM)
+                        .foregroundStyle(heroInkSoft)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// 把 "约 X 小时"拆成【大数字】+【小单位】，大数字与左侧周数同级。
+    /// 唯一真相源 = DimensionCompute.disposableRemainingText(now:)，不另写公式。
+    private func todayRemainingParts(now: Date) -> (number: String, unit: String) {
+        let text = DimensionCompute.disposableRemainingText(now: now)
+        // 形如 "约 6.5 小时"：中间的数字段作大字，其余（约 / 小时）作小字单位。
+        let tokens = text.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
+        if let numberIndex = tokens.firstIndex(where: { $0.first?.isNumber == true }) {
+            let number = tokens[numberIndex]
+            let unit = tokens[(numberIndex + 1)...].joined()
+            return (number, unit.isEmpty ? "小时" : unit)
+        }
+        // 兜底：保持整串可见
+        return (text, "")
     }
 
     // MARK: - Hero 配色（深色面板上的墨色系统）
@@ -142,33 +175,12 @@ struct DoubleLayerAccountCardView: View {
         TimeBankTheme.current.palette.surface.opacity(0.72)
     }
 
-    private var heroAccent: Color {
-        TimeBankTheme.current.palette.background
-    }
-
     // MARK: - 文案
 
     private var weeksNumberText: String {
         let weeks = Int(projection.remainingWeeks.rounded(.down))
         let formatted = weeks.formatted(.number.grouping(.automatic))
         return scope == .lifetime ? "约 \(formatted)" : formatted
-    }
-
-    private var yearsText: String {
-        if scope == .year {
-            let days = Int((projection.remainingYears * DimensionCompute.daysPerYear).rounded(.down))
-            return "\(days) 天 · \(Formatter.hoursCompact(projection.remainingHoursK * 1_000))"
-        }
-
-        return Formatter.lifespanSubtitle(
-            years: projection.remainingYears,
-            hoursK: projection.remainingHoursK
-        )
-    }
-
-    private var elapsedCaption: String {
-        let percent = Int((min(1, max(0, elapsedProgress)) * 100).rounded())
-        return scope == .year ? "今年已过 \(percent)%" : "已走过 \(percent)%"
     }
 
     private var storedText: String {

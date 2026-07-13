@@ -6,6 +6,12 @@ import Dispatch
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
+import os
+
+/// 存储链路诊断日志（用 Console.app / `log stream` 按 subsystem 过滤 com.adamchen.TimeBank 抓取）。
+enum FileStoreLog {
+    static let logger = Logger(subsystem: "com.adamchen.TimeBank", category: "MediaStore")
+}
 
 final class FileStore {
     enum FileStoreError: Error, LocalizedError {
@@ -434,19 +440,33 @@ final class FileStore {
         }.value
     }
 
-    nonisolated func orphanMomentDirectories(referencedMomentIDs: Set<UUID>) throws -> [URL] {
+    nonisolated func orphanMomentDirectories(
+        referencedMomentIDs: Set<UUID>,
+        now: Date = Date(),
+        graceInterval: TimeInterval = 24 * 60 * 60
+    ) throws -> [URL] {
         try ensureBaseDirectories()
 
         let root = momentsRootURL()
         let urls = try FileManager.default.contentsOfDirectory(
             at: root,
-            includingPropertiesForKeys: [.isDirectoryKey],
+            includingPropertiesForKeys: [.isDirectoryKey, .contentModificationDateKey, .creationDateKey],
             options: [.skipsHiddenFiles]
         )
 
         return urls.compactMap { url in
-            guard let uuid = UUID(uuidString: url.lastPathComponent) else { return url }
-            return referencedMomentIDs.contains(uuid) ? nil : url
+            // 非 UUID 命名的条目不动（更安全：绝不误删非瞬间目录）。
+            guard let uuid = UUID(uuidString: url.lastPathComponent) else { return nil }
+            // 有记录引用 → 保留。
+            if referencedMomentIDs.contains(uuid) { return nil }
+            // 宽限期：最近改动过的目录【绝不】当孤儿删——保护"刚存 / 存到一半、记录尚未提交"的媒体，
+            // 杜绝启动时孤儿清理误删导致封面空白 + 视频永久丢失。超过宽限期且无记录引用的才算真孤儿。
+            let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .creationDateKey])
+            if let modified = values?.contentModificationDate ?? values?.creationDate,
+               now.timeIntervalSince(modified) < graceInterval {
+                return nil
+            }
+            return url
         }
     }
 
@@ -454,6 +474,7 @@ final class FileStore {
     nonisolated func removeOrphanMomentDirectories(referencedMomentIDs: Set<UUID>) throws -> [URL] {
         let orphans = try orphanMomentDirectories(referencedMomentIDs: referencedMomentIDs)
         for orphan in orphans {
+            FileStoreLog.logger.warning("orphan-cleanup 删除无记录目录: \(orphan.lastPathComponent, privacy: .public)")
             try FileManager.default.removeItem(at: orphan)
         }
         return orphans
@@ -469,6 +490,7 @@ final class FileStore {
                 try FileManager.default.removeItem(at: targetURL)
             }
             // 自有临时文件直接移动（同卷=改名，瞬间完成），省掉整段视频的二次拷贝。
+            // moveItem 是原子操作：要么完全到位、要么没动，进程被挂起/杀死也不会在 targetURL 留半截文件。
             if media.movableSource {
                 do {
                     try FileManager.default.moveItem(at: sourceURL, to: targetURL)
@@ -477,7 +499,40 @@ final class FileStore {
                     // 跨卷等移动失败 → 退回拷贝，保证不丢。
                 }
             }
-            try FileManager.default.copyItem(at: sourceURL, to: targetURL)
+            // 拷贝（跨卷 / 相册资产等非自有临时文件）不是原子的：大视频拷到一半时进程被挂起/杀死，
+            // 会在最终路径留下截断文件 → 封面空白 + 视频损坏。
+            // 因此先拷到同目录的 .part 临时名，成功后再 moveItem 原子改名到 targetURL；
+            // 中途被打断只会留下一个孤儿 .part（不会被任何记录引用，随目录清理），绝不污染最终路径。
+            try copyAtomically(from: sourceURL, to: targetURL)
+        }
+    }
+
+    /// 非原子 copyItem 的安全封装：拷贝到同目录 .part 临时文件 → 成功后原子 moveItem 到最终路径。
+    /// 杜绝"大文件拷到一半被后台挂起/杀死，在最终路径留下截断文件"导致的封面空白 + 视频丢失。
+    private nonisolated func copyAtomically(from sourceURL: URL, to targetURL: URL) throws {
+        let partURL = targetURL
+            .deletingLastPathComponent()
+            .appendingPathComponent("\(targetURL.lastPathComponent).\(UUID().uuidString).part", isDirectory: false)
+
+        // 清理可能残留的上一次 .part（理论上 UUID 唯一，防御性处理）。
+        if FileManager.default.fileExists(atPath: partURL.path) {
+            try? FileManager.default.removeItem(at: partURL)
+        }
+
+        do {
+            try FileManager.default.copyItem(at: sourceURL, to: partURL)
+        } catch {
+            // 拷贝失败：清掉半截 .part，抛错让上层 rollback。
+            try? FileManager.default.removeItem(at: partURL)
+            throw error
+        }
+
+        do {
+            // 同目录改名：同卷原子操作，瞬间完成，不会留半截文件。
+            try FileManager.default.moveItem(at: partURL, to: targetURL)
+        } catch {
+            try? FileManager.default.removeItem(at: partURL)
+            throw error
         }
     }
 

@@ -7,6 +7,7 @@ struct RootView: View {
     @Environment(\.modelContext) private var modelContext
     @AppStorage(TimeBankThemeKind.storageKey) private var selectedThemeRawValue = TimeBankThemeKind.magazineApartamento.rawValue
     @AppStorage(TimeBankIconSetKind.storageKey) private var selectedIconSetRawValue = TimeBankIconSetKind.nativeFilled.rawValue
+    @AppStorage(HomeLayoutKind.storageKey) private var homeLayoutRaw = HomeLayoutKind.classic.rawValue
     @Environment(\.scenePhase) private var scenePhase
     @State private var launchState: LaunchState = .bootstrapping
     @State private var showQuickDeposit = false
@@ -86,7 +87,12 @@ struct RootView: View {
             })
 
         case .readyForHome:
-            HomeView()
+            switch HomeLayoutKind(rawValue: homeLayoutRaw) ?? .classic {   // 残留/未知 rawValue 回落 .classic，安全
+            case .classic:        HomeView()
+            case .bigPhoto:       BigPhotoHomeView()
+            case .bigPhotoMulti:  BigPhotoMultiHomeView()
+            case .bigPhotoText:   BigPhotoTextHomeView()
+            }
 
         case .failed(let message):
             Text(message)

@@ -25,8 +25,11 @@ struct HomeView: View {
     @State private var dimensionDeleteRequest: HomeDimensionDeleteRequest?
     @State private var homeToastMessage: String?
     @State private var homeToastDismissTask: Task<Void, Never>?
-    @State private var timeScope: DimensionCompute.TimeBalanceScope = .lifetime
+    @State private var timeScope: DimensionCompute.TimeBalanceScope = .year
     @State private var pendingMilestone: Int?
+    @State private var fileStore = FileStore()
+    @State private var momentRoute: Moment?
+    @State private var dimensionRoute: HomeDimensionRoute?
 
     var body: some View {
         NavigationStack {
@@ -48,6 +51,12 @@ struct HomeView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.tbBg)
+            .navigationDestination(item: $momentRoute) { moment in
+                MomentDetailView(momentID: moment.id)
+            }
+            .navigationDestination(item: $dimensionRoute) { route in
+                DimensionDetailView(dimensionID: route.id, initialTimeScope: route.scope)
+            }
             .sheet(item: $momentEditorRoute) { route in
                 MomentEditorView(route: route)
             }
@@ -118,16 +127,7 @@ struct HomeView: View {
     }
 
     private func homeContent(profile: UserProfile) -> some View {
-        let visibleDimensions = visibleAccountDimensions
-        let displayDimensions = displayDimensions(from: visibleDimensions)
-        let isEditing = homeEditMode.isEditing
-        let dimensionsByID = Dictionary(uniqueKeysWithValues: dimensions.map { ($0.id, $0) })
         let normalMoments = moments.filter { $0.status == .normal }
-        let projection = DimensionCompute.projection(profile: profile, scope: timeScope)
-        let totalAccount = DimensionCompute.totalAccount(
-            dimensions: visibleDimensions,
-            moments: normalMoments
-        )
 
         return VStack(spacing: 0) {
             GreetingHeaderView()
@@ -135,64 +135,22 @@ struct HomeView: View {
                 .padding(.top, TBSpace.s4)
                 .padding(.bottom, TBSpace.s2)
 
+            // 「今天还剩」已并进 hero 大卡（DoubleLayerAccountCardView），此处不再单独展示，避免重复。
+
+            // 顶部选项卡，与 TabView 共用 $timeScope 双向同步
             TimeBalanceScopeControl(scope: $timeScope)
                 .padding(.horizontal, TBSpace.s5)
                 .padding(.bottom, TBSpace.s2)
 
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: TBSpace.s3) {
-                    DoubleLayerAccountCardView(
-                        projection: projection,
-                        totalAccount: totalAccount,
-                        scope: timeScope,
-                        elapsedProgress: elapsedProgress(profile: profile),
-                        onDepositsTap: {
-                            selectedTab = .account
-                        }
-                    )
-                    .opacity(isEditing ? 0.4 : 1)
-                    .allowsHitTesting(isEditing == false)
+            TabView(selection: $timeScope) {
+                scopedScrollPage(profile: profile, scope: .year)
+                    .tag(DimensionCompute.TimeBalanceScope.year)
 
-                    todayMemorySection(
-                        moments: normalMoments,
-                        dimensionsByID: dimensionsByID,
-                        isEditing: isEditing
-                    )
-
-                    dimensionSectionHeader(count: visibleDimensions.count)
-                        .padding(.top, TBSpace.s1)
-
-                    VStack(spacing: TBSpace.s2) {
-                        ForEach(Array(displayDimensions.enumerated()), id: \.element.id) { index, dimension in
-                            dimensionCard(
-                                index: index,
-                                dimension: dimension,
-                                profile: profile,
-                                dimensionsByID: dimensionsByID,
-                                moments: normalMoments,
-                                timeScope: timeScope
-                            )
-                        }
-
-                        if isEditing == false {
-                            Color.clear
-                                .frame(height: TBSpace.s3)
-                        } else {
-                            Color.clear
-                                .frame(height: TBSpace.s6)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    finishDimensionEditing()
-                                }
-                        }
-                    }
-                }
-                .padding(.horizontal, TBSpace.s5)
-                .padding(.bottom, TBSpace.s5)
+                scopedScrollPage(profile: profile, scope: .lifetime)
+                    .tag(DimensionCompute.TimeBalanceScope.lifetime)
             }
-            .onChange(of: visibleDimensions.map(\.id)) { _, newIDs in
-                reconcileOrderedDimensionIDs(visibleIDs: newIDs)
-            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(maxHeight: .infinity)
 
             tabBar
         }
@@ -201,6 +159,79 @@ struct HomeView: View {
             if pendingMilestone == nil {
                 pendingMilestone = MilestoneTracker.pending(totalMoments: normalMoments.count)
             }
+        }
+    }
+
+    /// 随 scope 变化的首页主体（每页内部是 ScrollView，高度由外层 TabView 的 .frame(maxHeight:.infinity) 确定）。
+    @ViewBuilder
+    private func scopedScrollPage(
+        profile: UserProfile,
+        scope: DimensionCompute.TimeBalanceScope
+    ) -> some View {
+        let visibleDimensions = visibleAccountDimensions
+        let displayDimensions = displayDimensions(from: visibleDimensions)
+        let isEditing = homeEditMode.isEditing
+        let dimensionsByID = Dictionary(uniqueKeysWithValues: dimensions.map { ($0.id, $0) })
+        let normalMoments = moments.filter { $0.status == .normal }
+        let projection = DimensionCompute.projection(profile: profile, scope: scope)
+        let totalAccount = DimensionCompute.totalAccount(
+            dimensions: visibleDimensions,
+            moments: normalMoments
+        )
+
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: TBSpace.s3) {
+                DoubleLayerAccountCardView(
+                    projection: projection,
+                    totalAccount: totalAccount,
+                    scope: scope,
+                    elapsedProgress: elapsedProgress(profile: profile, scope: scope),
+                    onDepositsTap: {
+                        selectedTab = .account
+                    }
+                )
+                .opacity(isEditing ? 0.4 : 1)
+                .allowsHitTesting(isEditing == false)
+
+                todayMemorySection(
+                    moments: normalMoments,
+                    dimensionsByID: dimensionsByID,
+                    isEditing: isEditing
+                )
+
+                dimensionSectionHeader(count: visibleDimensions.count)
+                    .padding(.top, TBSpace.s1)
+
+                VStack(spacing: TBSpace.s2) {
+                    ForEach(Array(displayDimensions.enumerated()), id: \.element.id) { index, dimension in
+                        dimensionCard(
+                            index: index,
+                            dimension: dimension,
+                            profile: profile,
+                            dimensionsByID: dimensionsByID,
+                            moments: normalMoments,
+                            timeScope: scope
+                        )
+                    }
+
+                    if isEditing == false {
+                        Color.clear
+                            .frame(height: TBSpace.s3)
+                    } else {
+                        Color.clear
+                            .frame(height: TBSpace.s6)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                finishDimensionEditing()
+                            }
+                    }
+                }
+            }
+            .padding(.horizontal, TBSpace.s5)
+            .padding(.bottom, TBSpace.s5)
+        }
+        .onChange(of: visibleDimensions.map(\.id)) { _, newIDs in
+            reconcileOrderedDimensionIDs(visibleIDs: newIDs)
         }
     }
 
@@ -305,15 +336,27 @@ struct HomeView: View {
         moments: [Moment],
         timeScope: DimensionCompute.TimeBalanceScope
     ) -> some View {
+        let isEditing = homeEditMode.isEditing
         let card = DimensionCardView(
             dimension: dimension,
             profile: profile,
             dimensionsByID: dimensionsByID,
             moments: moments,
-            timeScope: timeScope
+            timeScope: timeScope,
+            fileStore: fileStore,
+            onTapMoment: { moment in
+                // 小图带点按：编辑态忽略；否则父层导航到瞬间详情
+                guard isEditing == false else { return }
+                momentRoute = moment
+            },
+            onTapCard: {
+                // 卡片非小图区域点按：编辑态忽略；否则导航进维度详情
+                guard isEditing == false else { return }
+                dimensionRoute = HomeDimensionRoute(id: dimension.id, scope: timeScope)
+            }
         )
 
-        if homeEditMode.isEditing {
+        if isEditing {
             card
                 .modifier(HomeDimensionJiggleEffect(
                     isActive: true,
@@ -340,18 +383,15 @@ struct HomeView: View {
                     )
                 )
         } else {
-            NavigationLink {
-                DimensionDetailView(dimensionID: dimension.id, initialTimeScope: timeScope)
-            } label: {
-                card
-            }
-            .buttonStyle(.plain)
-            .simultaneousGesture(
-                LongPressGesture(minimumDuration: 0.5)
-                    .onEnded { _ in
-                        enterDimensionEditing(haptic: true)
-                    }
-            )
+            // 不再用 NavigationLink 包整卡：导航经 onTapCard/onTapMoment + 父层 .navigationDestination。
+            // LongPress 进编辑态只挂在卡片整体（非小图区），小图带的独立 Button 自行截断手势。
+            card
+                .simultaneousGesture(
+                    LongPressGesture(minimumDuration: 0.5)
+                        .onEnded { _ in
+                            enterDimensionEditing(haptic: true)
+                        }
+                )
         }
     }
 
@@ -385,8 +425,8 @@ struct HomeView: View {
     }
 
     /// 今生 = 已度过的人生比例；今年 = 今年已过去的比例。用于 hero 卡进度条。
-    private func elapsedProgress(profile: UserProfile) -> Double {
-        switch timeScope {
+    private func elapsedProgress(profile: UserProfile, scope: DimensionCompute.TimeBalanceScope) -> Double {
+        switch scope {
         case .lifetime:
             let age = DimensionCompute.ageYears(birthday: profile.birthday)
             let expected = Double(profile.expectedLifespanYears)
@@ -537,6 +577,12 @@ private struct MilestoneRoute: Identifiable {
     let id: Int
 }
 
+/// 维度卡非小图区域点按 → 维度详情的导航路由（dimension.id 为 String，需 Identifiable 包装）。
+private struct HomeDimensionRoute: Identifiable, Hashable {
+    let id: String
+    let scope: DimensionCompute.TimeBalanceScope
+}
+
 private struct HomeDimensionDeleteRequest {
     let dimensionID: String
     let name: String
@@ -618,9 +664,13 @@ private struct UndoToastView: View {
 struct TimeBalanceScopeControl: View {
     @Binding var scope: DimensionCompute.TimeBalanceScope
 
+    /// 显式顺序：今年在左、今生在右（与 TabView 分页方向一致）；
+    /// 不依赖 enum allCases 的声明序，避免跨文件耦合。
+    private let orderedScopes: [DimensionCompute.TimeBalanceScope] = [.year, .lifetime]
+
     var body: some View {
         Picker("时间窗口", selection: $scope) {
-            ForEach(DimensionCompute.TimeBalanceScope.allCases) { option in
+            ForEach(orderedScopes) { option in
                 Text(option.title).tag(option)
             }
         }

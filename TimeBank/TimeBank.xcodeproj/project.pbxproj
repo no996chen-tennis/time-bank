@@ -59,6 +59,12 @@
 		F33000052FF5010100000001 /* TimeBankWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = F33000082FF5010100000001 /* TimeBankWidget.swift */; };
 		F33000062FF5010100000001 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F33000012FF5010100000001 /* WidgetSnapshot.swift */; };
 		F33000072FF5010100000001 /* TimeBankWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F330000B2FF5010100000001 /* TimeBankWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F34000022FF6010100000001 /* HomeLayoutKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34000012FF6010100000001 /* HomeLayoutKind.swift */; };
+		F34000042FF6010100000001 /* DimensionMomentStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34000032FF6010100000001 /* DimensionMomentStrip.swift */; };
+		F34000062FF6010100000001 /* TodayRemainingBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34000052FF6010100000001 /* TodayRemainingBar.swift */; };
+		F34000082FF6010100000001 /* BigPhotoHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34000072FF6010100000001 /* BigPhotoHomeView.swift */; };
+		F34300022FF7010100000001 /* BigPhotoMultiHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34300012FF7010100000001 /* BigPhotoMultiHomeView.swift */; };
+		F34300042FF7010100000001 /* BigPhotoTextHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34300032FF7010100000001 /* BigPhotoTextHomeView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -157,6 +163,12 @@
 		F13D3F722F989EE4007D270B /* TimeBank.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TimeBank.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F13D3F812F989EE5007D270B /* TimeBankTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TimeBankTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F13D3F8B2F989EE5007D270B /* TimeBankUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TimeBankUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F34000012FF6010100000001 /* HomeLayoutKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeLayoutKind.swift; sourceTree = "<group>"; };
+		F34000032FF6010100000001 /* DimensionMomentStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionMomentStrip.swift; sourceTree = "<group>"; };
+		F34000052FF6010100000001 /* TodayRemainingBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayRemainingBar.swift; sourceTree = "<group>"; };
+		F34000072FF6010100000001 /* BigPhotoHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BigPhotoHomeView.swift; sourceTree = "<group>"; };
+		F34300012FF7010100000001 /* BigPhotoMultiHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BigPhotoMultiHomeView.swift; sourceTree = "<group>"; };
+		F34300032FF7010100000001 /* BigPhotoTextHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BigPhotoTextHomeView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -296,6 +308,11 @@
 				F2D000062FB0010100000001 /* DimensionCardView.swift */,
 				F2D000082FB0010100000001 /* BottomTabBar.swift */,
 				F32000002FF101010000001 /* HomeDimensionEditSupport.swift */,
+				F34000032FF6010100000001 /* DimensionMomentStrip.swift */,
+				F34000052FF6010100000001 /* TodayRemainingBar.swift */,
+				F34000072FF6010100000001 /* BigPhotoHomeView.swift */,
+				F34300012FF7010100000001 /* BigPhotoMultiHomeView.swift */,
+				F34300032FF7010100000001 /* BigPhotoTextHomeView.swift */,
 			);
 			path = Home;
 			sourceTree = "<group>";
@@ -385,6 +402,7 @@
 				F13527792F99D3E400847E51 /* FileStore.swift */,
 				F135277A2F99D3E400847E51 /* Formatter.swift */,
 				F13527872F99D3E400847E51 /* KeyboardDismiss.swift */,
+				F34000012FF6010100000001 /* HomeLayoutKind.swift */,
 			);
 			path = Utility;
 			sourceTree = "<group>";
@@ -652,6 +670,12 @@
 				F13527852F99D3E500847E51 /* Settings.swift in Sources */,
 				F33000032FF5010100000001 /* WidgetSnapshot.swift in Sources */,
 				F33000042FF5010100000001 /* WidgetSnapshotWriter.swift in Sources */,
+				F34000022FF6010100000001 /* HomeLayoutKind.swift in Sources */,
+				F34000042FF6010100000001 /* DimensionMomentStrip.swift in Sources */,
+				F34000062FF6010100000001 /* TodayRemainingBar.swift in Sources */,
+				F34000082FF6010100000001 /* BigPhotoHomeView.swift in Sources */,
+				F34300022FF7010100000001 /* BigPhotoMultiHomeView.swift in Sources */,
+				F34300042FF7010100000001 /* BigPhotoTextHomeView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -6,6 +6,11 @@ struct SettingsHomeView: View {
     let profile: UserProfile
     @AppStorage(TimeBankThemeKind.storageKey) private var selectedThemeRawValue = TimeBankThemeKind.magazineApartamento.rawValue
     @AppStorage(TimeBankIconSetKind.storageKey) private var selectedIconSetRawValue = TimeBankIconSetKind.nativeFilled.rawValue
+    @AppStorage(HomeLayoutKind.storageKey) private var homeLayoutRaw = HomeLayoutKind.classic.rawValue
+
+    private var selectedHomeLayout: HomeLayoutKind {
+        HomeLayoutKind(rawValue: homeLayoutRaw) ?? .classic
+    }
 
     private var selectedTheme: TimeBankThemeKind {
         TimeBankThemeKind(rawValue: selectedThemeRawValue) ?? .magazineApartamento
@@ -45,6 +50,18 @@ struct SettingsHomeView: View {
                             icon: "rectangle.grid.2x2",
                             title: "时间账户管理",
                             subtitle: "新增 / 编辑 / 删除自定义账户",
+                            showsChevron: true
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        HomeLayoutSelectionView(homeLayoutRaw: $homeLayoutRaw)
+                    } label: {
+                        SettingsRow(
+                            icon: "rectangle.on.rectangle",
+                            title: "首页样式",
+                            subtitle: selectedHomeLayout.displayName,
                             showsChevron: true
                         )
                     }
@@ -249,6 +266,75 @@ private struct ThemeOptionRow: View {
                     .font(.tbHeadS)
                     .foregroundStyle(Color.tbPrimary)
                     .accessibilityLabel("当前主题")
+            }
+        }
+        .padding(TBSpace.s4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .tbThemedSurface(.row)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(kind.displayName)，\(kind.subtitle)")
+    }
+}
+
+private struct HomeLayoutSelectionView: View {
+    @Binding var homeLayoutRaw: String
+
+    var body: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: TBSpace.s3) {
+                ForEach(HomeLayoutKind.allCases) { kind in
+                    Button {
+                        homeLayoutRaw = kind.rawValue
+                    } label: {
+                        HomeLayoutOptionRow(
+                            kind: kind,
+                            isSelected: homeLayoutRaw == kind.rawValue
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, TBSpace.s5)
+            .padding(.top, TBSpace.s4)
+            .padding(.bottom, TBSpace.s8)
+        }
+        .background(Color.tbBg)
+        .navigationTitle("首页样式")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct HomeLayoutOptionRow: View {
+    let kind: HomeLayoutKind
+    let isSelected: Bool
+
+    var body: some View {
+        HStack(spacing: TBSpace.s3) {
+            Image(systemName: kind.iconName)
+                .font(.tbHeadS)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(Color.tbPrimary)
+                .frame(width: TBSpace.s8, height: TBSpace.s8)
+                .background(Color.tbPrimary.opacity(0.12))
+                .clipShape(RoundedRectangle(cornerRadius: TBRadius.md, style: .continuous))
+
+            VStack(alignment: .leading, spacing: TBSpace.s1) {
+                Text(kind.displayName)
+                    .font(.tbBody)
+                    .foregroundStyle(Color.tbInk)
+
+                Text(kind.subtitle)
+                    .font(.tbBodySm)
+                    .foregroundStyle(Color.tbInk2)
+            }
+
+            Spacer()
+
+            if isSelected {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.tbHeadS)
+                    .foregroundStyle(Color.tbPrimary)
+                    .accessibilityLabel("当前首页样式")
             }
         }
         .padding(TBSpace.s4)

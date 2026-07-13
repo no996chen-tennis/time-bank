@@ -5,6 +5,7 @@ import CoreTransferable
 import PhotosUI
 import SwiftData
 import SwiftUI
+import UIKit
 import UniformTypeIdentifiers
 
 /// 把相册视频导入成临时文件 URL（系统给的临时文件即将被回收，先拷到我们自己的临时目录）。
@@ -48,6 +49,7 @@ struct MomentEditorView: View {
     @State private var draggingMediaID: UUID?
     @State private var importedTempURLs: [URL] = []
     @State private var showDatePicker = false
+    @FocusState private var durationFocused: Bool
 
     init(route: MomentEditorRoute) {
         self.route = route
@@ -129,7 +131,12 @@ struct MomentEditorView: View {
             }
             .onDisappear {
                 slowSaveTask?.cancel()
-                cleanupImportedTempFiles()
+                // 保存仍在进行时（含用户切后台触发的 onDisappear）绝不清临时文件：
+                // 跨卷 copy 回退分支正在读源文件，删源会把拷贝打断成半截 → 视频损坏。
+                // 保存收尾（saveMoment 里）会在真正落库完成后再统一清理。
+                if isSaving == false {
+                    cleanupImportedTempFiles()
+                }
             }
             .timeBankKeyboardDismissBehavior()
         }
@@ -139,24 +146,35 @@ struct MomentEditorView: View {
     private var detailsSection: some View {
         editorCard {
             VStack(spacing: 0) {
-                HStack(spacing: TBSpace.s3) {
-                    Text("存入")
-                        .font(.tbBody)
-                        .foregroundStyle(Color.tbInk)
-
-                    Spacer(minLength: TBSpace.s3)
-
+                // 整行可点：用 Menu 包住整行做 label，点这一栏任意位置都能选账户（不必精准点右侧小胶囊）。
+                Menu {
                     Picker("存入", selection: selectedDimensionBinding) {
                         ForEach(availableDimensions, id: \.id) { dimension in
                             Text(dimension.name)
                                 .tag(dimension.id)
                         }
                     }
-                    .pickerStyle(.menu)
-                    .labelsHidden()
-                    .tint(Color.tbPrimary)
+                } label: {
+                    HStack(spacing: TBSpace.s3) {
+                        Text("存入")
+                            .font(.tbBody)
+                            .foregroundStyle(Color.tbInk)
+
+                        Spacer(minLength: TBSpace.s3)
+
+                        Text(selectedDimensionName)
+                            .font(.tbBody)
+                            .foregroundStyle(Color.tbPrimary)
+                            .lineLimit(1)
+
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.tbLabel)
+                            .foregroundStyle(Color.tbInk3)
+                    }
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
                 }
-                .frame(minHeight: 36)
+                .tint(Color.tbPrimary)
 
                 Divider().overlay(Color.tbHair)
 
@@ -198,13 +216,16 @@ struct MomentEditorView: View {
                         .multilineTextAlignment(.trailing)
                         .font(.tbBody)
                         .foregroundStyle(Color.tbInk)
+                        .focused($durationFocused)
                         .frame(maxWidth: 90)
 
                     Text("小时")
-                        .font(.tbBodySm)
+                        .font(.tbBody)
                         .foregroundStyle(Color.tbInk3)
                 }
                 .frame(minHeight: 36)
+                .contentShape(Rectangle())
+                .onTapGesture { durationFocused = true }
             }
         }
     }
@@ -542,6 +563,12 @@ struct MomentEditorView: View {
         )
     }
 
+    /// 存入行 Menu label 上显示的当前所选账户名。
+    private var selectedDimensionName: String {
+        let id = draft.selectedDimensionID ?? availableDimensions.first?.id
+        return availableDimensions.first { $0.id == id }?.name ?? ""
+    }
+
     private var durationBinding: Binding<String> {
         Binding(
             get: { draft.durationHoursText },
@@ -641,41 +668,46 @@ struct MomentEditorView: View {
         isLoadingMedia = true
 
         Task { @MainActor in
-            var loadedItems: [MomentEditorMediaItem] = []
+            // 大视频导入（loadTransferable 把系统资产整段拷到我们的临时目录）非常慢。
+            // 同样用后台任务保护：用户在"正在导入"时切后台/划走，系统不会立刻挂起进程把拷贝打断，
+            // 避免留下一个截断的临时视频（之后保存时会 move/copy 这半截文件 → 封面空白 + 视频损坏）。
+            await withBackgroundTask(name: "TimeBank.ImportMedia") {
+                var loadedItems: [MomentEditorMediaItem] = []
 
-            for item in items {
-                let kind = mediaKind(for: item)
-                do {
-                    switch kind {
-                    case .image:
-                        guard let data = try await item.loadTransferable(type: Data.self) else {
-                            loadedItems.append(.failed(kind: .image))
-                            continue
-                        }
-                        let fileExtension = preferredFileExtension(for: item, kind: .image)
-                        loadedItems.append(.image(data: data, fileExtension: fileExtension))
+                for item in items {
+                    let kind = mediaKind(for: item)
+                    do {
+                        switch kind {
+                        case .image:
+                            guard let data = try await item.loadTransferable(type: Data.self) else {
+                                loadedItems.append(.failed(kind: .image))
+                                continue
+                            }
+                            let fileExtension = preferredFileExtension(for: item, kind: .image)
+                            loadedItems.append(.image(data: data, fileExtension: fileExtension))
 
-                    case .video:
-                        // 视频以文件 URL 导入，不整段读进内存（存视频卡顿的根因修复）。
-                        guard let picked = try await item.loadTransferable(type: PickedVideoFile.self) else {
-                            loadedItems.append(.failed(kind: .video))
-                            continue
+                        case .video:
+                            // 视频以文件 URL 导入，不整段读进内存（存视频卡顿的根因修复）。
+                            guard let picked = try await item.loadTransferable(type: PickedVideoFile.self) else {
+                                loadedItems.append(.failed(kind: .video))
+                                continue
+                            }
+                            importedTempURLs.append(picked.url)
+                            loadedItems.append(.video(fileURL: picked.url))
                         }
-                        importedTempURLs.append(picked.url)
-                        loadedItems.append(.video(fileURL: picked.url))
+                    } catch {
+                        loadedItems.append(.failed(kind: kind))
                     }
-                } catch {
-                    loadedItems.append(.failed(kind: kind))
                 }
-            }
 
-            draft.mediaItems.append(contentsOf: loadedItems)
-            isLoadingMedia = false
-            generatePreviewThumbnails(for: loadedItems)
+                draft.mediaItems.append(contentsOf: loadedItems)
+                isLoadingMedia = false
+                generatePreviewThumbnails(for: loadedItems)
 
-            if loadedItems.isEmpty == false,
-               loadedItems.allSatisfy(\.isFailed) {
-                showToast("照片没加载上。换一张试试？")
+                if loadedItems.isEmpty == false,
+                   loadedItems.allSatisfy(\.isFailed) {
+                    showToast("照片没加载上。换一张试试？")
+                }
             }
         }
     }
@@ -821,39 +853,78 @@ struct MomentEditorView: View {
         }
 
         Task { @MainActor in
-            do {
-                let store = MomentStore(modelContext: modelContext)
-                switch route.mode {
-                case .create:
-                    guard let request = draft.makeSaveRequest() else {
+            // 关键：整个保存（写媒体文件 → moveItem/copy → 生成缩略图 → modelContext.save() 落库）
+            // 包在 begin/endBackgroundTask 里。大视频保存很慢，用户存完立刻退到桌面/划走 App 时，
+            // 若没有后台任务，iOS 会立刻挂起进程 → 保存被打断在"文件已 move 进 moment 目录但 DB 还没提交"，
+            // 下次启动孤儿清理会把这个没被记录引用的视频目录删掉 → 封面空白 + 视频永久丢失。
+            // 有了后台任务，系统会继续给几十秒把保存跑完再挂起。
+            await withBackgroundTask(name: "TimeBank.SaveMoment") {
+                do {
+                    let store = MomentStore(modelContext: modelContext)
+                    switch route.mode {
+                    case .create:
+                        guard let request = draft.makeSaveRequest() else {
+                            isSaving = false
+                            slowSaveTask?.cancel()
+                            return
+                        }
+                        _ = try await store.save(moment: request)
                         isSaving = false
                         slowSaveTask?.cancel()
-                        return
-                    }
-                    _ = try await store.save(moment: request)
-                    isSaving = false
-                    slowSaveTask?.cancel()
-                    showToast("存下了。")
-                    try? await Task.sleep(nanoseconds: 650_000_000)
-                    dismiss()
+                        // 已落库成功：媒体文件此时要么已 move 进 moment 目录、要么已 copy 完毕，
+                        // 源临时文件不再需要，在这里显式清理（不依赖 onDisappear 的时序，避免泄漏）。
+                        cleanupImportedTempFiles()
+                        showToast("存下了。")
+                        try? await Task.sleep(nanoseconds: 650_000_000)
+                        dismiss()
 
-                case .edit(let momentID):
-                    guard let updateRequest = draft.makeUpdateRequest(momentID: momentID) else {
+                    case .edit(let momentID):
+                        guard let updateRequest = draft.makeUpdateRequest(momentID: momentID) else {
+                            isSaving = false
+                            slowSaveTask?.cancel()
+                            return
+                        }
+                        _ = try await store.update(moment: updateRequest)
                         isSaving = false
                         slowSaveTask?.cancel()
-                        return
+                        cleanupImportedTempFiles()
+                        dismiss()
                     }
-                    _ = try await store.update(moment: updateRequest)
+                } catch {
                     isSaving = false
                     slowSaveTask?.cancel()
-                    dismiss()
+                    showToast("没存下。再试试？")
                 }
-            } catch {
-                isSaving = false
-                slowSaveTask?.cancel()
-                showToast("没存下。再试试？")
             }
         }
+    }
+
+    /// 在一个 UIApplication 后台任务的保护下执行 `work`，避免大视频导入/保存这类耗时操作
+    /// 在用户切后台/划走 App 时被系统立刻挂起而中断（拷贝写一半、DB 没提交 → 数据丢失）。
+    /// begin/end 严格成对：无论 work 正常返回还是抛错，defer 都会 endBackgroundTask，杜绝后台任务泄漏。
+    @MainActor
+    private func withBackgroundTask(
+        name: String,
+        _ work: () async -> Void
+    ) async {
+        let application = UIApplication.shared
+        var taskID: UIBackgroundTaskIdentifier = .invalid
+        taskID = application.beginBackgroundTask(withName: name) {
+            // 系统后台时间即将耗尽时的兜底回调：结束任务，防止被强杀。
+            if taskID != .invalid {
+                application.endBackgroundTask(taskID)
+                taskID = .invalid
+            }
+        }
+
+        defer {
+            if taskID != .invalid {
+                application.endBackgroundTask(taskID)
+                taskID = .invalid
+            }
+        }
+
+        await work()
     }
 
     private func showToast(_ message: String) {

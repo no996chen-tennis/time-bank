@@ -1,0 +1,1459 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TimeBank · 首页与 Widget 重设计对比</title>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    :root {
+      --canvas: #f7f7f3;
+      --canvas-deep: #efeee8;
+      --paper: #fdfcf9;
+      --paper-warm: #f6f4ee;
+      --paper-muted: #ece9e0;
+      --ink: #201f1b;
+      --ink-2: #6f6a5e;
+      --ink-3: #a8a294;
+      --line: #e3dfd4;
+      --forest: #2f6b58;
+      --forest-soft: #e7f0eb;
+      --brick: #2f6b58;
+      --brick-soft: #e7f0eb;
+      --gold: #8f5b1e;
+      --navy: #172b48;
+      --peach: #c8917e;
+      --shadow-lg: 0 18px 48px rgba(32, 31, 27, 0.08);
+      --shadow-md: 0 6px 22px rgba(32, 31, 27, 0.045);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 16px;
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--ink);
+      background: var(--canvas);
+    }
+
+    button,
+    a {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    .page-shell {
+      width: min(1500px, calc(100vw - 40px));
+      margin: 0 auto;
+      padding: 34px 0 72px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 16px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      min-height: 64px;
+      padding: 10px 12px 10px 22px;
+      margin-bottom: 52px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(253, 252, 249, 0.94);
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(20px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      color: var(--forest);
+      background: var(--forest-soft);
+      font-size: 20px;
+    }
+
+    .brand-copy strong,
+    .brand-copy span {
+      display: block;
+    }
+
+    .brand-copy strong {
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .brand-copy span {
+      margin-top: 2px;
+      color: var(--ink-2);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+    }
+
+    .topnav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      border-radius: 14px;
+      background: var(--paper-muted);
+    }
+
+    .topnav a {
+      padding: 9px 13px;
+      border-radius: 11px;
+      color: var(--ink-2);
+      font-size: 13px;
+      text-decoration: none;
+    }
+
+    .topnav a:hover,
+    .topnav a:focus-visible {
+      color: var(--ink);
+      background: var(--paper);
+      outline: none;
+    }
+
+    .scope-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      width: 156px;
+      padding: 4px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: var(--paper-muted);
+    }
+
+    .scope-switch button {
+      min-height: 36px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 10px;
+      color: var(--ink-2);
+      background: transparent;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    body[data-scope="year"] .scope-switch [data-set-scope="year"],
+    body[data-scope="life"] .scope-switch [data-set-scope="life"] {
+      color: var(--ink);
+      background: var(--paper);
+      box-shadow: 0 1px 5px rgba(32, 31, 27, 0.06);
+    }
+
+    .hero-intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+      gap: 48px;
+      align-items: end;
+      margin-bottom: 64px;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--brick);
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1,
+    h2,
+    .display-font {
+      font-family: Georgia, "Songti SC", serif;
+    }
+
+    h1 {
+      max-width: 820px;
+      margin-bottom: 0;
+      font-size: clamp(42px, 6.2vw, 84px);
+      line-height: 1.04;
+      font-weight: 500;
+      letter-spacing: -0.035em;
+    }
+
+    .intro-copy {
+      margin: 0;
+      padding: 24px 26px;
+      border-left: 2px solid var(--forest);
+      color: var(--ink-2);
+      font-size: 15px;
+      line-height: 1.8;
+      background: rgba(253, 252, 249, 0.72);
+    }
+
+    .section {
+      scroll-margin-top: 110px;
+      margin-top: 86px;
+    }
+
+    .section-heading {
+      display: grid;
+      grid-template-columns: 1fr minmax(300px, 500px);
+      gap: 40px;
+      align-items: end;
+      margin-bottom: 28px;
+    }
+
+    .section-heading h2 {
+      margin-bottom: 0;
+      font-size: clamp(34px, 4.6vw, 58px);
+      line-height: 1.05;
+      font-weight: 500;
+    }
+
+    .section-heading p {
+      margin-bottom: 0;
+      color: var(--ink-2);
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px;
+      align-items: start;
+    }
+
+    .comparison-card {
+      min-width: 0;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: var(--paper);
+    }
+
+    .comparison-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      min-height: 54px;
+      margin-bottom: 16px;
+    }
+
+    .comparison-label strong {
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .comparison-label span {
+      color: var(--ink-2);
+      font-size: 12px;
+    }
+
+    .version-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      color: var(--ink-2);
+      background: var(--paper-muted);
+    }
+
+    .version-pill.proposed {
+      color: var(--forest);
+      background: var(--forest-soft);
+    }
+
+    .screen-stage {
+      display: grid;
+      place-items: start center;
+      min-height: 900px;
+      padding: 24px;
+      border-radius: 24px;
+      background: var(--canvas-deep);
+      overflow: hidden;
+    }
+
+    .original-screen {
+      display: block;
+      width: 390px;
+      max-width: 100%;
+      height: auto;
+      border-radius: 28px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .phone-screen {
+      position: relative;
+      width: 390px;
+      max-width: 100%;
+      height: 844px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 36px;
+      color: var(--ink);
+      background: var(--paper-warm);
+      box-shadow: 0 12px 34px rgba(32, 31, 27, 0.08);
+    }
+
+    .phone-content {
+      height: 100%;
+      padding: 18px 18px 88px;
+      overflow: hidden;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 24px;
+      margin-bottom: 14px;
+      padding: 0 3px;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 14px;
+    }
+
+    .app-title-row {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 13px;
+    }
+
+    .app-title-row h3 {
+      margin-bottom: 2px;
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .app-title-row p {
+      margin-bottom: 0;
+      color: var(--ink-2);
+      font-size: 11px;
+    }
+
+    .quiet-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--ink-2);
+      background: var(--paper);
+      font-size: 18px;
+    }
+
+    .phone-segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      height: 36px;
+      padding: 4px;
+      margin-bottom: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper-muted);
+    }
+
+    .phone-segmented button {
+      border: 0;
+      border-radius: 10px;
+      color: var(--ink-2);
+      background: transparent;
+      font-size: 13px;
+    }
+
+    body[data-scope="year"] .phone-segmented [data-set-scope="year"],
+    body[data-scope="life"] .phone-segmented [data-set-scope="life"] {
+      color: var(--ink);
+      background: var(--paper);
+      box-shadow: 0 1px 5px rgba(32, 31, 27, 0.05);
+    }
+
+    body[data-scope="year"] [data-life],
+    body[data-scope="life"] [data-year] {
+      display: none !important;
+    }
+
+    .balance-card {
+      overflow: hidden;
+      margin-bottom: 12px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    .balance-head {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 15px 16px 3px;
+      color: var(--ink-3);
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: 0.08em;
+    }
+
+    .balance-metrics {
+      display: grid;
+      grid-template-columns: 1.18fr 1px 0.82fr;
+      align-items: stretch;
+      min-height: 106px;
+      padding: 12px 16px 14px;
+    }
+
+    .balance-divider {
+      background: var(--line);
+    }
+
+    .balance-metric {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+    }
+
+    .balance-metric:first-child {
+      padding-right: 15px;
+    }
+
+    .balance-metric:last-child {
+      padding-left: 16px;
+    }
+
+    .balance-metric span {
+      color: var(--ink-2);
+      font-size: 11px;
+    }
+
+    .balance-metric strong {
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+      margin-top: 6px;
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 46px;
+      line-height: 1;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .balance-metric strong small {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+      font-size: 16px;
+      font-weight: 550;
+      color: var(--ink-2);
+    }
+
+    .balance-metric:last-child strong {
+      color: var(--ink-2);
+      font-size: 34px;
+    }
+
+    .balance-deposited {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 43px;
+      padding: 0 16px;
+      border-top: 1px solid var(--line);
+      color: var(--ink-2);
+      background: transparent;
+      font-size: 11px;
+    }
+
+    .balance-deposited strong {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 600;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .memory-strip {
+      display: grid;
+      grid-template-columns: 98px 1fr 36px;
+      gap: 12px;
+      align-items: center;
+      min-height: 102px;
+      padding: 9px;
+      margin-bottom: 13px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--paper);
+    }
+
+    .memory-strip img {
+      width: 98px;
+      height: 82px;
+      object-fit: cover;
+      border-radius: 12px;
+    }
+
+    .memory-copy {
+      min-width: 0;
+    }
+
+    .memory-copy small {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--brick);
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: 0.06em;
+    }
+
+    .memory-copy strong {
+      display: -webkit-box;
+      overflow: hidden;
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 15px;
+      line-height: 1.35;
+      font-weight: 600;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    .memory-copy span {
+      display: block;
+      margin-top: 4px;
+      color: var(--ink-2);
+      font-size: 10px;
+    }
+
+    .round-arrow {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      color: var(--brick);
+      background: var(--brick-soft);
+      font-size: 15px;
+    }
+
+    .accounts-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .accounts-head strong {
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 16px;
+    }
+
+    .accounts-head span {
+      color: var(--ink-3);
+      font-size: 10px;
+    }
+
+    .account-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .mini-account {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 9px;
+      min-width: 0;
+      min-height: 84px;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--paper);
+    }
+
+    .mini-account img,
+    .mini-account .photo-fallback {
+      width: 42px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    .photo-fallback {
+      display: grid;
+      place-items: center;
+      color: var(--paper);
+      background: var(--navy);
+      font-size: 17px;
+    }
+
+    .mini-copy {
+      min-width: 0;
+    }
+
+    .mini-copy b,
+    .mini-copy strong,
+    .mini-copy small {
+      display: block;
+    }
+
+    .mini-copy b {
+      margin-bottom: 4px;
+      overflow: hidden;
+      font-size: 12px;
+      font-weight: 650;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mini-copy strong {
+      overflow: hidden;
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 15px;
+      line-height: 1.1;
+      font-weight: 600;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mini-copy small {
+      margin-top: 5px;
+      overflow: hidden;
+      color: var(--brick);
+      font-size: 9px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .phone-tabbar {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      align-items: center;
+      min-height: 64px;
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(253, 252, 249, 0.96);
+      box-shadow: 0 8px 22px rgba(32, 31, 27, 0.08);
+      backdrop-filter: blur(20px);
+    }
+
+    .phone-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--ink-3);
+      font-size: 9px;
+    }
+
+    .phone-tab i {
+      font-size: 20px;
+    }
+
+    .phone-tab.active {
+      color: var(--brick);
+    }
+
+    .phone-tab.deposit {
+      justify-self: center;
+      width: 54px;
+      height: 54px;
+      margin-top: -18px;
+      border-radius: 18px;
+      color: white;
+      background: var(--brick);
+    }
+
+    .comparison-notes {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .note-chip {
+      min-height: 64px;
+      padding: 10px 11px;
+      border-radius: 14px;
+      color: var(--ink-2);
+      background: var(--paper-muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .note-chip b {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--ink);
+      font-size: 11px;
+    }
+
+    .widget-comparison {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px;
+    }
+
+    .widget-panel {
+      min-width: 0;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: var(--paper);
+    }
+
+    .widget-stage {
+      display: grid;
+      place-items: center;
+      min-height: 330px;
+      padding: 26px;
+      border-radius: 24px;
+      background: var(--canvas-deep);
+    }
+
+    .original-widget {
+      display: block;
+      width: min(100%, 560px);
+      height: auto;
+      border-radius: 26px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .new-widget {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+      width: min(100%, 560px);
+      min-height: 260px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: var(--paper);
+      box-shadow: 0 12px 34px rgba(32, 31, 27, 0.08);
+    }
+
+    .widget-balance {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding: 24px 22px 20px;
+      color: var(--ink);
+      background: var(--paper);
+      border-right: 1px solid var(--line);
+    }
+
+    .widget-brand {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 20px;
+      color: var(--ink-3);
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: 0.08em;
+    }
+
+    .widget-sentence {
+      margin: 0 0 14px;
+      font-family: Georgia, "Songti SC", serif;
+      color: var(--ink);
+      font-size: 23px;
+      line-height: 1.32;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .widget-sentence em {
+      color: var(--forest);
+      font-size: 36px;
+      font-style: normal;
+      line-height: 1;
+    }
+
+    .widget-ledger {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      color: var(--ink-2);
+      font-size: 10px;
+    }
+
+    .widget-ledger span + span {
+      padding-left: 10px;
+      border-left: 1px solid var(--line);
+    }
+
+    .widget-ledger b {
+      display: block;
+      margin-top: 3px;
+      color: var(--ink);
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .widget-cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 40px;
+      margin-top: auto;
+      border-radius: 13px;
+      color: var(--forest);
+      background: var(--forest-soft);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .widget-memory {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding: 14px;
+    }
+
+    .widget-memory img {
+      width: 100%;
+      height: 148px;
+      object-fit: cover;
+      border-radius: 21px;
+      border: 1px solid var(--line);
+    }
+
+    .widget-memory-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 12px 2px 4px;
+      color: var(--ink-2);
+      font-size: 10px;
+    }
+
+    .widget-memory strong {
+      display: -webkit-box;
+      margin: 0 2px;
+      overflow: hidden;
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 15px;
+      line-height: 1.35;
+      font-weight: 600;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    .widget-rules {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .rule {
+      min-height: 110px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--paper);
+    }
+
+    .rule i {
+      display: block;
+      margin-bottom: 12px;
+      color: var(--forest);
+      font-size: 22px;
+    }
+
+    .rule b,
+    .rule span {
+      display: block;
+    }
+
+    .rule b {
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+
+    .rule span {
+      color: var(--ink-2);
+      font-size: 11px;
+      line-height: 1.55;
+    }
+
+    .decision-section {
+      display: grid;
+      grid-template-columns: minmax(0, 0.8fr) minmax(500px, 1.2fr);
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .decision-lead,
+    .decision-list {
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: var(--paper);
+    }
+
+    .decision-lead {
+      color: var(--ink);
+      border-left: 3px solid var(--forest);
+    }
+
+    .decision-lead h2 {
+      margin-bottom: 18px;
+      font-size: 40px;
+      line-height: 1.08;
+      font-weight: 500;
+    }
+
+    .decision-lead p {
+      margin-bottom: 0;
+      color: var(--ink-2);
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .decision-row {
+      display: grid;
+      grid-template-columns: 36px 150px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .decision-row:last-child {
+      border-bottom: 0;
+    }
+
+    .decision-index {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 11px;
+      color: var(--brick);
+      background: var(--brick-soft);
+      font-family: Georgia, serif;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .decision-row b {
+      padding-top: 6px;
+      font-size: 13px;
+    }
+
+    .decision-row span {
+      padding-top: 4px;
+      color: var(--ink-2);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .footer-note {
+      margin: 34px 0 0;
+      color: var(--ink-2);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    @media (max-width: 1120px) {
+      .comparison-grid,
+      .widget-comparison,
+      .decision-section {
+        grid-template-columns: 1fr;
+      }
+
+      .screen-stage {
+        min-height: auto;
+      }
+
+      .decision-section {
+        gap: 18px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .page-shell {
+        width: min(100vw - 20px, 430px);
+        padding-top: 10px;
+      }
+
+      .topbar {
+        position: static;
+        align-items: stretch;
+        flex-direction: column;
+        margin-bottom: 36px;
+        padding: 14px;
+      }
+
+      .topnav {
+        display: none;
+      }
+
+      .scope-switch {
+        width: 100%;
+      }
+
+      .hero-intro,
+      .section-heading {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      h1 {
+        font-size: 44px;
+      }
+
+      .section {
+        margin-top: 58px;
+      }
+
+      .comparison-card,
+      .widget-panel {
+        padding: 8px;
+        border-radius: 22px;
+      }
+
+      .screen-stage,
+      .widget-stage {
+        padding: 0;
+        border-radius: 18px;
+      }
+
+      .phone-screen {
+        width: 100%;
+        border-radius: 26px;
+      }
+
+      .balance-deposited strong {
+        font-size: 10.5px;
+      }
+
+      .comparison-notes,
+      .widget-rules {
+        grid-template-columns: 1fr;
+      }
+
+      .new-widget {
+        grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+        width: 100%;
+        min-height: 190px;
+      }
+
+      .widget-memory img {
+        height: 104px;
+        border-radius: 15px;
+      }
+
+      .widget-balance {
+        padding: 16px 13px 13px;
+      }
+
+      .widget-brand {
+        margin-bottom: 12px;
+        font-size: 9px;
+      }
+
+      .widget-balance > strong {
+        font-size: 39px;
+      }
+
+      .widget-balance > strong small {
+        font-size: 14px;
+      }
+
+      .widget-today,
+      .widget-cta {
+        font-size: 10px;
+      }
+
+      .widget-memory {
+        padding: 9px;
+      }
+
+      .widget-memory-top {
+        margin-top: 8px;
+        font-size: 8px;
+      }
+
+      .widget-memory strong {
+        font-size: 12px;
+      }
+
+      .decision-row {
+        grid-template-columns: 36px 1fr;
+      }
+
+      .decision-row span {
+        grid-column: 2;
+      }
+    }
+  </style>
+</head>
+<body data-scope="year">
+  <main class="page-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><i class="ph ph-hourglass"></i></div>
+        <div class="brand-copy">
+          <strong>TimeBank</strong>
+          <span>HOME + WIDGET REDESIGN</span>
+        </div>
+      </div>
+
+      <nav class="topnav" aria-label="页面导航">
+        <a href="#home-compare">首页对比</a>
+        <a href="#widget-compare">Widget 对比</a>
+        <a href="#decisions">设计取舍</a>
+      </nav>
+
+      <div class="scope-switch" aria-label="预览时间窗口">
+        <button type="button" data-set-scope="year">今年</button>
+        <button type="button" data-set-scope="life">今生</button>
+      </div>
+    </header>
+
+    <section class="hero-intro">
+      <div>
+        <p class="eyebrow">Design proposal · 2026.07.10</p>
+        <h1>时间是数字，<br>留下的才是生活。</h1>
+      </div>
+      <p class="intro-copy">
+        这一版参考「墨戒·账本」的纸墨体系：暖白纸底、黑色主信息、极细丝线、几乎没有阴影，松墨绿只负责动作与状态。先看见时间，再看见一段被留下的生活，最后才是账户明细。
+      </p>
+    </section>
+
+    <section class="section" id="home-compare">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">01 · Home</p>
+          <h2>首页：从“账户列表”变成“今天的时间首页”</h2>
+        </div>
+        <p>
+          数字仍然是锚点，但不再让每个模块同时抢注意力。新版保留今年 / 今生、时间余额、已存入和前 4 个账户，同时把真实回忆提到第一屏。
+        </p>
+      </div>
+
+      <div class="comparison-grid">
+        <article class="comparison-card">
+          <div class="comparison-label">
+            <div>
+              <strong>原版</strong>
+              <span>真机截图 · 今年</span>
+            </div>
+            <span class="version-pill"><i class="ph ph-image"></i> Current</span>
+          </div>
+          <div class="screen-stage">
+            <img class="original-screen" src="../真机截图/IMG_5324.PNG" alt="原版 TimeBank 首页真机截图">
+          </div>
+          <div class="comparison-notes">
+            <div class="note-chip"><b>层级平均</b>大数字、回忆、账户卡都在用相近的视觉音量。</div>
+            <div class="note-chip"><b>卡片偏高</b>一条账户占用大量垂直空间，很快进入滚动。</div>
+            <div class="note-chip"><b>照片是附件</b>图片尺寸小，还没成为“存下时间”的情感证据。</div>
+          </div>
+        </article>
+
+        <article class="comparison-card">
+          <div class="comparison-label">
+            <div>
+              <strong>新设计</strong>
+              <span>浅色提案 · 可切换今年 / 今生</span>
+            </div>
+            <span class="version-pill proposed"><i class="ph ph-sparkle"></i> Paper & Ink</span>
+          </div>
+          <div class="screen-stage">
+            <div class="phone-screen" aria-label="TimeBank 重设计首页预览">
+              <div class="phone-content">
+                <div class="status-row">
+                  <span>9:41</span>
+                  <div class="status-icons" aria-hidden="true">
+                    <i class="ph ph-cell-signal-high"></i>
+                    <i class="ph ph-wifi-high"></i>
+                    <i class="ph ph-battery-high"></i>
+                  </div>
+                </div>
+
+                <div class="app-title-row">
+                  <div>
+                    <h3>时间银行</h3>
+                    <p>7 月 10 日 · 把今天留在今天</p>
+                  </div>
+                  <button class="quiet-action" type="button" aria-label="打开设置"><i class="ph ph-sliders-horizontal"></i></button>
+                </div>
+
+                <div class="phone-segmented" aria-label="时间窗口">
+                  <button type="button" data-set-scope="year">今年</button>
+                  <button type="button" data-set-scope="life">今生</button>
+                </div>
+
+                <section class="balance-card">
+                  <div class="balance-head">
+                    <i class="ph ph-hourglass"></i>
+                    <span data-year>今年的时间账本</span>
+                    <span data-life>今生的时间账本</span>
+                  </div>
+                  <div class="balance-metrics">
+                    <div class="balance-metric">
+                      <span data-year>今年还剩</span>
+                      <span data-life>今生还剩约</span>
+                      <strong data-year>25 <small>周</small></strong>
+                      <strong data-life>2,811 <small>周</small></strong>
+                    </div>
+                    <div class="balance-divider"></div>
+                    <div class="balance-metric">
+                      <span>今天还剩</span>
+                      <strong>1.6 <small>小时</small></strong>
+                    </div>
+                  </div>
+                  <div class="balance-deposited">
+                    <span><i class="ph ph-book-open-text"></i> 时间账本</span>
+                    <strong>80 小时 30 分 · 29 个瞬间</strong>
+                  </div>
+                </section>
+
+                <section class="memory-strip">
+                  <img src="assets/home-widget-redesign/car-memory.png" alt="车停在树下的回忆照片">
+                  <div class="memory-copy">
+                    <small>今日回忆 · 12 天前</small>
+                    <strong>车停在树下，打开天窗，阳光洒下来</strong>
+                    <span>被感受过的时间，会留下。</span>
+                  </div>
+                  <div class="round-arrow" aria-hidden="true"><i class="ph ph-arrow-up-right"></i></div>
+                </section>
+
+                <div class="accounts-head">
+                  <strong>时间账户</strong>
+                  <span>首屏显示最相关的 4 个</span>
+                </div>
+
+                <section class="account-grid">
+                  <article class="mini-account">
+                    <img src="assets/home-widget-redesign/family-dinner.png" alt="陪父母吃饭的照片">
+                    <div class="mini-copy">
+                      <b>陪父母</b>
+                      <strong data-year>23 小时</strong>
+                      <strong data-life>1,295 小时</strong>
+                      <small>已存入 1 个瞬间</small>
+                    </div>
+                  </article>
+
+                  <article class="mini-account">
+                    <img src="assets/home-widget-redesign/reading-selfie.png" alt="读书时刻的视频封面">
+                    <div class="mini-copy">
+                      <b>读书</b>
+                      <strong data-year>89 小时</strong>
+                      <strong data-life>9,846 小时</strong>
+                      <small>已存入 1 个瞬间</small>
+                    </div>
+                  </article>
+
+                  <article class="mini-account">
+                    <div class="photo-fallback" aria-hidden="true"><i class="ph ph-person-simple-run"></i></div>
+                    <div class="mini-copy">
+                      <b>运动</b>
+                      <strong data-year>125 小时</strong>
+                      <strong data-life>1.1 万小时</strong>
+                      <small>还没有照片</small>
+                    </div>
+                  </article>
+
+                  <article class="mini-account">
+                    <img src="assets/home-widget-redesign/meal.png" alt="自由时间里的一顿寿喜烧">
+                    <div class="mini-copy">
+                      <b>自由</b>
+                      <strong data-year>836 小时</strong>
+                      <strong data-life>23.1 万小时</strong>
+                      <small>中午的寿喜烧</small>
+                    </div>
+                  </article>
+                </section>
+              </div>
+
+              <nav class="phone-tabbar" aria-label="底部导航">
+                <div class="phone-tab active"><i class="ph ph-house"></i><span>主页</span></div>
+                <div class="phone-tab"><i class="ph ph-chart-pie-slice"></i><span>账户</span></div>
+                <div class="phone-tab deposit"><i class="ph ph-plus"></i><span>存入</span></div>
+                <div class="phone-tab"><i class="ph ph-user-circle"></i><span>我</span></div>
+              </nav>
+            </div>
+          </div>
+          <div class="comparison-notes">
+            <div class="note-chip"><b>大面积留白</b>时间余额从深色卡改成白纸账本，用字号和丝线建立层级。</div>
+            <div class="note-chip"><b>回忆有证据</b>真实照片和一句话一起出现，存入的不再只是一串数字。</div>
+            <div class="note-chip"><b>绿只做动作</b>松墨绿只出现在选中态、链接与“存入”，页面整体更安静。</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="widget-compare">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">02 · Widget</p>
+          <h2>Widget：每次只说一件重要的事</h2>
+        </div>
+        <p>
+          中号 Widget 改用「小碑」式句子优先：先读“还剩多少时间”，再看今日账本和最近留下的一段生活。整块 Widget 都是暖白纸面，不再用深色左右切割。
+        </p>
+      </div>
+
+      <div class="widget-comparison">
+        <article class="widget-panel">
+          <div class="comparison-label">
+            <div>
+              <strong>原版 Widget</strong>
+              <span>真机截图裁切</span>
+            </div>
+            <span class="version-pill"><i class="ph ph-image"></i> Current</span>
+          </div>
+          <div class="widget-stage">
+            <img class="original-widget" src="assets/home-widget-redesign/widget-original.png" alt="原版 TimeBank 中号 Widget">
+          </div>
+          <div class="widget-rules">
+            <div class="rule"><i class="ph ph-columns"></i><b>三栏互抢</b><span>数字、长句、照片同时要求用户解读。</span></div>
+            <div class="rule"><i class="ph ph-text-aa"></i><b>竖排破坏阅读</b><span>观察型文案被拆成字柱，中文节奏变得生硬。</span></div>
+            <div class="rule"><i class="ph ph-arrow-square-out"></i><b>行动与内容分开</b><span>“存入此刻”在左下，照片在右边，心理连接较弱。</span></div>
+          </div>
+        </article>
+
+        <article class="widget-panel">
+          <div class="comparison-label">
+            <div>
+              <strong>新设计 Widget</strong>
+              <span>小碑式结构 · 暖白纸面</span>
+            </div>
+            <span class="version-pill proposed"><i class="ph ph-sparkle"></i> Paper & Ink</span>
+          </div>
+          <div class="widget-stage">
+            <div class="new-widget" aria-label="TimeBank 重设计中号 Widget">
+              <section class="widget-balance">
+                <div class="widget-brand"><i class="ph ph-hourglass"></i> TIMEBANK · 时间账本</div>
+                <p class="widget-sentence" data-year>今年，还剩 <em>25</em> 周。</p>
+                <p class="widget-sentence" data-life>今生，还剩约 <em>2,811</em> 周。</p>
+                <div class="widget-ledger">
+                  <span>今天还剩<b>1.6 小时</b></span>
+                  <span>已经存下<b>80 小时 30 分</b></span>
+                </div>
+                <div class="widget-cta"><i class="ph ph-plus-circle"></i> 存入此刻</div>
+              </section>
+
+              <section class="widget-memory">
+                <img src="assets/home-widget-redesign/meal.png" alt="中午的寿喜烧">
+                <div class="widget-memory-top">
+                  <span>自由 · 已存入</span>
+                  <span>29 个瞬间</span>
+                </div>
+                <strong>中午的寿喜烧</strong>
+              </section>
+            </div>
+          </div>
+          <div class="widget-rules">
+            <div class="rule"><i class="ph ph-quotes"></i><b>句子优先</b><span>“今年，还剩 25 周”成为第一阅读单位，像一句提醒，不像仪表盘。</span></div>
+            <div class="rule"><i class="ph ph-minus"></i><b>丝线分层</b><span>用 0.5–1px 细线组织今日与累计，不依靠色块和阴影。</span></div>
+            <div class="rule"><i class="ph ph-plus-circle"></i><b>一个动作</b><span>松墨绿只留给“存入此刻”，桌面上无需判断下一步。</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section decision-section" id="decisions">
+      <div class="decision-lead">
+        <p class="eyebrow">03 · Decisions</p>
+        <h2>更白、更轻，但不空。</h2>
+        <p>
+          借用「墨戒」的纸墨秩序，不复制它的戒断语义。TimeBank 仍然围绕时间余额、真实回忆和快捷存入，只把视觉音量降下来。
+        </p>
+      </div>
+
+      <div class="decision-list">
+        <div class="decision-row">
+          <span class="decision-index">01</span>
+          <b>取消大面积深色</b>
+          <span>首页与 Widget 都回到暖白纸面；大数字靠字重和留白成为锚点。</span>
+        </div>
+        <div class="decision-row">
+          <span class="decision-index">02</span>
+          <b>丝线代替阴影</b>
+          <span>卡片用纸色差与极细描边分层，更接近原生 iOS，也更像一页时间账本。</span>
+        </div>
+        <div class="decision-row">
+          <span class="decision-index">03</span>
+          <b>松墨绿收窄</b>
+          <span>只用于选中、链接和关键动作；不再让整张余额卡或半个 Widget 被绿色占满。</span>
+        </div>
+        <div class="decision-row">
+          <span class="decision-index">04</span>
+          <b>照片保留温度</b>
+          <span>白色秩序负责安静，真实照片负责生活感，两者一起避免页面变成冷淡的数字工具。</span>
+        </div>
+      </div>
+    </section>
+
+    <p class="footer-note">本页仅为设计比较稿，未写入 SwiftUI / WidgetKit 实现。</p>
+  </main>
+
+  <script>
+    const setScope = (scope) => {
+      document.body.dataset.scope = scope;
+    };
+
+    document.querySelectorAll('[data-set-scope]').forEach((button) => {
+      button.addEventListener('click', () => setScope(button.dataset.setScope));
+    });
+  </script>
+</body>
+</html>

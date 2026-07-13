@@ -80,6 +80,34 @@ enum WidgetSnapshotWriter {
             )
         }
 
+        // 缩略图导出：先算记忆与 top 分类各自要导出的图，收集"要保留的文件名"，
+        // 最后统一清理一次共享目录（记忆图 cat 图互不误删）。
+        let thumbsDir = TimeBankWidgetSnapshotStore.thumbsDirectoryURL()
+        let fileStore = FileStore()
+        var keptThumbNames = Set<String>()
+
+        let memories = widgetMemories(
+            moments: normalMoments,
+            dimensionsByID: dimensionsByID,
+            now: now,
+            thumbsDir: thumbsDir,
+            fileStore: fileStore,
+            keptThumbNames: &keptThumbNames
+        )
+
+        let topCategories = widgetTopCategories(
+            visibleDimensions: visibleDimensions,
+            profile: profile,
+            dimensionsByID: dimensionsByID,
+            moments: normalMoments,
+            now: now,
+            thumbsDir: thumbsDir,
+            fileStore: fileStore,
+            keptThumbNames: &keptThumbNames
+        )
+
+        pruneThumbs(in: thumbsDir, keeping: keptThumbNames)
+
         return TimeBankWidgetSnapshot(
             generatedAt: now,
             yearBalanceWeeks: Int(max(0, projection.remainingWeeks).rounded()),
@@ -90,20 +118,149 @@ enum WidgetSnapshotWriter {
             topText: topText(for: settings?.widgetTone ?? .warm),
             dimensions: dimensionSnapshots,
             todayDeposited: normalMoments.contains { Calendar.current.isDateInToday($0.createdAt) },
-            memories: widgetMemories(
-                moments: normalMoments,
-                dimensionsByID: dimensionsByID,
-                now: now
-            ),
-            themeKind: TimeBankThemeKind.persisted.rawValue
+            memories: memories,
+            themeKind: TimeBankThemeKind.persisted.rawValue,
+            dailyRoutine: .default,
+            topCategories: topCategories
         )
+    }
+
+    /// 用户存入最多的 top 分类：按【normal 状态 Moment 数量】降序，取前 3；无带图瞬间的分类也保留（thumbFiles 为空）。
+    /// 与首页维度卡同源：仅"可见账户维度"参与，"今年余额"文案复用 DimensionCompute .year scope + Formatter.hoursCompact。
+    private static func widgetTopCategories(
+        visibleDimensions: [Dimension],
+        profile: UserProfile,
+        dimensionsByID: [String: Dimension],
+        moments: [Moment],
+        now: Date,
+        thumbsDir: URL?,
+        fileStore: FileStore,
+        keptThumbNames: inout Set<String>
+    ) -> [TimeBankWidgetTopCategory] {
+        // 排名 = "存得最多优先"：按每个维度的 storedMomentCount（存入的 normal 瞬间数）降序，取前 3；
+        // 同数按 sortIndex 升序，稳定可预期（不随机、不会每次刷新换一批维度）。
+        let ranked = visibleDimensions
+            .map { dimension -> (dimension: Dimension, count: Int) in
+                (dimension, DimensionCompute.storedMomentCount(for: dimension.id, moments: moments))
+            }
+            .filter { $0.count > 0 }
+            .sorted { lhs, rhs in
+                if lhs.count == rhs.count { return lhs.dimension.sortIndex < rhs.dimension.sortIndex }
+                return lhs.count > rhs.count
+            }
+            .prefix(6) // 取存入量前 6 的维度进"跨维度轮换池"，让各维度的瞬间都能轮流在 widget 露脸
+
+        return ranked.map { entry -> TimeBankWidgetTopCategory in
+            let dimension = entry.dimension
+            let exported = exportCategoryThumbs(
+                for: dimension,
+                moments: moments,
+                fileStore: fileStore,
+                into: thumbsDir,
+                keptThumbNames: &keptThumbNames
+            )
+            return TimeBankWidgetTopCategory(
+                name: widgetDisplayName(for: dimension),
+                colorKey: dimension.colorKey,
+                yearRemainingText: yearRemainingText(
+                    for: dimension,
+                    profile: profile,
+                    dimensionsByID: dimensionsByID,
+                    now: now
+                ),
+                thumbFiles: exported.files,
+                thumbTitles: exported.titles
+            )
+        }
+    }
+
+    /// "今年余额"文案，与首页维度卡 DimensionCardView.consumeSummary 的消耗层主文案完全一致：
+    /// "<还能共度/未来> <Formatter.hoursCompact(今年 consumeHours)>"，如"还能共度 1,180 小时"。
+    private static func yearRemainingText(
+        for dimension: Dimension,
+        profile: UserProfile,
+        dimensionsByID: [String: Dimension],
+        now: Date
+    ) -> String {
+        let hours = DimensionCompute.consumeHours(
+            for: dimension,
+            profile: profile,
+            dimensionsByID: dimensionsByID,
+            scope: .year,
+            now: now
+        )
+        return "\(consumeLabel(for: dimension)) \(Formatter.hoursCompact(hours))"
+    }
+
+    /// 消耗层前缀标签，复用 DimensionCardView.consumeLabel 的分类归属。
+    private static func consumeLabel(for dimension: Dimension) -> String {
+        switch dimension.id {
+        case DimensionReservedID.parents.rawValue,
+             DimensionReservedID.kids.rawValue,
+             DimensionReservedID.partner.rawValue:
+            return "还能共度"
+        case DimensionReservedID.sport.rawValue,
+             DimensionReservedID.create.rawValue,
+             DimensionReservedID.free.rawValue:
+            return "未来"
+        default:
+            return "还能共度"
+        }
+    }
+
+    /// 每个分类最多导出的缩略图张数。给 widget 轮换更多素材、减少"总看到重复那几张"。
+    /// 上限从 4→10：一分钟换一张时，10 张可让循环周期拉到 10 分钟才回到第一张。
+    private static let maxCategoryThumbs = 4
+
+    /// 导出某分类最近【最多 maxCategoryThumbs 张】带图瞬间的首图缩略图到共享目录（最近优先）。
+    /// 文件名 "cat-<dimId>-<i>.jpg"，与记忆缩略图（<momentUUID>.jpg）前缀隔离、绝不冲突。
+    /// 返回 files 与 titles 两个【一一对应】的平行数组：每成功导出一张图，就同时收集该瞬间的标题
+    ///（去空白；为空则用兜底 categoryThumbFallbackTitle），保证 files.count == titles.count，
+    /// 供中号 widget 用同一下标取"文件名 + 对应标题"叠加标题遮罩。跳过（无图/导出失败）的瞬间两边都不追加。
+    private static func exportCategoryThumbs(
+        for dimension: Dimension,
+        moments: [Moment],
+        fileStore: FileStore,
+        into dir: URL?,
+        keptThumbNames: inout Set<String>
+    ) -> (files: [String], titles: [String]) {
+        guard let dir else { return ([], []) }
+
+        let dimensionMoments = moments
+            .filter { $0.dimensionId == dimension.id }
+            .sorted { $0.happenedAt > $1.happenedAt }
+
+        var files: [String] = []
+        var titles: [String] = []
+        for moment in dimensionMoments {
+            guard files.count < maxCategoryThumbs else { break }
+            let name = "cat-\(dimension.id)-\(files.count).jpg"
+            guard exportCategoryThumb(for: moment, fileStore: fileStore, into: dir, named: name) != nil else {
+                continue
+            }
+            files.append(name)
+            titles.append(categoryThumbFallbackTitle(for: moment, dimension: dimension))
+            keptThumbNames.insert(name)
+        }
+        return (files, titles)
+    }
+
+    /// 该缩略图叠加用的标题：优先瞬间自己的标题（去首尾空白）；瞬间没写标题时，
+    /// 用该分类的展示名兜底（如"父母""运动"），既不留空遮罩也不暴露隐私细节。
+    private static func categoryThumbFallbackTitle(for moment: Moment, dimension: Dimension) -> String {
+        let trimmed = moment.title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if trimmed.isEmpty == false { return trimmed }
+        return widgetDisplayName(for: dimension)
     }
 
     /// 为 widget 轮换面挑选记忆池：周年（那年今日）优先 → 刚冲洗优先 → 最近优先，取前 6。
     private static func widgetMemories(
         moments: [Moment],
         dimensionsByID: [String: Dimension],
-        now: Date
+        now: Date,
+        thumbsDir: URL?,
+        fileStore: FileStore,
+        keptThumbNames: inout Set<String>
     ) -> [TimeBankWidgetMemory] {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: now)
@@ -143,37 +300,71 @@ enum WidgetSnapshotWriter {
             return lhs.memory.daysAgo < rhs.memory.daysAgo
         }
 
-        return attachThumbs(to: Array(sorted.prefix(6)))
+        return attachThumbs(
+            to: Array(sorted.prefix(6)),
+            thumbsDir: thumbsDir,
+            fileStore: fileStore,
+            keptThumbNames: &keptThumbNames
+        )
     }
 
     /// 把入选记忆的缩略图导出到 App Group 共享目录（widget 进程读不到 App 沙盒里的媒体）。
     /// 任何一步失败都静默降级为无图——缩略图绝不能阻塞快照写入。
+    /// 只导出并登记要保留的文件名；清理由调用方统一 pruneThumbs（避免和 top 分类图互相误删）。
     private static func attachThumbs(
-        to entries: [(memory: TimeBankWidgetMemory, moment: Moment)]
+        to entries: [(memory: TimeBankWidgetMemory, moment: Moment)],
+        thumbsDir: URL?,
+        fileStore: FileStore,
+        keptThumbNames: inout Set<String>
     ) -> [TimeBankWidgetMemory] {
-        guard let dir = TimeBankWidgetSnapshotStore.thumbsDirectoryURL() else {
+        guard let dir = thumbsDir else {
             return entries.map(\.memory)
         }
 
-        let fileStore = FileStore()
-        var keptNames = Set<String>()
-        let result = entries.map { entry -> TimeBankWidgetMemory in
+        return entries.map { entry -> TimeBankWidgetMemory in
             var memory = entry.memory
             if let name = exportThumb(for: entry.moment, fileStore: fileStore, into: dir) {
                 memory.thumbFile = name
-                keptNames.insert(name)
+                keptThumbNames.insert(name)
             }
             return memory
         }
+    }
 
-        // 清掉不再被任何记忆引用的旧图，目录体积恒定在 ≤6 张小图
-        if let files = try? FileManager.default.contentsOfDirectory(atPath: dir.path) {
-            for file in files where keptNames.contains(file) == false {
-                try? FileManager.default.removeItem(at: dir.appendingPathComponent(file))
-            }
+    /// 统一清理共享缩略图目录：删掉本次快照不再引用的旧图（记忆图 <momentUUID>.jpg + top 分类图 cat-*.jpg）。
+    /// keptNames 里已登记本次实际引用到的全部文件（含每类最多 maxCategoryThumbs 张），
+    /// 故只删"没引用到的"——既不会误删本次要用的图，也不会无限增长：
+    /// 目录总量恒定在 ≤6 记忆图 + ≤3×maxCategoryThumbs 分类图。
+    /// 分类图变少（如某维度删了瞬间）时，多出来的旧 cat-*-<i>.jpg 因不在 keptNames 里被顺带清掉。
+    private static func pruneThumbs(in dir: URL?, keeping keptNames: Set<String>) {
+        guard let dir else { return }
+        guard let files = try? FileManager.default.contentsOfDirectory(atPath: dir.path) else { return }
+        for file in files where keptNames.contains(file) == false {
+            try? FileManager.default.removeItem(at: dir.appendingPathComponent(file))
+        }
+    }
+
+    /// 导出某分类首图缩略图到指定文件名（覆盖式：分类图按位次固定名 cat-<dimId>-<i>.jpg，
+    /// 内容随最近瞬间变化，须强制重写；沿用与记忆图一致的 CGImageSource 480px 方案）。
+    private static func exportCategoryThumb(
+        for moment: Moment,
+        fileStore: FileStore,
+        into dir: URL,
+        named name: String
+    ) -> String? {
+        let sortedMedia = moment.mediaItems.sorted { $0.sortIndex < $1.sortIndex }
+        guard let item = sortedMedia.first(where: { $0.thumbnailPath != nil || $0.mediaKind == .image }) else {
+            return nil
         }
 
-        return result
+        let destination = dir.appendingPathComponent(name)
+        // 位次坑：内容会随最近瞬间变，先清旧内容再写。
+        try? FileManager.default.removeItem(at: destination)
+        // 高清：图片直接从原图降采样（不用 200px 小缩略图，否则放大发糊）；视频只能用已生成的帧缩略图。
+        let sourcePath = item.mediaKind == .image ? item.relativePath : (item.thumbnailPath ?? item.relativePath)
+        let sourceURL = fileStore.url(forRelativePath: sourcePath)
+        guard writeThumbnail(from: sourceURL, to: destination) else { return nil }
+        return name
     }
 
     private static func exportThumb(for moment: Moment, fileStore: FileStore, into dir: URL) -> String? {
@@ -188,12 +379,19 @@ enum WidgetSnapshotWriter {
             return name
         }
 
-        let relativePath = item.thumbnailPath ?? item.relativePath
-        let sourceURL = fileStore.url(forRelativePath: relativePath)
+        // 高清：图片直接从原图降采样（不用 200px 小缩略图，否则放大发糊）；视频只能用已生成的帧缩略图。
+        let sourcePath = item.mediaKind == .image ? item.relativePath : (item.thumbnailPath ?? item.relativePath)
+        let sourceURL = fileStore.url(forRelativePath: sourcePath)
+        guard writeThumbnail(from: sourceURL, to: destination) else { return nil }
+        return name
+    }
+
+    /// 共享缩略图渲染：CGImageSource 生成 480px 缩略图写成 JPEG。记忆图与分类图共用，保证 480px 方案一致。
+    private static func writeThumbnail(from sourceURL: URL, to destination: URL) -> Bool {
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
             kCGImageSourceCreateThumbnailWithTransform: true,
-            kCGImageSourceThumbnailMaxPixelSize: 360
+            kCGImageSourceThumbnailMaxPixelSize: 800
         ]
         guard let source = CGImageSourceCreateWithURL(sourceURL as CFURL, nil),
               let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary),
@@ -204,7 +402,7 @@ enum WidgetSnapshotWriter {
                   nil
               )
         else {
-            return nil
+            return false
         }
 
         CGImageDestinationAddImage(
@@ -212,8 +410,7 @@ enum WidgetSnapshotWriter {
             thumbnail,
             [kCGImageDestinationLossyCompressionQuality: 0.72] as CFDictionary
         )
-        guard CGImageDestinationFinalize(destinationRef) else { return nil }
-        return name
+        return CGImageDestinationFinalize(destinationRef)
     }
 
     private static func makeDimensionSnapshot(

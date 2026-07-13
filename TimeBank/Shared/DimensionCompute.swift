@@ -789,3 +789,17 @@ enum DimensionCompute {
         return dimension.name
     }
 }
+
+// MARK: - 今天可支配剩余（App 端 thin wrapper，转调唯一真相源 DisposableTime）
+
+extension DimensionCompute {
+    /// App 端读"今天可支配剩余秒数"——转调 WidgetSnapshot.swift 里的唯一真相源，绝不另写一份公式。
+    static func disposableRemainingSeconds(now: Date = .now, routine: DailyRoutineParams = .default) -> Double {
+        DisposableTime.remainingSeconds(now: now, routine: routine)
+    }
+
+    /// App 端读"今天可支配剩余"展示文案（"约 X 小时"）。
+    static func disposableRemainingText(now: Date = .now, routine: DailyRoutineParams = .default) -> String {
+        DisposableTime.remainingText(now: now, routine: routine)
+    }
+}

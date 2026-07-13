@@ -8,6 +8,11 @@ struct DimensionCardView: View {
     let dimensionsByID: [String: Dimension]
     let moments: [Moment]
     let timeScope: DimensionCompute.TimeBalanceScope
+    let fileStore: FileStore
+    /// 小图带内单张瞬间点按：父层处理导航（本卡不放 NavigationLink）。
+    var onTapMoment: (Moment) -> Void
+    /// 卡片非小图区域（header / 副信息）点按：父层导航进维度详情。
+    var onTapCard: () -> Void
 
     var body: some View {
         card
@@ -23,30 +28,24 @@ struct DimensionCardView: View {
                 .frame(width: 4)
 
             VStack(alignment: .leading, spacing: TBSpace.s3) {
-                header
-
-                HStack(alignment: .top, spacing: TBSpace.s4) {
-                    metric(
-                        label: consumeLabel,
-                        primary: consumePrimary,
-                        secondary: isMemorial ? "纪念账户" : subtitleText,
-                        primaryColor: Color.tbInk
-                    )
-
-                    Rectangle()
-                        .fill(Color.tbHair.opacity(0.8))
-                        .frame(width: 1)
-                        .padding(.vertical, 2)
-
-                    metric(
-                        label: "已存入",
-                        primary: storedPrimary,
-                        secondary: storedSecondary,
-                        primaryColor: storedMomentCount > 0
-                            ? DimensionPalette.color(for: dimension)
-                            : Color.tbInk3
-                    )
+                // header + 副信息 = 进维度详情的点按区（不含小图带）
+                VStack(alignment: .leading, spacing: TBSpace.s3) {
+                    header
+                    subInfoLine
                 }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    onTapCard()
+                }
+
+                // 主体：图片为主的横滑小图带（内部各 thumb 是独立 Button，不冒泡到 onTapCard）
+                DimensionMomentStrip(
+                    dimension: dimension,
+                    moments: moments,
+                    fileStore: fileStore,
+                    thumbSize: 64,
+                    onTapMoment: onTapMoment
+                )
             }
             .padding(.vertical, TBSpace.s4)
             .padding(.horizontal, TBSpace.s4)
@@ -92,47 +91,48 @@ struct DimensionCardView: View {
         }
     }
 
-    private func metric(
-        label: String,
-        primary: String,
-        secondary: String,
-        primaryColor: Color
-    ) -> some View {
-        VStack(alignment: .leading, spacing: TBSpace.s1) {
-            Text(label)
-                .font(.tbLabel)
+    /// 原两个大 metric 压成一行小字副信息。复用现有 consumeHours / subtitleText / storedMomentCount 计算。
+    private var subInfoLine: some View {
+        HStack(spacing: TBSpace.s2) {
+            Text(consumeSummary)
+                .font(.tbBodySm)
+                .foregroundStyle(Color.tbInk2)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+
+            Text("·")
+                .font(.tbBodySm)
                 .foregroundStyle(Color.tbInk3)
 
-            Text(primary)
-                .font(.tbNumM)
-                .foregroundStyle(primaryColor)
+            Text(storedSummary)
+                .font(.tbLabel)
+                .foregroundStyle(
+                    storedMomentCount > 0
+                        ? DimensionPalette.color(for: dimension)
+                        : Color.tbInk3
+                )
                 .lineLimit(1)
-                .minimumScaleFactor(0.66)
-                .contentTransition(.numericText())
+                .minimumScaleFactor(0.7)
 
-            if secondary.isEmpty == false {
-                Text(secondary)
-                    .font(.tbBodySm)
-                    .foregroundStyle(Color.tbInk2)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.78)
-            }
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - 数据
 
-    private var consumePrimary: String {
-        isMemorial ? "记录这一段。" : Formatter.hoursCompact(consumeHours)
+    /// 消耗层一行小字：纪念账户给固定文案，否则「<还能共度/未来> 约 X 小时 · 副信息」。
+    private var consumeSummary: String {
+        if isMemorial {
+            return "记录这一段。"
+        }
+        let primary = "\(consumeLabel) \(Formatter.hoursCompact(consumeHours))"
+        let subtitle = subtitleText
+        return subtitle.isEmpty ? primary : "\(primary) · \(subtitle)"
     }
 
-    private var storedPrimary: String {
-        Formatter.storedDuration(storedHours)
-    }
-
-    private var storedSecondary: String {
-        Formatter.momentsCount(storedMomentCount)
+    /// 存储层一行小字：只用「N 个瞬间」量词（存储层量词铁律）。
+    private var storedSummary: String {
+        "已存入 \(Formatter.momentsCount(storedMomentCount))"
     }
 
     private var consumeLabel: String {
@@ -183,10 +183,6 @@ struct DimensionCardView: View {
         }
     }
 
-    private var storedHours: Double {
-        DimensionCompute.storedHours(for: dimension.id, moments: moments)
-    }
-
     private var storedMomentCount: Int {
         DimensionCompute.storedMomentCount(for: dimension.id, moments: moments)
     }
@@ -197,11 +193,11 @@ struct DimensionCardView: View {
 
     private var accessibilitySummary: String {
         if isMemorial {
-            return "\(dimension.name)，纪念账户，已存入 \(storedPrimary)，\(storedSecondary)"
+            return "\(dimension.name)，纪念账户，\(storedSummary)"
         }
 
         let subtitle = subtitleText.isEmpty ? "" : "，\(subtitleText)"
-        return "\(dimension.name)，\(consumeLabel) \(consumePrimary)\(subtitle)，已存入 \(storedPrimary)，\(storedSecondary)"
+        return "\(dimension.name)，\(consumeLabel) \(Formatter.hoursCompact(consumeHours))\(subtitle)，\(storedSummary)"
     }
 
     private var isMemorial: Bool {

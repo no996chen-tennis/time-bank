@@ -2,6 +2,7 @@
 
 import Foundation
 import SwiftData
+import os
 
 @MainActor
 final class MomentStore {
@@ -212,6 +213,7 @@ final class MomentStore {
             insertedMoment = true
             try modelContext.save()
 
+            FileStoreLog.logger.notice("moment 落库成功 id=\(request.id.uuidString, privacy: .public) media=\(writtenMedia.count, privacy: .public)")
             return moment
         } catch {
             if insertedMoment {
