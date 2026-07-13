@@ -1,137 +1,30 @@
-# 时间银行（暂定名）
+# 时间银行 — 项目索引
 
-> 本文件是 Claude Code Project 会自动加载的项目索引。当前 PRD 版本：**V1.3.2**（2026-04-22 晚晚 · UI 定稿）
+> 2026-07-13 重写（旧版停留在 4-26 的 V1.3.2 快照，已失真）。历史 PRD/UC/设计文档全部在 `各类 md 文件/`。
 
 ## 产品定位
-一个"时间可视化 + 时间沉淀"双层 App，帮用户既**看清**人生中真正重要的时间时间账户，又能**封存**那些被真正感受过的瞬间。
-核心调性：**珍惜 & 感受当下**，不是焦虑倒计时。
+"时间可视化 + 时间沉淀"双层 App：消耗层看清重要时间账户的剩余（陪父母/陪孩子/运动/伴侣/创造/自由），存储层把有意义的时刻（图文视频）永久封存、只增不减。调性是**珍惜与感受当下**，不是焦虑倒计时。Widget-first、无联网无注册。
 
-## 核心理念
-- "第 N 次"叙事 > "剩余 N 次"叙事（默认正向框架）
-- 没有"浪费"的时间，只有没被感受到的时间
-- Widget-first：不打开 App 就能看到
-- **时间可以被"存起来"**：有意义的时刻（带图文）沉淀到对应时间账户，永不被扣减 —— 这是产品叫"时间银行"的根本原因
-- 隐私 = 营销主张：V1 不申请任何敏感权限、不联网、不注册、不收集数据
+## 当前状态（2026-07-13）
+- **分支 `m3-app-loop`**（已推 GitHub `no996chen-tennis/time-bank`），App 已在 Adam 真机迭代。
+- **首页 4 布局并存待收敛**：经典 / 大图·单图 / 大图·多图 / 大图·带文字（`HomeLayoutKind`，设置→首页样式切换）。Adam 对现状不满意，方案讨论中；收敛后删多余（View + RootView case + enum case + pbxproj 登记一起删）。
+- 「今天剩余」可支配时间条（App 秒级跳动，Widget 分钟级），基于损耗段建模（睡眠/三餐/杂项预设）。
+- Widget：三尺寸 + 锁屏；回忆面缩略图已加大加清晰。
+- 最新设计载体：`designs/home-widget-redesign-comparison.html`（7-10）+ `真机截图/`（7-6）。
+- 里程碑分支 `main` / `m1-data-layer` / `m2-onboarding-home` / `claude/retention-p0` 各代表历史阶段，尚无统一合并计划。
 
-## 双层模型
+## 工程铁律（都是真踩过的坑）
+1. 标准 xcodeproj（**非 xcodegen**）：新 `.swift` 必须手动登记 `project.pbxproj`（仅 `TimeBank/Retention/` 与 `TimeBankTests/` 免登记）。
+2. Widget target 只编译 `TimeBankWidget.swift` + `WidgetSnapshot.swift` 两个文件；要给 Widget 用的类型（含 `openAppWhenRun` 的 AppIntent）必须写进 `WidgetSnapshot.swift`，否则真机点按钮无反应。
+3. Widget 图片从原图 `relativePath` 降采样（≥480px），禁止拿 200px 缩略图放大。
+4. 媒体保存必须包 `withBackgroundTask`：切后台挂起会造成"文件在、数据库记录丢"→ 孤儿清理误删（已加 24h 宽限期 + os_log）。
+5. 编译验证：`xcodebuild build -project TimeBank/TimeBank.xcodeproj -scheme TimeBank -destination 'generic/platform=iOS Simulator'`；实现 agent 只编译、不 boot 模拟器。
+6. 真机：自动签名 team L73W528KAY；设备 iPhone 17 Pro Max（UDID 00008150-00017CE42E87801C）；`xcodebuild -allowProvisioningUpdates build` + `xcrun devicectl device install app`。
 
-```
-消耗层 Counter Layer    →  时间在流逝，显示"剩余 X h / 约 N 次"（自动算）
-         ↕
-存储层 Deposit Layer    →  用户主动存入有意义的时刻（图文），永久保留，只增不减
-```
-
-两层在每张时间账户卡片同时出现："还能共度 552h · 约 92 次见面" vs "已存入 56h · 12 个瞬间"。
-
-### 顶部「时间余额」时间账户（V1.3.1 新增）
-
-主页顶部还有一个特殊的**系统时间账户 `lifespan`**，作为"人生总倒计时"的哲学 anchor：
-- 主数字用**周**（呼应《四千周》），副文案 "N 年 · N Kh"
-- 独立于 6 时间账户之外，不参与聚合
-- 和"已存入"组成**双层账户卡**（上半 lifespan / 下半 deposited）
-
-## V1 Scope（12 周 timeline · 2026-04-22 定稿）
-
-**做：** Onboarding（4 步 + chip 多选，支持单身/无父母/丁克） · 6 内置时间账户双数字卡片 · 时刻 CRUD（图文，只从相册选）· Memorial Mode（任何关系时间账户）· 账户 Tab · 1 个锁屏 Widget · Raw ZIP 导出 · **仅 Light Mode**（无 Dark Mode 规划）
-
-**推迟到 V1.1+：** 今日此刻 · 自定义时间账户 CRUD · 分享卡 · 视频拍摄 · 保存到相册 · 桌面 Widget · StandBy · 多格式导出 · 从 ZIP 恢复 · CloudKit 同步（V1.5 两阶段做）
-
-## 目标平台
-Apple 生态优先：iOS Widget（锁屏 + 桌面 + StandBy）→ Apple Watch → Android
-
-## 时间时间账户
-**内置时间账户（6个）：**
-1. 陪父母时间（基于父母年龄和见面频率）
-2. 陪孩子时间（随孩子年龄递减）
-3. 运动时间（按年龄段动态调整）
-4. 创造/工作时间（黄金创造期 + 自由创造期，可设子分类）
-5. 陪伴侣共处时间
-6. 自由可支配时间（总时间减去以上所有）
-
-**日常时刻（"第 N 次"模块）：**
-洗澡、吃饭、早晨、日落、散步、上厕所、做饭……
-
-**自定义时间账户：** 用户可创建最多 10 个自定义追踪项
-
-## 设计原则
-- 极简初始化：只需生日 + 家人基本信息，其余全部自动算
-- 温暖配色，正向文案
-- Widget 是主要触达方式，App 是设置入口
-
-## 核心功能（2026-04-19 更新）
-
-### V1（最小可用版本）
-
-**消耗层：**
-1. **极简引导**：只需生日 + 家人基本信息，自动计算所有时间
-2. **主页时间时间账户卡片**：陪父母、陪孩子、运动、陪伴侣、自由时间
-3. **自定义追踪项**：用户可以创建自己想追踪的时间账户（如阅读、旅行等）
-4. **计算方式可调**：用户可以修改默认的合理值（运动时长、见面频率等）
-5. **"今日此刻"模块**：第 N 次洗澡 / 第 N 顿饭 / 第 N 个早晨
-6. **锁屏 Widget**：最核心的触达方式
-
-**存储层（V1.1 新增）：**
-7. **存入时刻**：任何时间账户可点"+"存入一段时刻（标题 + 时长 + 文字 + 图片/视频最多 9 条）
-8. **时间账户时间线**：每个时间账户详情页展示该时间账户下所有存入的时刻，倒序
-9. **时刻详情页**：全屏多图轮播 / 视频播放 / 文字展开
-10. **双数字卡片**：每张时间账户卡片同时显示"消耗层剩余"+ "存储层已存入"
-11. **数据导出**：一键 ZIP 导出全部原媒体 + 索引，保证用户可完整带走
-
-### V2
-7. **轻量打卡**：不是每日任务，而是"发生了就点一下"（见了爸妈→点一下→自动记录）
-8. **月度回顾**：像一封温柔的信，展示你这个月的时间分布，不像 KPI 报表
-9. **桌面 Widget（中号/大号）**
-
-### V3
-10. Apple Watch complication
-11. StandBy 模式支持
-
-## 设计方向（待 Figma 出图）
-- 方向 A：Claude 风（干净、大留白、serif 字体、米白色调）
-- 方向 B：Headspace 风（圆润、插画感、温暖色彩、亲和力）
-- 方向 C：Apple 风（毛玻璃、半透明、系统感、极简）
-
-## 技术栈
-- SwiftUI + WidgetKit
-- **SwiftData** 存结构化数据（Dimension / Moment / MediaItem 元数据）
-- **FileManager 沙盒**（`Documents/TimeBank/moments/{uuid}/`）存原始图/视频 + 缩略图
-- **PhotosPicker (iOS 16+)** 选择媒体，**AVFoundation** 直接拍摄，无需敏感相册权限
-- **HEIC/HEVC** 优先（较 JPG/MP4 省 ~50% 空间）
-- V1 无需后端；V1.5 用 **CloudKit Private Database** 做免费同步（SwiftData + CloudKit 一键开启）
-- 详见 `技术方案-媒体存储.md`
-
-## 竞品空白
-市场上无任何产品同时做"家人剩余时间 + 日常体验觉知 + Widget-first"
-
-## 文档矩阵（按角色查阅）
-
-| 角色 | 必读 |
+## 文档地图
+| 路径 | 内容 |
 |------|------|
-| **PM (Adam)** | PRD 主文档全文 |
-| **iOS 工程师** | `Use-Cases-详尽交互.md` / `技术方案-媒体存储.md` / PRD §6-7.5, §12 / `开发上线指南.md` |
-| **UX Researcher** | `用户研究.md`（Persona / 旅程 / 访谈脚本） |
-| **UI 设计师** | `设计规范.md`（色板 / 字阶 / 组件 / 动效） |
-| **内容设计 / 文案** | `文案系统.md`（Tone / 文案库 / Widget 轮换池） |
-| **法务 / Privacy** | `隐私与合规.md`（Privacy Manifest / App Review / 政策模版） |
-| **Growth / ASO** | `增长与上线.md`（30 天冷启动 / ASO / KOL / 社群） |
-
-## 文件清单
-
-- `PRD-时间银行-V1.md` — **V1.3.1** 产品需求文档（含 §7.6 Schema + §21 Formatter Matrix + §22 主页 layout 硬约束）
-- `Use-Cases-详尽交互.md` — **V1.2** 所有模块 CRUD 逐步交互（V1 工程交付真相源）
-- `Use-Cases-全版本梳理.md` — **V1 + V1.1 + V1.5 + V2+** 全版本 UC 索引（high-level · 漏洞自检用）
-- `测试-M3端到端用例.md` — Codex computer use 端到端测试脚本（5 Persona × P0/P1/P2/P3 用例）
-- `ChatGPT-协作协议.md` — ChatGPT 写代码 + Claude review 的协同工作流（**ChatGPT 第一个读**）
-- `Claude-新窗口启动prompt.md` — 新 Claude Code 窗口启动 prompt（落盘 + review 角色）
-- `designs/DesignTokens.swift` — 从 Claude Design 提取的 Swift 常量（**当前实现引用** · 待 V1 UI 重设计后替换）
-- `designs/v1-ui-final.html` — V1 初版 UI bundle（**待 2026-04-26 multi-tool 设计探索后被替换**）
-- `designs/README.md` — designs 目录说明 + UI 和 PRD 的差异点
-- `用户研究.md` — 3 个 Persona + 用户旅程 + 访谈脚本 + 招募计划
-- `设计规范.md` — 设计哲学 + 色板 + 字阶 + 组件规范 + 动效原则
-- `文案系统.md` — **V1.3** Tone of voice + 文案库 + Widget/通知双池 + Formatter Matrix（覆盖 §2.4 详情页 / §2.5 存时刻 / §2.9 个人信息 / §2.10 参数编辑 / §2.11 移除关系 / §2.12 Memorial / §2.13 账户 Tab）
-- `隐私与合规.md` — **V1.1** Privacy Manifest + App Review + 政策模版 + 中国合规独立 branch
-- `增长与上线.md` — **V1.1** ASO + 冷启动 30 天 + 内容营销 + V1 截图方案调整
-- `技术方案-媒体存储.md` — **V1.1** iOS 沙盒 + App Group + CloudKit 两阶段 + 媒体兼容矩阵
-- `开发上线指南.md` — 从零到 App Store 完整流程
-- `prototype-存储层.html` — 存储层交互草图（4 屏，**当前唯一 active prototype**）
-- `legacy-prototype-消耗层.html` — ⚠️ V1.0 旧版原型，仅作历史参考
+| `各类 md 文件/` | 全部历史文档（PRD V1.3.2、Use-Cases、进度报告-2026-06-11、协作协议等，2026-07 从顶层迁入） |
+| `designs/` | 设计稿仓库（最新：home-widget-redesign-comparison.html） |
+| `真机截图/` | 最新真机走查截图 |
+| `TimeBank/` `TimeBankWidget/` | Xcode 工程与 Widget 扩展 |
